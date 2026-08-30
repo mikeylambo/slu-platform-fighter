@@ -29,7 +29,10 @@ export interface FighterAttackState { attackId: string; frame: number; hitTarget
 export interface FighterGrabActionState { actionId: string; frame: number; }
 
 export interface FighterState {
+  /** Stable runtime participant/slot id, e.g. fighter-a or player-3. */
   id: string;
+  /** Stable fighter-pack/content id, e.g. greybox or a roster character id. */
+  definitionId: string;
   x: Fixed;
   y: Fixed;
   vx: Fixed;
@@ -81,7 +84,7 @@ export interface WorldState {
   fighters: FighterState[];
   surfaces: StageSurface[];
   ledges: StageLedge[];
-  /** Stable winner id once a stock match is resolved; null while unresolved. */
+  /** Stable winner participant id once a stock match is resolved; null while unresolved. */
   winnerId: string | null;
 }
 
