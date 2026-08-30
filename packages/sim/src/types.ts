@@ -52,6 +52,8 @@ export interface FighterState {
   invulnerableFrames: number;
   dodgeCooldownFrames: number;
   techBufferFrames: number;
+  /** Remaining authored aerial landing recovery after the landing frame itself. */
+  landingLagFrames: number;
   /** Damage percent stored in tenths: 35 = 3.5%. */
   percentTenths: number;
   hitlagFrames: number;
@@ -110,12 +112,12 @@ export interface MatchRuntimeState {
   framesRemaining: number | null;
   /** Participant score table used by timed/statistical match policies. */
   scores: Record<string, number>;
-  /** Winning team id for team matches; participant winnerId remains separate. */
-  winningTeamId: string | null;
   /** True when regulation ended tied and the active policy requests a tiebreak round. */
   suddenDeath: boolean;
   /** True after the match director has resolved regulation or stock victory. */
   ended: boolean;
+  /** Stable team id once a team match resolves; null for FFA/unresolved/tied. */
+  winningTeamId: string | null;
 }
 
 export interface WorldState {
@@ -130,7 +132,7 @@ export interface WorldState {
   ledges: StageLedge[];
   /** Match director state. Optional only while legacy constructors migrate. */
   match?: MatchRuntimeState;
-  /** Stable winner participant id once a non-team match is resolved; null while unresolved/tied/team-owned. */
+  /** Stable winner participant id once a match is resolved; null while unresolved/tied. */
   winnerId: string | null;
 }
 
