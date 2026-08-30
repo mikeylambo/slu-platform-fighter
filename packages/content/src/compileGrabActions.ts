@@ -15,7 +15,7 @@ interface PackMove {
   timeline: readonly TimelineEvent[];
 }
 
-interface FighterPackLike {
+export interface FighterGrabPackLike {
   id: string;
   moves: Readonly<Record<string, PackMove>>;
 }
@@ -58,7 +58,8 @@ function exactlyOne(moveId: string, timeline: readonly TimelineEvent[], type: st
   return events[0]!;
 }
 
-export function compileFighterGrabActions(pack: FighterPackLike): Map<GrabActionInput, GrabActionDefinition> {
+/** Compiles one fighter's semantic grab table for fighter-local tooling/tests. */
+export function compileFighterGrabActions(pack: FighterGrabPackLike): Map<GrabActionInput, GrabActionDefinition> {
   const result = new Map<GrabActionInput, GrabActionDefinition>();
   for (const [moveName, move] of Object.entries(pack.moves).sort(([a], [b]) => a.localeCompare(b))) {
     if (!move.grabAction) continue;
@@ -69,13 +70,8 @@ export function compileFighterGrabActions(pack: FighterPackLike): Map<GrabAction
       const event = exactlyOne(id, move.timeline, 'grab_damage');
       if (!event.data) throw new Error(`${id} grab_damage requires data`);
       result.set('pummel', {
-        kind: 'pummel',
-        id,
-        input: 'pummel',
-        totalFrames: move.totalFrames,
-        eventFrame: event.frame,
-        damageTenths: integer(event.data, 'damageTenths'),
-        hitlagFrames: integer(event.data, 'hitlagFrames'),
+        kind: 'pummel', id, input: 'pummel', totalFrames: move.totalFrames, eventFrame: event.frame,
+        damageTenths: integer(event.data, 'damageTenths'), hitlagFrames: integer(event.data, 'hitlagFrames'),
       });
       continue;
     }
@@ -83,18 +79,35 @@ export function compileFighterGrabActions(pack: FighterPackLike): Map<GrabAction
     const event = exactlyOne(id, move.timeline, 'throw_release');
     if (!event.data) throw new Error(`${id} throw_release requires data`);
     result.set(move.grabAction, {
-      kind: 'throw',
-      id,
-      input: move.grabAction,
-      totalFrames: move.totalFrames,
-      releaseFrame: event.frame,
+      kind: 'throw', id, input: move.grabAction, totalFrames: move.totalFrames, releaseFrame: event.frame,
       damageTenths: integer(event.data, 'damageTenths'),
       baseKnockback: integer(event.data, 'baseKnockback') as Fixed,
       growthPer100Percent: integer(event.data, 'growthPer100Percent') as Fixed,
-      directionX: integer(event.data, 'directionX'),
-      directionY: integer(event.data, 'directionY'),
+      directionX: integer(event.data, 'directionX'), directionY: integer(event.data, 'directionY'),
       hitstunFrames: integer(event.data, 'hitstunFrames'),
     });
   }
   return result;
+}
+
+/**
+ * Mixed-roster registry. Keys include fighter definition identity so two fighters
+ * can both define `forward-throw` without colliding in the same match runtime.
+ * Example key: `greybox:forward-throw`.
+ */
+export function compileGrabActionRegistry(packs: readonly FighterGrabPackLike[]): Map<string, GrabActionDefinition> {
+  const registry = new Map<string, GrabActionDefinition>();
+  for (const pack of [...packs].sort((a, b) => a.id.localeCompare(b.id))) {
+    const local = compileFighterGrabActions(pack);
+    for (const [input, definition] of local) {
+      const key = `${pack.id}:${input}`;
+      if (registry.has(key)) throw new Error(`duplicate scoped grab action ${key}`);
+      registry.set(key, definition);
+    }
+  }
+  return registry;
+}
+
+export function scopedGrabActionKey(definitionId: string, input: GrabActionInput): string {
+  return `${definitionId}:${input}`;
 }
