@@ -9,27 +9,51 @@
   "movement": {"walkSpeed": 400000, "initialDashSpeed": 900000, "runSpeed": 720000, "gravity": 55000, "fallSpeed": 1050000, "fastFallSpeed": 1500000, "shortHopVelocity": 760000, "fullHopVelocity": 1050000, "doubleJumpVelocity": 950000, "airAcceleration": 28000, "airSpeed": 650000, "traction": 45000, "jumpSquatFrames": 3},
   "moves": {
     "jab": {
-      "animationRole": "jab",
+      "animationRole": "jab_1",
       "totalFrames": 18,
       "timeline": [
-        {
-          "frame": 3,
-          "type": "hitbox_on",
-          "data": {
-            "id": "jab-main",
-            "offsetX": 1100000,
-            "offsetY": 1500000,
-            "radius": 750000,
-            "damageTenths": 35,
-            "baseKnockback": 180000,
-            "growthPer100Percent": 260000,
-            "directionX": 1000,
-            "directionY": 420,
-            "hitlagFrames": 4,
-            "hitstunFrames": 11
-          }
-        },
+        {"frame": 3, "type": "hitbox_on", "data": {"id": "jab-main", "offsetX": 1100000, "offsetY": 1500000, "radius": 750000, "damageTenths": 35, "baseKnockback": 180000, "growthPer100Percent": 260000, "directionX": 1000, "directionY": 420, "hitlagFrames": 4, "hitstunFrames": 11}},
         {"frame": 6, "type": "hitbox_off", "data": {"id": "jab-main"}}
+      ]
+    },
+    "pummel": {
+      "animationRole": "pummel",
+      "grabAction": "pummel",
+      "totalFrames": 12,
+      "timeline": [
+        {"frame": 5, "type": "grab_damage", "data": {"damageTenths": 15, "hitlagFrames": 2}}
+      ]
+    },
+    "forward-throw": {
+      "animationRole": "forward_throw",
+      "grabAction": "forward-throw",
+      "totalFrames": 28,
+      "timeline": [
+        {"frame": 15, "type": "throw_release", "data": {"damageTenths": 55, "baseKnockback": 260000, "growthPer100Percent": 360000, "directionX": 1000, "directionY": 300, "hitstunFrames": 18}}
+      ]
+    },
+    "back-throw": {
+      "animationRole": "back_throw",
+      "grabAction": "back-throw",
+      "totalFrames": 31,
+      "timeline": [
+        {"frame": 17, "type": "throw_release", "data": {"damageTenths": 60, "baseKnockback": 280000, "growthPer100Percent": 390000, "directionX": -1000, "directionY": 340, "hitstunFrames": 20}}
+      ]
+    },
+    "up-throw": {
+      "animationRole": "up_throw",
+      "grabAction": "up-throw",
+      "totalFrames": 30,
+      "timeline": [
+        {"frame": 16, "type": "throw_release", "data": {"damageTenths": 50, "baseKnockback": 245000, "growthPer100Percent": 350000, "directionX": 100, "directionY": 1000, "hitstunFrames": 19}}
+      ]
+    },
+    "down-throw": {
+      "animationRole": "down_throw",
+      "grabAction": "down-throw",
+      "totalFrames": 32,
+      "timeline": [
+        {"frame": 18, "type": "throw_release", "data": {"damageTenths": 45, "baseKnockback": 185000, "growthPer100Percent": 260000, "directionX": 500, "directionY": 520, "hitstunFrames": 22}}
       ]
     }
   },
