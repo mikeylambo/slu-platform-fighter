@@ -1,7 +1,35 @@
 import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { FighterState, SimInputFrame, StageSurface } from './types.js';
 
-export const K1_MOVEMENT = {
+export interface MovementRules {
+  stickMax: number;
+  deadzone: number;
+  runThreshold: number;
+  crouchThreshold: number;
+  fastFallThreshold: number;
+  inputHistoryFrames: number;
+  jumpBufferFrames: number;
+  dashFrames: number;
+  turnFrames: number;
+  jumpSquatFrames: number;
+  landingFrames: number;
+  platformDropFrames: number;
+  walkSpeed: Fixed;
+  dashSpeed: Fixed;
+  runSpeed: Fixed;
+  groundAccel: Fixed;
+  groundFriction: Fixed;
+  airAccel: Fixed;
+  maxAirSpeed: Fixed;
+  fullHopSpeed: Fixed;
+  shortHopSpeed: Fixed;
+  doubleJumpSpeed: Fixed;
+  gravity: Fixed;
+  maxFallSpeed: Fixed;
+  fastFallSpeed: Fixed;
+}
+
+export const K1_MOVEMENT: MovementRules = {
   stickMax: 1000,
   deadzone: 180,
   runThreshold: 720,
@@ -27,11 +55,11 @@ export const K1_MOVEMENT = {
   gravity: fixed.fromRatio(1, 40),
   maxFallSpeed: fixed.fromRatio(9, 20),
   fastFallSpeed: fixed.fromRatio(29, 50),
-} as const;
+};
 
-function clampStick(value: number): number {
+function clampStick(value: number, rules: MovementRules): number {
   if (!Number.isInteger(value)) throw new Error(`stick input must be integer, got ${value}`);
-  return Math.max(-K1_MOVEMENT.stickMax, Math.min(K1_MOVEMENT.stickMax, value));
+  return Math.max(-rules.stickMax, Math.min(rules.stickMax, value));
 }
 
 function approach(current: Fixed, target: Fixed, amount: Fixed): Fixed {
@@ -40,14 +68,14 @@ function approach(current: Fixed, target: Fixed, amount: Fixed): Fixed {
   return current;
 }
 
-function stickToFixed(value: number, maxSpeed: Fixed): Fixed {
-  const clamped = clampStick(value);
-  return fixed.mul(fixed.fromRatio(clamped, K1_MOVEMENT.stickMax), maxSpeed);
+function stickToFixed(value: number, maxSpeed: Fixed, rules: MovementRules): Fixed {
+  const clamped = clampStick(value, rules);
+  return fixed.mul(fixed.fromRatio(clamped, rules.stickMax), maxSpeed);
 }
 
-function signOutsideDeadzone(value: number): -1 | 0 | 1 {
-  if (value > K1_MOVEMENT.deadzone) return 1;
-  if (value < -K1_MOVEMENT.deadzone) return -1;
+function signOutsideDeadzone(value: number, rules: MovementRules): -1 | 0 | 1 {
+  if (value > rules.deadzone) return 1;
+  if (value < -rules.deadzone) return -1;
   return 0;
 }
 
@@ -72,11 +100,11 @@ function findLandingSurface(
   return candidates[0];
 }
 
-export function sanitizeInput(input: SimInputFrame): SimInputFrame {
+export function sanitizeInput(input: SimInputFrame, rules: MovementRules = K1_MOVEMENT): SimInputFrame {
   return {
     ...input,
-    moveX: clampStick(input.moveX),
-    moveY: clampStick(input.moveY),
+    moveX: clampStick(input.moveX, rules),
+    moveY: clampStick(input.moveY, rules),
   };
 }
 
@@ -84,14 +112,15 @@ export function stepFighterMovement(
   fighter: FighterState,
   rawInput: SimInputFrame,
   surfaces: StageSurface[],
+  rules: MovementRules = K1_MOVEMENT,
 ): FighterState {
-  const input = sanitizeInput(rawInput);
+  const input = sanitizeInput(rawInput, rules);
   const priorInput = fighter.inputHistory.at(-1);
-  const history = [...fighter.inputHistory, input].slice(-K1_MOVEMENT.inputHistoryFrames);
-  const horizontal = signOutsideDeadzone(input.moveX);
-  const previousHorizontal = priorInput ? signOutsideDeadzone(priorInput.moveX) : 0;
-  const downPressed = input.moveY <= K1_MOVEMENT.crouchThreshold;
-  const downFlick = input.moveY <= K1_MOVEMENT.fastFallThreshold && (priorInput?.moveY ?? 0) > K1_MOVEMENT.fastFallThreshold;
+  const history = [...fighter.inputHistory, input].slice(-rules.inputHistoryFrames);
+  const horizontal = signOutsideDeadzone(input.moveX, rules);
+  const previousHorizontal = priorInput ? signOutsideDeadzone(priorInput.moveX, rules) : 0;
+  const downPressed = input.moveY <= rules.crouchThreshold;
+  const downFlick = input.moveY <= rules.fastFallThreshold && (priorInput?.moveY ?? 0) > rules.fastFallThreshold;
 
   let x = fighter.x;
   let y = fighter.y;
@@ -106,14 +135,14 @@ export function stepFighterMovement(
   let fastFalling = fighter.fastFalling;
   let dropThroughFrames = Math.max(0, fighter.dropThroughFrames - 1);
   let jumpBufferFrames = input.jumpPressed
-    ? K1_MOVEMENT.jumpBufferFrames
+    ? rules.jumpBufferFrames
     : Math.max(0, fighter.jumpBufferFrames - 1);
 
   const currentSurface = surfaceAt(fighter, surfaces);
   if (grounded && currentSurface?.kind === 'one-way' && downPressed) {
     grounded = false;
     groundSurfaceId = null;
-    dropThroughFrames = K1_MOVEMENT.platformDropFrames;
+    dropThroughFrames = rules.platformDropFrames;
     locomotion = 'airborne';
     locomotionFrame = 0;
     y = fixed.sub(y, fixed.fromRatio(1, 1000));
@@ -123,70 +152,70 @@ export function stepFighterMovement(
     locomotion = 'jump-squat';
     locomotionFrame = 0;
     jumpBufferFrames = 0;
-    vx = horizontal === 0 ? vx : stickToFixed(input.moveX, K1_MOVEMENT.runSpeed);
+    vx = horizontal === 0 ? vx : stickToFixed(input.moveX, rules.runSpeed, rules);
   }
 
   if (grounded) {
     if (locomotion === 'jump-squat') {
-      vx = approach(vx, stickToFixed(input.moveX, K1_MOVEMENT.runSpeed), K1_MOVEMENT.groundAccel);
-      if (locomotionFrame >= K1_MOVEMENT.jumpSquatFrames) {
+      vx = approach(vx, stickToFixed(input.moveX, rules.runSpeed, rules), rules.groundAccel);
+      if (locomotionFrame >= rules.jumpSquatFrames) {
         grounded = false;
         groundSurfaceId = null;
         locomotion = 'airborne';
         locomotionFrame = 0;
-        vy = input.jumpHeld ? K1_MOVEMENT.fullHopSpeed : K1_MOVEMENT.shortHopSpeed;
+        vy = input.jumpHeld ? rules.fullHopSpeed : rules.shortHopSpeed;
         jumpsRemaining = 1;
       }
     } else if (downPressed) {
       locomotion = 'crouch';
       locomotionFrame = locomotion === fighter.locomotion ? locomotionFrame : 0;
-      vx = approach(vx, fixed.zero, K1_MOVEMENT.groundFriction);
+      vx = approach(vx, fixed.zero, rules.groundFriction);
     } else if (horizontal === 0) {
-      locomotion = locomotion === 'landing' && locomotionFrame < K1_MOVEMENT.landingFrames ? 'landing' : 'idle';
-      vx = approach(vx, fixed.zero, K1_MOVEMENT.groundFriction);
+      locomotion = locomotion === 'landing' && locomotionFrame < rules.landingFrames ? 'landing' : 'idle';
+      vx = approach(vx, fixed.zero, rules.groundFriction);
     } else {
       facing = horizontal;
       const reversed = previousHorizontal !== 0 && horizontal !== previousHorizontal;
       if (reversed && (fighter.locomotion === 'dash' || fighter.locomotion === 'run')) {
         locomotion = 'turn';
         locomotionFrame = 0;
-      } else if (locomotion === 'turn' && locomotionFrame < K1_MOVEMENT.turnFrames) {
-        vx = approach(vx, fixed.zero, K1_MOVEMENT.groundFriction);
-      } else if (Math.abs(input.moveX) >= K1_MOVEMENT.runThreshold) {
+      } else if (locomotion === 'turn' && locomotionFrame < rules.turnFrames) {
+        vx = approach(vx, fixed.zero, rules.groundFriction);
+      } else if (Math.abs(input.moveX) >= rules.runThreshold) {
         if (fighter.locomotion === 'idle' || fighter.locomotion === 'walk' || fighter.locomotion === 'landing' || previousHorizontal === 0) {
           locomotion = 'dash';
           locomotionFrame = 0;
-          vx = fixed.mul(fixed.fromInt(horizontal), K1_MOVEMENT.dashSpeed);
-        } else if (locomotion === 'dash' && locomotionFrame < K1_MOVEMENT.dashFrames) {
-          vx = fixed.mul(fixed.fromInt(horizontal), K1_MOVEMENT.dashSpeed);
+          vx = fixed.mul(fixed.fromInt(horizontal), rules.dashSpeed);
+        } else if (locomotion === 'dash' && locomotionFrame < rules.dashFrames) {
+          vx = fixed.mul(fixed.fromInt(horizontal), rules.dashSpeed);
         } else {
           locomotion = 'run';
-          vx = approach(vx, fixed.mul(fixed.fromInt(horizontal), K1_MOVEMENT.runSpeed), K1_MOVEMENT.groundAccel);
+          vx = approach(vx, fixed.mul(fixed.fromInt(horizontal), rules.runSpeed), rules.groundAccel);
         }
       } else {
         locomotion = 'walk';
-        vx = approach(vx, stickToFixed(input.moveX, K1_MOVEMENT.walkSpeed), K1_MOVEMENT.groundAccel);
+        vx = approach(vx, stickToFixed(input.moveX, rules.walkSpeed, rules), rules.groundAccel);
       }
     }
   } else {
     locomotion = 'airborne';
     if (jumpBufferFrames > 0 && jumpsRemaining > 0) {
-      vy = K1_MOVEMENT.doubleJumpSpeed;
+      vy = rules.doubleJumpSpeed;
       jumpsRemaining -= 1;
       fastFalling = false;
       jumpBufferFrames = 0;
       locomotionFrame = 0;
     }
 
-    const targetAirVx = stickToFixed(input.moveX, K1_MOVEMENT.maxAirSpeed);
-    vx = approach(vx, targetAirVx, K1_MOVEMENT.airAccel);
+    const targetAirVx = stickToFixed(input.moveX, rules.maxAirSpeed, rules);
+    vx = approach(vx, targetAirVx, rules.airAccel);
 
     if (downFlick && vy < fixed.zero) fastFalling = true;
     if (fastFalling) {
-      vy = fixed.mul(fixed.fromInt(-1), K1_MOVEMENT.fastFallSpeed);
+      vy = fixed.mul(fixed.fromInt(-1), rules.fastFallSpeed);
     } else {
-      vy = fixed.sub(vy, K1_MOVEMENT.gravity);
-      const terminal = fixed.mul(fixed.fromInt(-1), K1_MOVEMENT.maxFallSpeed);
+      vy = fixed.sub(vy, rules.gravity);
+      const terminal = fixed.mul(fixed.fromInt(-1), rules.maxFallSpeed);
       if (vy < terminal) vy = terminal;
     }
   }
