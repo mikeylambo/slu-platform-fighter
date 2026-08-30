@@ -20,9 +20,9 @@ function createTrainingLedges(): StageLedge[] {
   ];
 }
 
-export function createFighterState(id: string, x = fixed.fromInt(-10), facing: -1 | 1 = 1): FighterState {
+export function createFighterState(id: string, x = fixed.fromInt(-10), facing: -1 | 1 = 1, definitionId = 'greybox'): FighterState {
   return {
-    id, x, y: GROUND_Y, vx: fixed.zero, vy: fixed.zero,
+    id, definitionId, x, y: GROUND_Y, vx: fixed.zero, vy: fixed.zero,
     grounded: true, groundSurfaceId: 'ground', facing,
     locomotion: 'idle', locomotionFrame: 0, jumpsRemaining: 1, fastFalling: false,
     dropThroughFrames: 0, jumpBufferFrames: 0, inputHistory: [], ledgeId: null,
