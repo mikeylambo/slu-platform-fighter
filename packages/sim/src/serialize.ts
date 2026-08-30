@@ -1,6 +1,6 @@
 import type { FighterState, LocomotionState, MatchRuntimeState, OwnedEntityState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
 
-export const WORLD_BINARY_VERSION = 12;
+export const WORLD_BINARY_VERSION = 13;
 
 const locomotionCode: Record<LocomotionState, number> = {
   idle: 0, walk: 1, dash: 2, run: 3, turn: 4, crouch: 5, 'jump-squat': 6, airborne: 7,
@@ -116,6 +116,7 @@ function writeMatch(writer: ByteWriter, match: MatchRuntimeState | undefined) {
   const scores = Object.entries(match.scores).sort(([a], [b]) => a.localeCompare(b));
   writer.u16(scores.length);
   for (const [participantId, score] of scores) { writer.string(participantId); writer.i32(score); }
+  writeOptionalString(writer, match.winningTeamId);
   writer.bool(match.suddenDeath);
   writer.bool(match.ended);
 }
