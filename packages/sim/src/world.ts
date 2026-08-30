@@ -30,6 +30,7 @@ export function createFighterState(id: string, x = fixed.fromInt(-10), facing: -
     percentTenths: 0, hitlagFrames: 0, hitstunFrames: 0, attack: null,
     shielding: false, shieldHealth: DEFAULT_SHIELD_HEALTH, shieldStunFrames: 0, shieldRegenDelayFrames: 0,
     grabTargetId: null, grabbedById: null, grabFrames: 0, grabAction: null,
+    lastHitById: null, lastHitFrame: -1,
     stocks: DEFAULT_STOCKS, eliminated: false, respawnFrames: 0,
   };
 }
