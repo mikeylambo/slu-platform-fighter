@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import { serializeWorldState } from './serialize.js';
+import { hashWorldState } from './stateHash.js';
 import { restoreWorld, snapshotWorld } from './world.js';
 import type { SimInputFrame, WorldSnapshot, WorldState } from './types.js';
 
@@ -25,7 +24,7 @@ export interface ReplayCheckpoint {
   /** State ready to simulate this frame. */
   frame: number;
   snapshot: WorldSnapshot;
-  sha256: string;
+  hash: string;
 }
 
 export interface ReplayTape {
@@ -35,15 +34,8 @@ export interface ReplayTape {
   checkpoints: readonly ReplayCheckpoint[];
 }
 
-export interface ReplayStepResult<TEvent = unknown> {
-  state: WorldState;
-  events: readonly TEvent[];
-}
+export interface ReplayStepResult<TEvent = unknown> { state: WorldState; events: readonly TEvent[]; }
 export type ReplayStep<TEvent = unknown> = (state: WorldState, input: ReplayFrame) => ReplayStepResult<TEvent>;
-
-function worldHash(state: WorldState): string {
-  return createHash('sha256').update(serializeWorldState(state)).digest('hex');
-}
 
 function cloneInput(input: SimInputFrame): SimInputFrame { return { ...input }; }
 function cloneFrame(frame: ReplayFrame): ReplayFrame {
@@ -52,7 +44,7 @@ function cloneFrame(frame: ReplayFrame): ReplayFrame {
   return { frame: frame.frame, byFighterId };
 }
 function checkpoint(state: WorldState): ReplayCheckpoint {
-  return { frame: state.frame, snapshot: snapshotWorld(state), sha256: worldHash(state) };
+  return { frame: state.frame, snapshot: snapshotWorld(state), hash: hashWorldState(state) };
 }
 
 export class ReplayRecorder {
@@ -75,19 +67,12 @@ export class ReplayRecorder {
       if (!definitionId) throw new Error(`replay missing fighter definition for participant ${id}`);
       fighterDefinitionIds[id] = definitionId;
     }
-    this.metadata = {
-      ...metadata,
-      formatVersion: REPLAY_FORMAT_VERSION,
-      seed: initialState.seed,
-      participantIds,
-      fighterDefinitionIds,
-    };
+    this.metadata = { ...metadata, formatVersion: REPLAY_FORMAT_VERSION, seed: initialState.seed, participantIds, fighterDefinitionIds };
     this.initial = checkpoint(initialState);
     this.checkpointInterval = checkpointInterval;
     this.nextFrame = initialState.frame;
   }
 
-  /** Append the input that produced resultingState. */
   append(frameInput: ReplayFrame, resultingState: WorldState): void {
     if (frameInput.frame !== this.nextFrame) throw new Error(`replay expected frame ${this.nextFrame}, got ${frameInput.frame}`);
     if (resultingState.frame !== frameInput.frame + 1) throw new Error('replay append requires resulting state exactly one frame later');
@@ -102,9 +87,7 @@ export class ReplayRecorder {
     if ((resultingState.frame - this.initial.frame) % this.checkpointInterval === 0) this.checkpoints.push(checkpoint(resultingState));
   }
 
-  finish(): ReplayTape {
-    return structuredClone({ metadata: this.metadata, initial: this.initial, frames: this.frames, checkpoints: this.checkpoints });
-  }
+  finish(): ReplayTape { return structuredClone({ metadata: this.metadata, initial: this.initial, frames: this.frames, checkpoints: this.checkpoints }); }
 }
 
 export class ReplayPlayer<TEvent = unknown> {
@@ -117,9 +100,9 @@ export class ReplayPlayer<TEvent = unknown> {
     this.tape = structuredClone(tape);
     this.step = step;
     this.frameByNumber = new Map(this.tape.frames.map((frame) => [frame.frame, frame] as const));
-    if (worldHash(restoreWorld(this.tape.initial.snapshot)) !== this.tape.initial.sha256) throw new Error('replay initial checkpoint hash mismatch');
+    if (hashWorldState(restoreWorld(this.tape.initial.snapshot)) !== this.tape.initial.hash) throw new Error('replay initial checkpoint hash mismatch');
     for (const stored of this.tape.checkpoints) {
-      if (worldHash(restoreWorld(stored.snapshot)) !== stored.sha256) throw new Error(`replay checkpoint ${stored.frame} hash mismatch`);
+      if (hashWorldState(restoreWorld(stored.snapshot)) !== stored.hash) throw new Error(`replay checkpoint ${stored.frame} hash mismatch`);
     }
   }
 
@@ -127,9 +110,7 @@ export class ReplayPlayer<TEvent = unknown> {
   get endFrame(): number { return this.tape.initial.frame + this.tape.frames.length; }
 
   private bestCheckpoint(targetFrame: number): ReplayCheckpoint {
-    const candidates = [this.tape.initial, ...this.tape.checkpoints]
-      .filter((entry) => entry.frame <= targetFrame)
-      .sort((a, b) => b.frame - a.frame);
+    const candidates = [this.tape.initial, ...this.tape.checkpoints].filter((entry) => entry.frame <= targetFrame).sort((a, b) => b.frame - a.frame);
     const best = candidates[0];
     if (!best) throw new Error(`replay target frame ${targetFrame} predates initial frame ${this.startFrame}`);
     return best;
@@ -152,4 +133,4 @@ export class ReplayPlayer<TEvent = unknown> {
   playToEnd(): WorldState { return this.seek(this.endFrame); }
 }
 
-export function replayWorldHash(state: WorldState): string { return worldHash(state); }
+export function replayWorldHash(state: WorldState): string { return hashWorldState(state); }
