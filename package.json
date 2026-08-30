@@ -22,13 +22,15 @@
     "roster:frame-data": "node scripts/frame-data.mjs --all",
     "roster:report": "node scripts/roster-readiness.mjs",
     "roster:asset-audit": "node scripts/audit-roster-assets.mjs",
+    "roster:soak": "node scripts/roster-soak-matrix.mjs",
+    "rig:check": "node scripts/rig-profiles.mjs",
     "entity:build": "node scripts/entity-packs.mjs build",
     "entity:check": "node scripts/entity-packs.mjs check",
     "stage:build": "node scripts/stage-packs.mjs build",
     "stage:check": "node scripts/stage-packs.mjs check",
     "content:doctor": "node scripts/content-doctor.mjs",
     "content:build": "npm run fighter:build && npm run entity:build && npm run stage:build",
-    "content:check": "npm run fighter:check && npm run fighter:landing:check && npm run entity:check && npm run stage:check",
+    "content:check": "npm run fighter:check && npm run fighter:landing:check && npm run rig:check && npm run entity:check && npm run stage:check",
     "fighter:audit:greybox": "blender --background --python scripts/blender/audit_fighter.py -- fighters/greybox/render.json",
     "certify:k0": "node dist/packages/certification/src/k0.js",
     "certify:k1": "node dist/packages/certification/src/k1.js",
@@ -67,8 +69,9 @@
     "certify:k31squad": "node dist/packages/certification/src/k31squad.js",
     "certify:k32encounters": "node dist/packages/certification/src/k32encounters.js",
     "certify:k33foundation": "node dist/packages/certification/src/k33foundationExtensions.js",
+    "certify:k34authoring": "node dist/packages/certification/src/k34authoringAutomation.js",
     "soak:matches": "node dist/packages/certification/src/k10soak.js",
-    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run certify:k12mixed-roster && npm run certify:k13shell && npm run certify:k14match-factory && npm run certify:k15teams && npm run certify:k16training && npm run certify:k17attribution && npm run certify:k18match-rules && npm run certify:k19execution && npm run certify:k20team-results && npm run certify:k21netcode && npm run certify:k22animation && npm run certify:k23content-fighter && npm run certify:k24aerial-landing && npm run certify:k25training-telemetry && npm run certify:k26presentation-events && npm run certify:k27stage-runtime && npm run certify:k28match-control && npm run certify:k29input && npm run certify:k30spectator && npm run certify:k31squad && npm run certify:k32encounters && npm run certify:k33foundation && npm run lab:movement:build && npm run lab:combat:build"
+    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run certify:k12mixed-roster && npm run certify:k13shell && npm run certify:k14match-factory && npm run certify:k15teams && npm run certify:k16training && npm run certify:k17attribution && npm run certify:k18match-rules && npm run certify:k19execution && npm run certify:k20team-results && npm run certify:k21netcode && npm run certify:k22animation && npm run certify:k23content-fighter && npm run certify:k24aerial-landing && npm run certify:k25training-telemetry && npm run certify:k26presentation-events && npm run certify:k27stage-runtime && npm run certify:k28match-control && npm run certify:k29input && npm run certify:k30spectator && npm run certify:k31squad && npm run certify:k32encounters && npm run certify:k33foundation && npm run certify:k34authoring && npm run lab:movement:build && npm run lab:combat:build"
   },
   "dependencies": { "three": "^0.185.0" },
   "devDependencies": { "@types/node": "^24.3.0", "@types/three": "^0.185.0", "typescript": "^5.9.2", "vite": "^7.1.3" }
