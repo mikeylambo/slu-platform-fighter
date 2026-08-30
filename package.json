@@ -12,6 +12,7 @@
     "lab:combat:build": "vite build apps/combat-lab --outDir ../../dist-combat-lab --emptyOutDir",
     "fighter:new": "node scripts/fighter-packs.mjs new",
     "fighter:seed": "node scripts/seed-fighter.mjs",
+    "roster:seed": "node scripts/seed-roster.mjs",
     "fighter:build": "node scripts/fighter-packs.mjs build",
     "fighter:check": "node scripts/fighter-packs.mjs check",
     "roster:report": "node scripts/roster-readiness.mjs",
