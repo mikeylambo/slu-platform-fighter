@@ -103,6 +103,19 @@ export interface OwnedEntityState {
   hitTargets: string[];
 }
 
+export type MatchMode = 'stock' | 'time' | 'stock-time';
+export interface MatchRuntimeState {
+  mode: MatchMode;
+  /** Remaining authoritative timer frames, or null for untimed stock matches. */
+  framesRemaining: number | null;
+  /** Participant score table used by timed/statistical match policies. */
+  scores: Record<string, number>;
+  /** True when regulation ended tied and the active policy requests a tiebreak round. */
+  suddenDeath: boolean;
+  /** True after the match director has resolved regulation or stock victory. */
+  ended: boolean;
+}
+
 export interface WorldState {
   frame: number;
   seed: number;
@@ -113,7 +126,9 @@ export interface WorldState {
   nextEntitySerial?: number;
   surfaces: StageSurface[];
   ledges: StageLedge[];
-  /** Stable winner participant id once a stock match is resolved; null while unresolved. */
+  /** Match director state. Optional only while legacy constructors migrate. */
+  match?: MatchRuntimeState;
+  /** Stable winner participant id once a match is resolved; null while unresolved/tied. */
   winnerId: string | null;
 }
 
