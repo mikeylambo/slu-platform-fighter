@@ -48,6 +48,10 @@ export interface FighterState {
   hitlagFrames: number;
   hitstunFrames: number;
   attack: FighterAttackState | null;
+  shielding: boolean;
+  shieldHealth: number;
+  shieldStunFrames: number;
+  shieldRegenDelayFrames: number;
 }
 
 export interface WorldState {
