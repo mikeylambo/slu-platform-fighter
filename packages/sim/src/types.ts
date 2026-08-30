@@ -2,7 +2,7 @@ import type { Fixed } from '../../deterministic-math/src/fixed.js';
 
 export type LocomotionState =
   | 'idle' | 'walk' | 'dash' | 'run' | 'turn' | 'crouch' | 'jump-squat' | 'airborne' | 'landing'
-  | 'ledge-hang' | 'air-dodge' | 'spot-dodge' | 'roll' | 'tech-in-place' | 'tech-roll' | 'knockdown';
+  | 'ledge-hang' | 'air-dodge' | 'spot-dodge' | 'roll' | 'tech-in-place' | 'tech-roll' | 'knockdown' | 'grabbed';
 
 export interface SimInputFrame {
   frame: number;
@@ -12,8 +12,9 @@ export interface SimInputFrame {
   moveY: number;
   jumpPressed: boolean;
   jumpHeld: boolean;
-  /** Movement-only adapters may omit this; combat adapters must provide it explicitly. */
+  /** Movement-only adapters may omit combat semantics; combat adapters should provide them explicitly. */
   attackPressed?: boolean;
+  grabPressed?: boolean;
   dodgePressed: boolean;
   shieldHeld: boolean;
 }
@@ -49,9 +50,16 @@ export interface FighterState {
   hitstunFrames: number;
   attack: FighterAttackState | null;
   shielding: boolean;
+  /** Shield health in integer simulation units. */
   shieldHealth: number;
   shieldStunFrames: number;
   shieldRegenDelayFrames: number;
+  /** Captor-side relationship; null when this fighter is not holding another fighter. */
+  grabTargetId: string | null;
+  /** Captive-side relationship; null when this fighter is not grabbed. */
+  grabbedById: string | null;
+  /** Frames elapsed in the current grab relationship. */
+  grabFrames: number;
 }
 
 export interface WorldState {
