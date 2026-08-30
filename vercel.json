@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run lab:movement:build",
-  "outputDirectory": "dist-movement-lab",
+  "buildCommand": "npm run content:build && npm run lab:combat:build",
+  "outputDirectory": "dist-combat-lab",
   "framework": null
 }
