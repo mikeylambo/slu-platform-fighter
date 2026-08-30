@@ -1,5 +1,5 @@
 import { fixed } from '../../deterministic-math/src/fixed.js';
-import { stepFighterMovement } from './movement.js';
+import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
 import type { FighterState, SimInputFrame, StageSurface, WorldSnapshot, WorldState } from './types.js';
 
 const GROUND_Y = fixed.zero;
@@ -50,7 +50,11 @@ export function createWorld(seed: number): WorldState {
   };
 }
 
-export function stepWorld(state: WorldState, input: SimInputFrame): WorldState {
+export function stepWorld(
+  state: WorldState,
+  input: SimInputFrame,
+  movementRules: MovementRules = K1_MOVEMENT,
+): WorldState {
   if (input.frame !== state.frame) {
     throw new Error(`input frame ${input.frame} does not match world frame ${state.frame}`);
   }
@@ -61,7 +65,7 @@ export function stepWorld(state: WorldState, input: SimInputFrame): WorldState {
   return {
     frame: state.frame + 1,
     seed: state.seed,
-    fighters: [stepFighterMovement(fighter, input, state.surfaces)],
+    fighters: [stepFighterMovement(fighter, input, state.surfaces, movementRules)],
     surfaces: state.surfaces,
   };
 }
