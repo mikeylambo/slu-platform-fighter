@@ -1,6 +1,6 @@
-import greybox from '../../fighters/greybox/fighter.json';
-import bruiser from '../../fighters/cert-bruiser/fighter.json';
-import stage from '../../stages/greybox/stage.json';
+import greybox from '../../fighters/greybox/fighter.json' with { type: 'json' };
+import bruiser from '../../fighters/cert-bruiser/fighter.json' with { type: 'json' };
+import stage from '../../stages/greybox/stage.json' with { type: 'json' };
 import { PlatformFighterShell } from '../../packages/shell/src/session.js';
 import { createDefaultPlayerProfile } from '../../packages/shell/src/profile.js';
 
