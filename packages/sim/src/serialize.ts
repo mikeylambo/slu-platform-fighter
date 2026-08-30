@@ -1,6 +1,6 @@
 import type { FighterState, LocomotionState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
 
-export const WORLD_BINARY_VERSION = 3;
+export const WORLD_BINARY_VERSION = 4;
 
 const locomotionCode: Record<LocomotionState, number> = {
   idle: 0, walk: 1, dash: 2, run: 3, turn: 4, crouch: 5, 'jump-squat': 6, airborne: 7,
@@ -63,6 +63,10 @@ function writeFighter(writer: ByteWriter, fighter: FighterState) {
     const hitTargets = [...fighter.attack.hitTargets].sort();
     writer.u16(hitTargets.length); for (const target of hitTargets) writer.string(target);
   }
+  writer.bool(fighter.shielding);
+  writer.u16(fighter.shieldHealth);
+  writer.u16(fighter.shieldStunFrames);
+  writer.u16(fighter.shieldRegenDelayFrames);
   if (fighter.inputHistory.length > 0xffff) throw new Error('input history exceeds binary format capacity');
   writer.u16(fighter.inputHistory.length); for (const input of fighter.inputHistory) writeInput(writer, input);
 }
