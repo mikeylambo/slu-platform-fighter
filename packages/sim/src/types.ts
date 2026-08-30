@@ -70,6 +70,10 @@ export interface FighterState {
   grabFrames: number;
   /** Fighter-authored pummel/throw timeline currently executing while holding a target. */
   grabAction: FighterGrabActionState | null;
+  /** Most recent participant to deal damaging contact, retained through launch for KO credit. */
+  lastHitById: string | null;
+  /** Simulation frame of the most recent damaging contact; -1 when none exists. */
+  lastHitFrame: number;
   /** Remaining stocks in stock-based rulesets. */
   stocks: number;
   /** True after the fighter has lost its final stock. */
