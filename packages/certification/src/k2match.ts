@@ -40,13 +40,16 @@ function grabAtFrameZero(state: WorldState): WorldState {
 }
 
 let state = createTwoFighterMatch(0x4b_32);
+const initialTargetX = state.fighters.find((fighter) => fighter.id === 'fighter-b')!.x;
 let hitObserved = false;
 for (let frame = 0; frame < 20; frame += 1) {
   const result = step(state, inputForFrame(frame)); state = result.state;
   if (result.events.some((event) => event.type === 'hit')) hitObserved = true;
 }
+const launchedTarget = state.fighters.find((fighter) => fighter.id === 'fighter-b');
 assert(hitObserved, 'authored jab must create a hit event in unified match world');
-assert(state.fighters.find((fighter) => fighter.id === 'fighter-b')?.percentTenths === 35, 'combat damage must persist in authoritative FighterState');
+assert(launchedTarget?.percentTenths === 35, 'combat damage must persist in authoritative FighterState');
+assert((launchedTarget?.x ?? initialTargetX) > initialTargetX, 'hitstun must advance authored knockback through world space after hitlag');
 
 state = createTwoFighterMatch(0x53_48_4c_44);
 let blockObserved = false;
@@ -84,19 +87,25 @@ state = grabAtFrameZero(createTwoFighterMatch(0x54_48_52_57));
 result = step(state, { frame: state.frame, byFighterId: { 'fighter-a': fighterInput(state.frame, { attackPressed: true, moveX: 1000 }), 'fighter-b': fighterInput(state.frame) } });
 state = result.state;
 assert(String(state.fighters[0]?.grabAction?.actionId ?? '') === 'greybox:forward-throw', 'forward held attack must select authored forward throw');
+const throwStartX = state.fighters[1]!.x;
 let throwObserved = false;
+let throwLaunchObserved = false;
 let throwCheckpoint = snapshotWorld(state);
 const throwHashes: string[] = [];
 for (let i = 0; i < 30; i += 1) {
   if (i === 6) throwCheckpoint = snapshotWorld(state);
   result = step(state, { frame: state.frame, byFighterId: { 'fighter-a': fighterInput(state.frame), 'fighter-b': fighterInput(state.frame) } });
   state = result.state; throwHashes.push(hash(state));
-  if (result.events.some((event) => event.type === 'throw')) throwObserved = true;
+  const throwEvent = result.events.find((event) => event.type === 'throw');
+  if (throwEvent?.type === 'throw') {
+    throwObserved = true;
+    throwLaunchObserved = throwEvent.knockbackX > fixed.zero && throwEvent.knockbackY > fixed.zero;
+  }
 }
 held = state.fighters[1]!; holder = state.fighters[0]!;
 assert(throwObserved, 'authored forward throw must emit throw event at release frame');
 assert(holder.grabTargetId === null && held.grabbedById === null, 'throw release must clear grab relationship');
-assert(held.percentTenths === 55 && held.vx > fixed.zero && held.vy > fixed.zero, 'forward throw must apply authored damage and launch');
+assert(held.percentTenths === 55 && throwLaunchObserved && held.x > throwStartX, 'forward throw must apply authored damage and produce forward-up knockback flight');
 
 let throwReplay = restoreWorld(throwCheckpoint);
 for (let i = 6; i < throwHashes.length; i += 1) {
@@ -123,5 +132,5 @@ for (let frame = 0; frame < TOTAL; frame += 1) { if (frame === SNAPSHOT) checkpo
 let replay = restoreWorld(checkpoint);
 for (let frame = SNAPSHOT; frame < TOTAL; frame += 1) { replay = step(replay, inputForFrame(frame)).state; assert(hash(replay) === hashes[frame], `movement+combat+defense resimulation diverged at frame ${frame + 1}`); }
 
-console.log(`K2 MATCH PASS — attacks, defense, grabs, authored pummels/throws, and ${TOTAL}-frame snapshot/resim certified.`);
+console.log(`K2 MATCH PASS — attacks, defense, knockback flight, grabs, authored pummels/throws, and ${TOTAL}-frame snapshot/resim certified.`);
 console.log(`Final unified state hash: ${hash(state)}`);
