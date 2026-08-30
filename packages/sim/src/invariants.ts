@@ -18,18 +18,26 @@ export function checkWorldInvariants(state: WorldState): InvariantViolation[] {
   for (const fighter of state.fighters) {
     if (fighterIds.has(fighter.id)) violations.push({ code: 'fighter.duplicate-id', fighterId: fighter.id, message: `duplicate fighter id ${fighter.id}` });
     fighterIds.add(fighter.id);
+  }
+
+  for (const fighter of state.fighters) {
     for (const [key, value] of Object.entries({
       x: fighter.x, y: fighter.y, vx: fighter.vx, vy: fighter.vy,
       percentTenths: fighter.percentTenths, hitlagFrames: fighter.hitlagFrames, hitstunFrames: fighter.hitstunFrames,
       shieldHealth: fighter.shieldHealth, shieldStunFrames: fighter.shieldStunFrames, shieldRegenDelayFrames: fighter.shieldRegenDelayFrames,
       stocks: fighter.stocks, respawnFrames: fighter.respawnFrames, invulnerableFrames: fighter.invulnerableFrames,
-      grabFrames: fighter.grabFrames,
+      grabFrames: fighter.grabFrames, lastHitFrame: fighter.lastHitFrame,
     })) {
       if (!safeInteger(value)) violations.push({ code: 'fighter.non-integer', fighterId: fighter.id, message: `${fighter.id}.${key} is not a safe integer: ${value}` });
     }
     if (fighter.percentTenths < 0) violations.push({ code: 'fighter.negative-percent', fighterId: fighter.id, message: `${fighter.id} has negative percent` });
     if (fighter.stocks < 0) violations.push({ code: 'fighter.negative-stocks', fighterId: fighter.id, message: `${fighter.id} has negative stocks` });
     if (fighter.eliminated && fighter.stocks !== 0) violations.push({ code: 'fighter.eliminated-stock', fighterId: fighter.id, message: `${fighter.id} eliminated with ${fighter.stocks} stocks` });
+    if (fighter.lastHitById === null && fighter.lastHitFrame !== -1) violations.push({ code: 'fighter.attribution-frame', fighterId: fighter.id, message: `${fighter.id} has attribution frame without attacker` });
+    if (fighter.lastHitById !== null) {
+      if (!fighterIds.has(fighter.lastHitById)) violations.push({ code: 'fighter.attribution-attacker', fighterId: fighter.id, message: `${fighter.id} credits missing attacker ${fighter.lastHitById}` });
+      if (fighter.lastHitFrame < 0 || fighter.lastHitFrame > state.frame) violations.push({ code: 'fighter.attribution-frame', fighterId: fighter.id, message: `${fighter.id} has invalid lastHitFrame ${fighter.lastHitFrame} at world frame ${state.frame}` });
+    }
     if (fighter.grabTargetId !== null) {
       const target = state.fighters.find((entry) => entry.id === fighter.grabTargetId);
       if (!target || target.grabbedById !== fighter.id) violations.push({ code: 'grab.asymmetric-captor', fighterId: fighter.id, message: `${fighter.id} holds ${fighter.grabTargetId} without reciprocal captive state` });
