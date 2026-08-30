@@ -1,6 +1,6 @@
 import type { FighterState, LocomotionState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
 
-export const WORLD_BINARY_VERSION = 7;
+export const WORLD_BINARY_VERSION = 8;
 
 const locomotionCode: Record<LocomotionState, number> = {
   idle: 0, walk: 1, dash: 2, run: 3, turn: 4, crouch: 5, 'jump-squat': 6, airborne: 7,
@@ -34,7 +34,9 @@ class ByteWriter {
 function writeInput(writer: ByteWriter, input: SimInputFrame) {
   writer.i32(input.frame); writer.i16(input.moveX); writer.i16(input.moveY);
   writer.bool(input.jumpPressed); writer.bool(input.jumpHeld); writer.bool(Boolean(input.attackPressed));
-  writer.bool(Boolean(input.grabPressed)); writer.bool(input.dodgePressed); writer.bool(input.shieldHeld);
+  writer.bool(Boolean(input.specialPressed)); writer.bool(Boolean(input.grabPressed));
+  writer.i16(input.smashX ?? 0); writer.i16(input.smashY ?? 0);
+  writer.bool(input.dodgePressed); writer.bool(input.shieldHeld);
 }
 
 function writeSurface(writer: ByteWriter, surface: StageSurface) {
