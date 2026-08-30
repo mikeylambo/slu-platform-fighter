@@ -1,6 +1,6 @@
 import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { EntityDefinition, EntitySpawnDefinition } from '../../content/src/compileEntities.js';
-import type { GrabActionDefinition, GrabActionInput } from '../../content/src/compileGrabActions.js';
+import { scopedGrabActionKey, type GrabActionDefinition, type GrabActionInput } from '../../content/src/compileGrabActions.js';
 import type { MoveRuntimeDefinition } from '../../content/src/compileMoveRuntime.js';
 import { resolveStandardAttackId } from './actionResolver.js';
 import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type CombatEvent } from './combat.js';
@@ -19,6 +19,7 @@ export interface PummelEvent { type: 'pummel'; attackerId: string; targetId: str
 export interface ThrowEvent { type: 'throw'; attackerId: string; targetId: string; actionId: string; damageTenths: number; knockbackX: Fixed; knockbackY: Fixed; hitstunFrames: number; }
 export type MatchEvent = CombatEvent | GrabEvent | GrabReleaseEvent | PummelEvent | ThrowEvent | EntityEvent | LifecycleEvent;
 export interface MatchStepResult { state: WorldState; events: MatchEvent[]; }
+export type GrabActionLookup = ReadonlyMap<GrabActionInput, GrabActionDefinition> | ReadonlyMap<string, GrabActionDefinition>;
 
 const HURTBOX_RADIUS = fixed.fromRatio(3, 4);
 const HURTBOX_OFFSET_Y = fixed.fromRatio(3, 2);
@@ -155,10 +156,15 @@ function normalizedThrowDirection(definition: Extract<GrabActionDefinition, { ki
   return { x: fixed.fromRatio(rawX, magnitude), y: fixed.fromRatio(rawY, magnitude) };
 }
 
+function findGrabAction(definitions: GrabActionLookup, definitionId: string, input: GrabActionInput): GrabActionDefinition | undefined {
+  const registry = definitions as ReadonlyMap<string, GrabActionDefinition>;
+  return registry.get(scopedGrabActionKey(definitionId, input)) ?? registry.get(input);
+}
+
 function stepGrabActions(
   fightersInput: FighterState[],
   inputs: Readonly<Record<string, SimInputFrame>>,
-  definitions: ReadonlyMap<GrabActionInput, GrabActionDefinition>,
+  definitions: GrabActionLookup,
 ): { fighters: FighterState[]; events: (PummelEvent | ThrowEvent)[] } {
   const fighters: FighterState[] = fightersInput.map((fighter) => ({ ...fighter, grabAction: fighter.grabAction ? { ...fighter.grabAction } : null }));
   const events: (PummelEvent | ThrowEvent)[] = [];
@@ -179,7 +185,7 @@ function stepGrabActions(
     const input = inputs[captor.id] ?? neutralInput(0);
 
     if (captor.grabAction === null && input.attackPressed) {
-      const selected = definitions.get(chooseGrabAction(input, captor.facing));
+      const selected = findGrabAction(definitions, captor.definitionId, chooseGrabAction(input, captor.facing));
       if (selected) captor = { ...captor, grabAction: { actionId: selected.id, frame: 0 } };
     }
     if (captor.grabAction === null) { fighters[captorIndex] = captor; continue; }
@@ -226,7 +232,7 @@ export function stepMatchWorld(
   attacks: ReadonlyMap<string, AttackDefinition>,
   defaultAttackId: string,
   movementRules: MovementRules = K1_MOVEMENT,
-  grabActions: ReadonlyMap<GrabActionInput, GrabActionDefinition> = new Map(),
+  grabActions: GrabActionLookup = new Map<GrabActionInput, GrabActionDefinition>(),
   stockRules: StockMatchRules = DEFAULT_STOCK_MATCH_RULES,
   entityDefinitions: ReadonlyMap<string, EntityDefinition> = new Map(),
   entitySpawnsByMoveId: ReadonlyMap<string, readonly EntitySpawnDefinition[]> = new Map(),
