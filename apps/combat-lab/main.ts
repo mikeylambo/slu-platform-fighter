@@ -39,13 +39,7 @@ centerPlatform.position.y = 3.86; centerPlatform.receiveShadow = true; scene.add
 const grid = new THREE.GridHelper(34, 34, 0x31405c, 0x1e2533);
 grid.rotation.x = Math.PI / 2; grid.position.z = -3.01; scene.add(grid);
 
-interface FighterVisual {
-  root: THREE.Group;
-  body: THREE.Mesh;
-  hurtbox: THREE.Mesh;
-  hitboxes: THREE.Group;
-}
-
+interface FighterVisual { root: THREE.Group; body: THREE.Mesh; hurtbox: THREE.Mesh; hitboxes: THREE.Group; }
 function createFighterVisual(bodyColor: number, accentColor: number): FighterVisual {
   const root = new THREE.Group(); scene.add(root);
   const bodyMaterial = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.45, metalness: 0.12 });
@@ -54,10 +48,7 @@ function createFighterVisual(bodyColor: number, accentColor: number): FighterVis
   body.position.y = 1.3; body.castShadow = true; root.add(body);
   const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.7), accentMaterial);
   head.position.y = 2.9; head.castShadow = true; root.add(head);
-  const hurtbox = new THREE.Mesh(
-    new THREE.SphereGeometry(0.75, 20, 14),
-    new THREE.MeshBasicMaterial({ color: 0xff7f9c, wireframe: true, transparent: true, opacity: 0.55 }),
-  );
+  const hurtbox = new THREE.Mesh(new THREE.SphereGeometry(0.75, 20, 14), new THREE.MeshBasicMaterial({ color: 0xff7f9c, wireframe: true, transparent: true, opacity: 0.55 }));
   hurtbox.position.y = 1.5; root.add(hurtbox);
   const hitboxes = new THREE.Group(); root.add(hitboxes);
   return { root, body, hurtbox, hitboxes };
@@ -68,9 +59,11 @@ const visuals = new Map<string, FighterVisual>([
   ['fighter-b', createFighterVisual(0x40495a, 0xffb65c)],
 ]);
 
-const hud = document.querySelector<HTMLDivElement>('#hud');
-const eventsHud = document.querySelector<HTMLDivElement>('#events');
-if (!hud || !eventsHud) throw new Error('Combat Lab UI missing');
+const hudElement = document.querySelector<HTMLDivElement>('#hud');
+const eventsElement = document.querySelector<HTMLDivElement>('#events');
+if (!hudElement || !eventsElement) throw new Error('Combat Lab UI missing');
+const hud: HTMLDivElement = hudElement;
+const eventsHud: HTMLDivElement = eventsElement;
 
 let world = createTwoFighterMatch(SEED);
 let previous = structuredClone(world);
@@ -130,12 +123,8 @@ function playerInput(frame: number): SimInputFrame {
     jumpHeld ||= padJump;
   }
   const input: SimInputFrame = {
-    frame, moveX, moveY,
-    jumpPressed: jumpLatch,
-    jumpHeld,
-    attackPressed: attackLatch,
-    dodgePressed: dodgeLatch,
-    shieldHeld: false,
+    frame, moveX, moveY, jumpPressed: jumpLatch, jumpHeld,
+    attackPressed: attackLatch, dodgePressed: dodgeLatch, shieldHeld: false,
   };
   jumpLatch = attackLatch = dodgeLatch = false;
   return input;
@@ -164,13 +153,11 @@ function drawHitboxes(fighter: FighterState, visual: FighterVisual) {
   if (!fighter.attack) return;
   const attack: AttackDefinition | undefined = attacks.get(fighter.attack.attackId);
   if (!attack) return;
-  const active = attack.hitboxes.filter((window) => fighter.attack && fighter.attack.frame >= window.startFrame && fighter.attack.frame <= window.endFrame);
+  const attackFrame = fighter.attack.frame;
+  const active = attack.hitboxes.filter((window) => attackFrame >= window.startFrame && attackFrame <= window.endFrame);
   for (const window of active) {
     const hitbox = window.hitbox;
-    const mesh = new THREE.Mesh(
-      new THREE.SphereGeometry(fixed.toNumber(hitbox.radius), 20, 14),
-      new THREE.MeshBasicMaterial({ color: 0xff4d67, wireframe: true }),
-    );
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(fixed.toNumber(hitbox.radius), 20, 14), new THREE.MeshBasicMaterial({ color: 0xff4d67, wireframe: true }));
     mesh.position.set(fixed.toNumber(hitbox.offsetX), fixed.toNumber(hitbox.offsetY), 0);
     visual.hitboxes.add(mesh);
   }
@@ -199,11 +186,11 @@ function renderHud() {
     'SLU PLATFORM FIGHTER — K2 COMBAT LAB',
     `frame      ${world.frame}`,
     '',
-    `P1 ${ (a.percentTenths / 10).toFixed(1).padStart(5) }%  ${a.locomotion}`,
+    `P1 ${(a.percentTenths / 10).toFixed(1).padStart(5)}%  ${a.locomotion}`,
     `   attack   ${a.attack ? `${a.attack.attackId} [${a.attack.frame}]` : 'none'}`,
     `   hitlag   ${a.hitlagFrames}  hitstun ${a.hitstunFrames}`,
     '',
-    `P2 ${ (b.percentTenths / 10).toFixed(1).padStart(5) }%  ${b.locomotion}`,
+    `P2 ${(b.percentTenths / 10).toFixed(1).padStart(5)}%  ${b.locomotion}`,
     `   attack   ${b.attack ? `${b.attack.attackId} [${b.attack.frame}]` : 'none'}`,
     `   hitlag   ${b.hitlagFrames}  hitstun ${b.hitstunFrames}`,
     '',
