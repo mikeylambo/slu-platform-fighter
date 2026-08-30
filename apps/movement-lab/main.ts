@@ -81,8 +81,9 @@ debugGrid.rotation.x = Math.PI / 2;
 debugGrid.position.z = -3.01;
 scene.add(debugGrid);
 
-const hud = document.querySelector<HTMLDivElement>('#hud');
-if (!hud) throw new Error('Movement Lab HUD missing');
+const hudElement = document.querySelector<HTMLDivElement>('#hud');
+if (!hudElement) throw new Error('Movement Lab HUD missing');
+const hud: HTMLDivElement = hudElement;
 
 let world = createWorld(0x51_4c_55);
 let previousWorld = structuredClone(world);
