@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { fixed } from '../../packages/deterministic-math/src/fixed.js';
 import { compileFighterAttacks } from '../../packages/content/src/compileMoves.js';
 import { ALL_FIGHTER_PACKS } from '../../packages/content/src/generated/fighterRegistry.js';
-import { createTwoFighterMatch, stepMatchWorld } from '../../packages/sim/src/match.js';
-import type { AttackDefinition, CombatEvent } from '../../packages/sim/src/combat.js';
+import { createTwoFighterMatch, stepMatchWorld, type MatchEvent } from '../../packages/sim/src/match.js';
+import type { AttackDefinition } from '../../packages/sim/src/combat.js';
 import type { FighterState, SimInputFrame } from '../../packages/sim/src/types.js';
 
 const SIM_HZ = 60;
@@ -76,31 +76,36 @@ let stepRequested = false;
 const keys = new Set<string>();
 let jumpLatch = false;
 let attackLatch = false;
+let grabLatch = false;
 let dodgeLatch = false;
 let priorPadJump = false;
 let priorPadAttack = false;
+let priorPadGrab = false;
 let priorPadDodge = false;
-let lastEvent: CombatEvent | null = null;
+let lastEvent: MatchEvent | null = null;
 let flashFrames = 0;
 let dummyShield = false;
 let dummyAttackLatch = false;
+let dummyGrabLatch = false;
 
 function reset() {
   world = createTwoFighterMatch(SEED);
   previous = structuredClone(world);
   accumulator = 0;
-  jumpLatch = attackLatch = dodgeLatch = dummyAttackLatch = false;
+  jumpLatch = attackLatch = grabLatch = dodgeLatch = dummyAttackLatch = dummyGrabLatch = false;
   lastEvent = null;
   flashFrames = 0;
-  eventsHud.textContent = 'NO COMBAT EVENTS YET';
+  eventsHud.textContent = 'NO MATCH EVENTS YET';
 }
 
 addEventListener('keydown', (event) => {
   if (!event.repeat && event.code === 'Space') jumpLatch = true;
   if (!event.repeat && event.code === 'KeyF') attackLatch = true;
+  if (!event.repeat && event.code === 'KeyE') grabLatch = true;
   if (!event.repeat && event.code === 'KeyK') dodgeLatch = true;
   if (!event.repeat && event.code === 'KeyH') dummyShield = !dummyShield;
   if (!event.repeat && event.code === 'KeyG') dummyAttackLatch = true;
+  if (!event.repeat && event.code === 'KeyT') dummyGrabLatch = true;
   if (!event.repeat && event.code === 'KeyR') reset();
   if (!event.repeat && event.code === 'KeyP') paused = !paused;
   if (!event.repeat && event.code === 'Period') stepRequested = true;
@@ -122,19 +127,21 @@ function playerInput(frame: number): SimInputFrame {
     if (Math.abs(pad.axes[1] ?? 0) >= 0.12) moveY = quantize(-(pad.axes[1] ?? 0));
     const padJump = Boolean(pad.buttons[0]?.pressed);
     const padAttack = Boolean(pad.buttons[2]?.pressed);
+    const padGrab = Boolean(pad.buttons[3]?.pressed);
     const padDodge = Boolean(pad.buttons[1]?.pressed);
     if (padJump && !priorPadJump) jumpLatch = true;
     if (padAttack && !priorPadAttack) attackLatch = true;
+    if (padGrab && !priorPadGrab) grabLatch = true;
     if (padDodge && !priorPadDodge) dodgeLatch = true;
-    priorPadJump = padJump; priorPadAttack = padAttack; priorPadDodge = padDodge;
+    priorPadJump = padJump; priorPadAttack = padAttack; priorPadGrab = padGrab; priorPadDodge = padDodge;
     jumpHeld ||= padJump;
     shieldHeld ||= Boolean(pad.buttons[5]?.pressed);
   }
   const input: SimInputFrame = {
     frame, moveX, moveY, jumpPressed: jumpLatch, jumpHeld,
-    attackPressed: attackLatch, dodgePressed: dodgeLatch, shieldHeld,
+    attackPressed: attackLatch, grabPressed: grabLatch, dodgePressed: dodgeLatch, shieldHeld,
   };
-  jumpLatch = attackLatch = dodgeLatch = false;
+  jumpLatch = attackLatch = grabLatch = dodgeLatch = false;
   return input;
 }
 
@@ -143,10 +150,12 @@ function dummyInput(frame: number): SimInputFrame {
     frame, moveX: 0, moveY: 0,
     jumpPressed: false, jumpHeld: false,
     attackPressed: dummyAttackLatch,
+    grabPressed: dummyGrabLatch,
     dodgePressed: false,
     shieldHeld: dummyShield,
   };
   dummyAttackLatch = false;
+  dummyGrabLatch = false;
   return input;
 }
 
@@ -193,14 +202,16 @@ function interpolateFighter(id: string, alpha: number) {
   visual.shield.visible = current.shielding;
   const shieldScale = 0.65 + (current.shieldHealth / 600) * 0.35;
   visual.shield.scale.setScalar(shieldScale);
-  visual.body.rotation.z = current.attack ? -current.facing * 0.13 * Math.sin((current.attack.frame / 18) * Math.PI) : 0;
+  visual.body.rotation.z = current.attack ? -current.facing * 0.13 * Math.sin((current.attack.frame / 18) * Math.PI) : current.grabTargetId ? -current.facing * 0.16 : 0;
   drawHitboxes(current, visual);
 }
 
 function fighterHud(label: string, fighter: FighterState): string[] {
+  const grab = fighter.grabTargetId ? `holding ${fighter.grabTargetId} [${fighter.grabFrames}]` : fighter.grabbedById ? `grabbed by ${fighter.grabbedById} [${fighter.grabFrames}]` : 'none';
   return [
     `${label} ${(fighter.percentTenths / 10).toFixed(1).padStart(5)}%  ${fighter.locomotion}`,
     `   attack   ${fighter.attack ? `${fighter.attack.attackId} [${fighter.attack.frame}]` : 'none'}`,
+    `   grab     ${grab}`,
     `   hitlag   ${fighter.hitlagFrames}  hitstun ${fighter.hitstunFrames}`,
     `   shield   ${fighter.shielding ? 'ON ' : 'off'} ${String(fighter.shieldHealth).padStart(3)}  stun ${fighter.shieldStunFrames}  regen ${fighter.shieldRegenDelayFrames}`,
   ];
@@ -231,13 +242,18 @@ function renderHud() {
       `damage ${(lastEvent.damageTenths / 10).toFixed(1)}%`,
       `hitlag ${lastEvent.hitlagFrames} / hitstun ${lastEvent.hitstunFrames}`,
     ].join('\n');
-  } else {
+  } else if (lastEvent.type === 'block') {
     eventsHud.textContent = [
       lastEvent.broken ? 'SHIELD BREAK!' : flashFrames > 0 ? 'BLOCK!' : 'LAST BLOCK',
       `${lastEvent.attackerId} → ${lastEvent.targetId}`,
       `${lastEvent.attackId} / ${lastEvent.hitboxId}`,
       `shield -${lastEvent.shieldDamage} → ${lastEvent.shieldHealthAfter}`,
       `shieldstun ${lastEvent.shieldStunFrames}`,
+    ].join('\n');
+  } else {
+    eventsHud.textContent = [
+      lastEvent.type === 'grab' ? (flashFrames > 0 ? 'GRAB!' : 'LAST GRAB') : 'GRAB RELEASE',
+      `${lastEvent.attackerId} → ${lastEvent.targetId}`,
     ].join('\n');
   }
 }
