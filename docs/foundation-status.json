@@ -1,26 +1,39 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "asOf": "2026-08-30",
   "definition": "docs/production-completion-gate.md",
-  "status": "in-progress",
-  "certifiedThrough": "K27",
-  "areas": {
-    "deterministicKernel": {"state": "complete", "evidence": ["K0", "K8", "K9"]},
-    "fighterLocomotion": {"state": "partial", "evidence": ["K1", "K1b", "K3 knockback", "K24"], "remaining": ["full ledge getup/roll/attack/drop routing", "explicit wall cling/jump policy completion", "hard-landing policy"]},
-    "combatInteraction": {"state": "partial", "evidence": ["K2", "K2 Match", "K7", "K24"], "remaining": ["jab-chain/rapid-jab routing", "smash charge", "hurtbox timeline mutation", "weight/scaling runtime hook", "clank/trade priority", "armor/superarmor/intangibility semantics", "parry policy", "grab escape", "optional stale/rage modifiers"]},
-    "matchLifecycle": {"state": "near-complete", "evidence": ["K3 lifecycle", "K17", "K18", "K20"], "remaining": ["pause/disconnect/controller-loss policy"]},
-    "stageRuntime": {"state": "partial", "evidence": ["K4", "K11", "K27"], "remaining": ["hazard effect payload/runtime", "stage-owned entities/triggers", "stage authoring lab/editor"]},
-    "entitiesAndItems": {"state": "partial", "evidence": ["K6"], "remaining": ["entity command/despawn execution breadth", "reflection/absorption hooks", "generic items", "item spawn tables/rules"]},
-    "presentationAnimation": {"state": "near-complete", "evidence": ["K11", "K22", "K26"], "remaining": ["root-motion policy enforcement", "hitstop/camera/VFX emphasis hooks", "held-item socket usage"]},
-    "contentPipeline": {"state": "near-complete", "evidence": ["K12", "K23"], "remaining": ["custom-rig profile path", "bulk Blender audit orchestration", "release-grade asset certification run"]},
-    "trainingLabs": {"state": "partial", "evidence": ["K16", "K25"], "remaining": ["dummy tech presets", "dummy attack playback", "lab replay playback", "controller diagnostics/remapping UI"]},
-    "cpuAutomation": {"state": "partial", "evidence": ["K10"], "remaining": ["recovery/defense/grab behavior expansion", "scriptable scenario-bot catalog", "large roster matchup soak matrix"]},
-    "replayRollbackOnline": {"state": "near-complete", "evidence": ["K8", "K9", "K21"], "remaining": ["spectator feed", "concrete transport/lobby/relay integration deferred from foundation core"]},
-    "playerShell": {"state": "partial", "evidence": ["K13", "K14", "K19"], "remaining": ["visual title/menu/settings", "controller assignment/remapping", "online lobby path", "squad/crew format", "challenge/event framework", "adventure encounter framework", "replay/statistics surfaces", "unlock/reward/customization/accessibility/save migration"]}
+  "status": "roster-production-ready-universal-rules-in-progress",
+  "certifiedBaseline": "K0-K35 (latest cumulative head subject to CI on newest commits)",
+  "gates": {
+    "rosterProductionReady": {
+      "state": "ready-pending-first-real-asset-proof",
+      "meaning": "A conventional fighter can enter the shared seed -> rig -> animate -> author -> tune -> certify pipeline without declaring fighter-specific engine work.",
+      "remaining": ["Run one actual roster character GLB/rig/clip set through fighter:autobind, fighter:audit, fighter:handoff and a playable match as final physical integration proof."]
+    },
+    "universalRulesComplete": {
+      "state": "in-progress",
+      "meaning": "Every optional/shared rule in docs/production-completion-gate.md is executable and certified independent of any one fighter."
+    }
   },
-  "policyBlocked": {
-    "hazardEffects": "Current stage schema authors cadence/shape/kind but no damage or launch magnitudes; do not invent effect values.",
-    "armorAndCancels": "Timeline event names exist but payload/priority semantics are not yet explicit; define generic policy contract before runtime behavior.",
-    "parry": "Ruleset field/policy timing and reward behavior must remain parameterized rather than hidden in combat code."
+  "areas": {
+    "deterministicKernel": {"state": "complete", "evidence": ["K0", "K8", "K9", "binary snapshots", "state hashes"]},
+    "fighterLocomotion": {"state": "partial", "evidence": ["K1", "K1b", "K3 knockback", "K24"], "remaining": ["neutral ledge getup/roll/attack routing", "wall collision -> jump/cling execution", "explicit hard-landing policy"]},
+    "combatInteraction": {"state": "near-complete", "evidence": ["K2", "K2 Match", "K5", "K7", "K24", "K35"], "completedSincePrior": ["authored hurtbox mutation", "armor/super-armor timeline semantics", "authored cancel windows"], "remaining": ["jab-chain/rapid-jab sequencing", "smash charge", "weight/scaling ruleset application", "clank/trade priority", "parry/perfect-shield execution", "grab escape/mash policy", "optional stale/comeback runtime modifiers"]},
+    "matchLifecycle": {"state": "complete-foundation", "evidence": ["K3 lifecycle", "K17", "K18", "K20", "K28"]},
+    "stageRuntime": {"state": "near-complete", "evidence": ["K4", "K11", "K27", "Stage Lab", "stage:seed", "stage:handoff"], "remaining": ["compose authored hazard effects into canonical match", "generic stage-owned triggers/entities"]},
+    "entitiesAndItems": {"state": "partial", "evidence": ["K6", "K33 generic item contract"], "remaining": ["entity command/despawn breadth", "reflection/absorption", "item state in canonical WorldState/rollback", "item spawn/use collision integration"]},
+    "presentationAnimation": {"state": "complete-foundation", "evidence": ["K11", "K22", "K26", "K33 presentation policies", "generic GLB fighter view", "85-role contract", "root-motion enforcement"]},
+    "contentPipeline": {"state": "ready-pending-real-asset", "evidence": ["K12", "K23", "custom rig profiles", "bulk Blender audit", "fighter:handoff", "stage:seed", "stage:handoff"], "remaining": ["first actual roster model/rig/animation certification"]},
+    "trainingLabs": {"state": "near-complete", "evidence": ["K16", "K25", "K29", "K34", "Movement Lab", "Combat Lab"], "remaining": ["direct replay playback controls inside lab UI", "visual input-remap editor polish"]},
+    "cpuAutomation": {"state": "near-complete", "evidence": ["K10", "K34", "scenario bot catalog", "roster soak orchestration"], "remaining": ["true per-matchup mixed-roster soak CLI rather than equivalent-volume universal soak"]},
+    "replayRollbackOnline": {"state": "complete-foundation", "evidence": ["K8", "K9", "K21", "K30"], "deferredPlatformIntegration": ["production lobby/matchmaking/relay/moderation service selection"]},
+    "playerShell": {"state": "complete-foundation", "evidence": ["K13", "K14", "K19", "K28", "K31", "K32", "Shell Lab", "versioned profile/accessibility/unlocks/stats"], "deferredPlatformIntegration": ["production online service UI and store/platform account surfaces"]}
+  },
+  "policyStatus": {
+    "hazardEffects": "Generic authored effect policy exists; canonical match composition remains.",
+    "armorAndCancels": "Explicit payload semantics compile and execute in production match composition.",
+    "hurtboxMutation": "Per-instance authored keyframes are projected into combat collision without extra rollback state.",
+    "parry": "Policy contract exists; actual shield-contact execution remains universal engine work.",
+    "items": "Generic definition/state/spawn/use contracts exist; authoritative match/rollback integration remains."
   }
 }
