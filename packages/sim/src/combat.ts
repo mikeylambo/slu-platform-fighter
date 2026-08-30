@@ -14,23 +14,9 @@ export interface HitboxDefinition {
   hitstunFrames: number;
 }
 
-export interface HitboxWindow {
-  startFrame: number;
-  endFrame: number;
-  hitbox: HitboxDefinition;
-}
-
-export interface AttackDefinition {
-  id: string;
-  totalFrames: number;
-  hitboxes: HitboxWindow[];
-}
-
-export interface CombatAttackState {
-  attackId: string;
-  frame: number;
-  hitTargets: string[];
-}
+export interface HitboxWindow { startFrame: number; endFrame: number; hitbox: HitboxDefinition; }
+export interface AttackDefinition { id: string; totalFrames: number; hitboxes: HitboxWindow[]; }
+export interface CombatAttackState { attackId: string; frame: number; hitTargets: string[]; }
 
 export interface CombatantState {
   id: string;
@@ -60,10 +46,7 @@ export interface HitEvent {
   hitstunFrames: number;
 }
 
-export interface CombatStepResult {
-  combatants: CombatantState[];
-  events: HitEvent[];
-}
+export interface CombatStepResult { combatants: CombatantState[]; events: HitEvent[]; }
 
 export function beginAttack(combatant: CombatantState, attackId: string): CombatantState {
   if (combatant.hitlagFrames > 0 || combatant.hitstunFrames > 0) return combatant;
@@ -81,18 +64,14 @@ function circlesOverlap(ax: Fixed, ay: Fixed, ar: Fixed, bx: Fixed, by: Fixed, b
   const dx = fixed.sub(ax, bx);
   const dy = fixed.sub(ay, by);
   const radius = fixed.add(ar, br);
-  const distanceSquared = fixed.add(fixed.mul(dx, dx), fixed.mul(dy, dy));
-  return distanceSquared <= fixed.mul(radius, radius);
+  return fixed.add(fixed.mul(dx, dx), fixed.mul(dy, dy)) <= fixed.mul(radius, radius);
 }
 
 function normalizedDirection(hitbox: HitboxDefinition, facing: -1 | 1): { x: Fixed; y: Fixed } {
   const rawX = hitbox.directionX * facing;
   const rawY = hitbox.directionY;
   const magnitude = Math.max(Math.abs(rawX), Math.abs(rawY), 1);
-  return {
-    x: fixed.fromRatio(rawX, magnitude),
-    y: fixed.fromRatio(rawY, magnitude),
-  };
+  return { x: fixed.fromRatio(rawX, magnitude), y: fixed.fromRatio(rawY, magnitude) };
 }
 
 function knockbackMagnitude(hitbox: HitboxDefinition, targetPercentTenths: number): Fixed {
@@ -107,7 +86,6 @@ function resolveOneHit(attacker: CombatantState, target: CombatantState, hitbox:
   const knockbackX = fixed.mul(direction.x, magnitude);
   const knockbackY = fixed.mul(direction.y, magnitude);
   const hitTargets = attacker.attack ? [...attacker.attack.hitTargets, target.id].sort() : [target.id];
-
   return {
     attacker: {
       ...attacker,
@@ -124,16 +102,9 @@ function resolveOneHit(attacker: CombatantState, target: CombatantState, hitbox:
       attack: null,
     },
     event: {
-      type: 'hit',
-      attackerId: attacker.id,
-      targetId: target.id,
-      attackId,
-      hitboxId: hitbox.id,
-      damageTenths: hitbox.damageTenths,
-      knockbackX,
-      knockbackY,
-      hitlagFrames: hitbox.hitlagFrames,
-      hitstunFrames: hitbox.hitstunFrames,
+      type: 'hit', attackerId: attacker.id, targetId: target.id, attackId, hitboxId: hitbox.id,
+      damageTenths: hitbox.damageTenths, knockbackX, knockbackY,
+      hitlagFrames: hitbox.hitlagFrames, hitstunFrames: hitbox.hitstunFrames,
     },
   };
 }
@@ -153,14 +124,12 @@ export function stepCombatFrame(combatantsInput: CombatantState[], attacks: Read
     for (const hitbox of activeHitboxes(attack, attacker.attack.frame)) {
       const hitboxX = fixed.add(attacker.x, fixed.mul(hitbox.offsetX, fixed.fromInt(attacker.facing)));
       const hitboxY = fixed.add(attacker.y, hitbox.offsetY);
-
       for (let targetIndex = 0; targetIndex < combatants.length; targetIndex += 1) {
         if (targetIndex === attackerIndex) continue;
         const target = combatants[targetIndex];
-        if (!target || attacker.attack.hitTargets.includes(target.id)) continue;
+        if (!target || attacker.attack?.hitTargets.includes(target.id)) continue;
         const hurtboxY = fixed.add(target.y, target.hurtboxOffsetY);
         if (!circlesOverlap(hitboxX, hitboxY, hitbox.radius, target.x, hurtboxY, target.hurtboxRadius)) continue;
-
         const resolved = resolveOneHit(attacker, target, hitbox, attack.id);
         attacker = resolved.attacker;
         combatants[attackerIndex] = attacker;
@@ -187,6 +156,5 @@ export function stepCombatFrame(combatantsInput: CombatantState[], attacks: Read
     }
     combatants[index] = { ...combatant, hitstunFrames: nextHitstun, attack };
   }
-
   return { combatants, events };
 }
