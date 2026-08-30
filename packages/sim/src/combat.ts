@@ -181,18 +181,19 @@ export function stepCombatFrame(
   attacks: ReadonlyMap<string, AttackDefinition>,
   defenseRules: CombatDefenseRules = K2_DEFENSE,
 ): CombatStepResult {
-  const combatants = [...combatantsInput]
+  const combatants: CombatantState[] = [...combatantsInput]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((combatant) => ({ ...combatant, attack: combatant.attack ? { ...combatant.attack, hitTargets: [...combatant.attack.hitTargets] } : null }));
   const events: CombatEvent[] = [];
 
   for (let attackerIndex = 0; attackerIndex < combatants.length; attackerIndex += 1) {
-    let attacker = combatants[attackerIndex];
-    if (!attacker || attacker.hitlagFrames > 0 || !attacker.attack) continue;
-    const attack = attacks.get(attacker.attack.attackId);
-    if (!attack) throw new Error(`missing attack definition ${attacker.attack.attackId}`);
+    const initialAttacker = combatants[attackerIndex];
+    if (!initialAttacker || initialAttacker.hitlagFrames > 0 || !initialAttacker.attack) continue;
+    let attacker: CombatantState = initialAttacker;
+    const attack = attacks.get(initialAttacker.attack.attackId);
+    if (!attack) throw new Error(`missing attack definition ${initialAttacker.attack.attackId}`);
 
-    for (const hitbox of activeHitboxes(attack, attacker.attack.frame)) {
+    for (const hitbox of activeHitboxes(attack, initialAttacker.attack.frame)) {
       const hitboxX = fixed.add(attacker.x, fixed.mul(hitbox.offsetX, fixed.fromInt(attacker.facing)));
       const hitboxY = fixed.add(attacker.y, hitbox.offsetY);
       for (let targetIndex = 0; targetIndex < combatants.length; targetIndex += 1) {
@@ -201,7 +202,7 @@ export function stepCombatFrame(
         if (!target || target.invulnerableFrames > 0 || attacker.attack?.hitTargets.includes(target.id)) continue;
         const hurtboxY = fixed.add(target.y, target.hurtboxOffsetY);
         if (!circlesOverlap(hitboxX, hitboxY, hitbox.radius, target.x, hurtboxY, target.hurtboxRadius)) continue;
-        const resolved = target.shielding && target.shieldHealth > 0
+        const resolved: { attacker: CombatantState; target: CombatantState; event: CombatEvent } = target.shielding && target.shieldHealth > 0
           ? resolveBlock(attacker, target, hitbox, attack.id, defenseRules)
           : resolveOneHit(attacker, target, hitbox, attack.id);
         attacker = resolved.attacker;
@@ -225,12 +226,12 @@ export function stepCombatFrame(
     const nextShieldHealth = !combatant.shielding && nextRegenDelay === 0
       ? Math.min(defenseRules.shieldMaxHealth, combatant.shieldHealth + defenseRules.shieldRegenPerFrame)
       : combatant.shieldHealth;
-    let attack = combatant.attack;
-    if (attack) {
-      const definition = attacks.get(attack.attackId);
-      if (!definition) throw new Error(`missing attack definition ${attack.attackId}`);
-      const nextFrame = attack.frame + 1;
-      attack = nextFrame >= definition.totalFrames ? null : { ...attack, frame: nextFrame };
+    let attackState = combatant.attack;
+    if (attackState) {
+      const definition = attacks.get(attackState.attackId);
+      if (!definition) throw new Error(`missing attack definition ${attackState.attackId}`);
+      const nextFrame = attackState.frame + 1;
+      attackState = nextFrame >= definition.totalFrames ? null : { ...attackState, frame: nextFrame };
     }
     combatants[index] = {
       ...combatant,
@@ -238,7 +239,7 @@ export function stepCombatFrame(
       shieldStunFrames: nextShieldStun,
       shieldRegenDelayFrames: nextRegenDelay,
       shieldHealth: nextShieldHealth,
-      attack,
+      attack: attackState,
     };
   }
   return { combatants, events };
