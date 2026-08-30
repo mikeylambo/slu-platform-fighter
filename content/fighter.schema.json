@@ -11,8 +11,7 @@
     "status": {"enum": ["draft", "playable", "certified", "release"]},
     "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
     "identity": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["displayName", "archetype", "playstyle"],
       "properties": {
         "displayName": {"type": "string", "minLength": 1},
@@ -23,8 +22,7 @@
     },
     "rigProfile": {"const": "slu-humanoid-v1"},
     "attributes": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["weight", "hurtboxWidth", "hurtboxHeight"],
       "properties": {
         "weight": {"type": "integer", "minimum": 1},
@@ -32,37 +30,23 @@
         "hurtboxHeight": {"type": "integer", "minimum": 1}
       }
     },
-    "movement": {
-      "type": "object",
-      "additionalProperties": {"type": "integer"}
-    },
-    "moves": {
-      "type": "object",
-      "additionalProperties": {"$ref": "#/$defs/move"}
-    },
-    "ownedEntities": {
-      "type": "array",
-      "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-      "uniqueItems": true
-    },
-    "palettes": {
-      "type": "object",
-      "additionalProperties": {"$ref": "#/$defs/palette"}
-    },
+    "movement": {"type": "object", "additionalProperties": {"type": "integer"}},
+    "moves": {"type": "object", "additionalProperties": {"$ref": "#/$defs/move"}},
+    "ownedEntities": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}, "uniqueItems": true},
+    "palettes": {"type": "object", "additionalProperties": {"$ref": "#/$defs/palette"}},
     "provenance": {"$ref": "#/$defs/provenance"}
   },
   "$defs": {
     "move": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["animationRole", "timeline"],
+      "type": "object", "additionalProperties": false,
+      "required": ["animationRole", "totalFrames", "timeline"],
       "properties": {
-        "animationRole": {"type": "string"},
+        "animationRole": {"type": "string", "minLength": 1},
+        "totalFrames": {"type": "integer", "minimum": 1},
         "timeline": {
           "type": "array",
           "items": {
-            "type": "object",
-            "additionalProperties": false,
+            "type": "object", "additionalProperties": false,
             "required": ["frame", "type"],
             "properties": {
               "frame": {"type": "integer", "minimum": 0},
@@ -74,8 +58,7 @@
       }
     },
     "palette": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["primary", "secondary", "accent", "skin", "hair", "metal", "energy"],
       "properties": {
         "primary": {"$ref": "#/$defs/color"}, "secondary": {"$ref": "#/$defs/color"}, "accent": {"$ref": "#/$defs/color"},
@@ -84,17 +67,12 @@
     },
     "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
     "provenance": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["code", "assets"],
-      "properties": {
-        "code": {"type": "string"},
-        "assets": {"type": "array", "items": {"$ref": "#/$defs/source"}}
-      }
+      "properties": {"code": {"type": "string"}, "assets": {"type": "array", "items": {"$ref": "#/$defs/source"}}}
     },
     "source": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["role", "name", "author", "license", "sourceUrl"],
       "properties": {
         "role": {"type": "string"}, "name": {"type": "string"}, "author": {"type": "string"}, "license": {"type": "string"},
