@@ -18,6 +18,24 @@ export interface HitboxWindow { startFrame: number; endFrame: number; hitbox: Hi
 export interface AttackDefinition { id: string; totalFrames: number; hitboxes: HitboxWindow[]; }
 export interface CombatAttackState { attackId: string; frame: number; hitTargets: string[]; }
 
+export interface CombatDefenseRules {
+  shieldMaxHealth: number;
+  shieldDamageBase: number;
+  shieldStunBaseFrames: number;
+  shieldRegenDelayFrames: number;
+  shieldRegenPerFrame: number;
+  shieldBreakStunFrames: number;
+}
+
+export const K2_DEFENSE: CombatDefenseRules = {
+  shieldMaxHealth: 600,
+  shieldDamageBase: 12,
+  shieldStunBaseFrames: 3,
+  shieldRegenDelayFrames: 45,
+  shieldRegenPerFrame: 2,
+  shieldBreakStunFrames: 90,
+};
+
 export interface CombatantState {
   id: string;
   x: Fixed;
@@ -32,6 +50,10 @@ export interface CombatantState {
   hitstunFrames: number;
   invulnerableFrames: number;
   attack: CombatAttackState | null;
+  shielding: boolean;
+  shieldHealth: number;
+  shieldStunFrames: number;
+  shieldRegenDelayFrames: number;
 }
 
 export interface HitEvent {
@@ -47,10 +69,23 @@ export interface HitEvent {
   hitstunFrames: number;
 }
 
-export interface CombatStepResult { combatants: CombatantState[]; events: HitEvent[]; }
+export interface BlockEvent {
+  type: 'block';
+  attackerId: string;
+  targetId: string;
+  attackId: string;
+  hitboxId: string;
+  shieldDamage: number;
+  shieldHealthAfter: number;
+  shieldStunFrames: number;
+  broken: boolean;
+}
+
+export type CombatEvent = HitEvent | BlockEvent;
+export interface CombatStepResult { combatants: CombatantState[]; events: CombatEvent[]; }
 
 export function beginAttack(combatant: CombatantState, attackId: string): CombatantState {
-  if (combatant.hitlagFrames > 0 || combatant.hitstunFrames > 0) return combatant;
+  if (combatant.hitlagFrames > 0 || combatant.hitstunFrames > 0 || combatant.shieldStunFrames > 0 || combatant.shielding) return combatant;
   return { ...combatant, attack: { attackId, frame: 0, hitTargets: [] } };
 }
 
@@ -80,19 +115,19 @@ function knockbackMagnitude(hitbox: HitboxDefinition, targetPercentTenths: numbe
   return fixed.add(hitbox.baseKnockback, fixed.mul(hitbox.growthPer100Percent, percentScale));
 }
 
+function appendHitTarget(attacker: CombatantState, targetId: string): CombatantState {
+  if (!attacker.attack) return attacker;
+  return { ...attacker, attack: { ...attacker.attack, hitTargets: [...attacker.attack.hitTargets, targetId].sort() } };
+}
+
 function resolveOneHit(attacker: CombatantState, target: CombatantState, hitbox: HitboxDefinition, attackId: string): { attacker: CombatantState; target: CombatantState; event: HitEvent } {
   const postDamagePercent = target.percentTenths + hitbox.damageTenths;
   const magnitude = knockbackMagnitude(hitbox, postDamagePercent);
   const direction = normalizedDirection(hitbox, attacker.facing);
   const knockbackX = fixed.mul(direction.x, magnitude);
   const knockbackY = fixed.mul(direction.y, magnitude);
-  const hitTargets = attacker.attack ? [...attacker.attack.hitTargets, target.id].sort() : [target.id];
   return {
-    attacker: {
-      ...attacker,
-      hitlagFrames: Math.max(attacker.hitlagFrames, hitbox.hitlagFrames),
-      attack: attacker.attack ? { ...attacker.attack, hitTargets } : null,
-    },
+    attacker: { ...appendHitTarget(attacker, target.id), hitlagFrames: Math.max(attacker.hitlagFrames, hitbox.hitlagFrames) },
     target: {
       ...target,
       percentTenths: postDamagePercent,
@@ -101,6 +136,7 @@ function resolveOneHit(attacker: CombatantState, target: CombatantState, hitbox:
       hitlagFrames: Math.max(target.hitlagFrames, hitbox.hitlagFrames),
       hitstunFrames: Math.max(target.hitstunFrames, hitbox.hitstunFrames),
       attack: null,
+      shielding: false,
     },
     event: {
       type: 'hit', attackerId: attacker.id, targetId: target.id, attackId, hitboxId: hitbox.id,
@@ -110,11 +146,45 @@ function resolveOneHit(attacker: CombatantState, target: CombatantState, hitbox:
   };
 }
 
-export function stepCombatFrame(combatantsInput: CombatantState[], attacks: ReadonlyMap<string, AttackDefinition>): CombatStepResult {
+function resolveBlock(
+  attacker: CombatantState,
+  target: CombatantState,
+  hitbox: HitboxDefinition,
+  attackId: string,
+  rules: CombatDefenseRules,
+): { attacker: CombatantState; target: CombatantState; event: BlockEvent } {
+  const shieldDamage = rules.shieldDamageBase + hitbox.damageTenths;
+  const shieldHealthAfter = Math.max(0, target.shieldHealth - shieldDamage);
+  const broken = shieldHealthAfter === 0;
+  const shieldStunFrames = rules.shieldStunBaseFrames + hitbox.hitlagFrames + Math.trunc(hitbox.damageTenths / 10);
+  return {
+    attacker: { ...appendHitTarget(attacker, target.id), hitlagFrames: Math.max(attacker.hitlagFrames, hitbox.hitlagFrames) },
+    target: {
+      ...target,
+      shieldHealth: shieldHealthAfter,
+      shielding: !broken,
+      shieldStunFrames: broken ? 0 : Math.max(target.shieldStunFrames, shieldStunFrames),
+      shieldRegenDelayFrames: rules.shieldRegenDelayFrames,
+      hitlagFrames: Math.max(target.hitlagFrames, hitbox.hitlagFrames),
+      hitstunFrames: broken ? Math.max(target.hitstunFrames, rules.shieldBreakStunFrames) : target.hitstunFrames,
+      attack: broken ? null : target.attack,
+    },
+    event: {
+      type: 'block', attackerId: attacker.id, targetId: target.id, attackId, hitboxId: hitbox.id,
+      shieldDamage, shieldHealthAfter, shieldStunFrames, broken,
+    },
+  };
+}
+
+export function stepCombatFrame(
+  combatantsInput: CombatantState[],
+  attacks: ReadonlyMap<string, AttackDefinition>,
+  defenseRules: CombatDefenseRules = K2_DEFENSE,
+): CombatStepResult {
   const combatants = [...combatantsInput]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((combatant) => ({ ...combatant, attack: combatant.attack ? { ...combatant.attack, hitTargets: [...combatant.attack.hitTargets] } : null }));
-  const events: HitEvent[] = [];
+  const events: CombatEvent[] = [];
 
   for (let attackerIndex = 0; attackerIndex < combatants.length; attackerIndex += 1) {
     let attacker = combatants[attackerIndex];
@@ -131,7 +201,9 @@ export function stepCombatFrame(combatantsInput: CombatantState[], attacks: Read
         if (!target || target.invulnerableFrames > 0 || attacker.attack?.hitTargets.includes(target.id)) continue;
         const hurtboxY = fixed.add(target.y, target.hurtboxOffsetY);
         if (!circlesOverlap(hitboxX, hitboxY, hitbox.radius, target.x, hurtboxY, target.hurtboxRadius)) continue;
-        const resolved = resolveOneHit(attacker, target, hitbox, attack.id);
+        const resolved = target.shielding && target.shieldHealth > 0
+          ? resolveBlock(attacker, target, hitbox, attack.id, defenseRules)
+          : resolveOneHit(attacker, target, hitbox, attack.id);
         attacker = resolved.attacker;
         combatants[attackerIndex] = attacker;
         combatants[targetIndex] = resolved.target;
@@ -148,6 +220,11 @@ export function stepCombatFrame(combatantsInput: CombatantState[], attacks: Read
       continue;
     }
     const nextHitstun = Math.max(0, combatant.hitstunFrames - 1);
+    const nextShieldStun = Math.max(0, combatant.shieldStunFrames - 1);
+    const nextRegenDelay = Math.max(0, combatant.shieldRegenDelayFrames - 1);
+    const nextShieldHealth = !combatant.shielding && nextRegenDelay === 0
+      ? Math.min(defenseRules.shieldMaxHealth, combatant.shieldHealth + defenseRules.shieldRegenPerFrame)
+      : combatant.shieldHealth;
     let attack = combatant.attack;
     if (attack) {
       const definition = attacks.get(attack.attackId);
@@ -155,7 +232,14 @@ export function stepCombatFrame(combatantsInput: CombatantState[], attacks: Read
       const nextFrame = attack.frame + 1;
       attack = nextFrame >= definition.totalFrames ? null : { ...attack, frame: nextFrame };
     }
-    combatants[index] = { ...combatant, hitstunFrames: nextHitstun, attack };
+    combatants[index] = {
+      ...combatant,
+      hitstunFrames: nextHitstun,
+      shieldStunFrames: nextShieldStun,
+      shieldRegenDelayFrames: nextRegenDelay,
+      shieldHealth: nextShieldHealth,
+      attack,
+    };
   }
   return { combatants, events };
 }
