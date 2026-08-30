@@ -116,7 +116,7 @@ function knockbackMagnitude(hitbox: HitboxDefinition, targetPercentTenths: numbe
 }
 
 function appendHitTarget(attacker: CombatantState, targetId: string): CombatantState {
-  if (!attacker.attack) return attacker;
+  if (!attacker.attack || attacker.attack.hitTargets.includes(targetId)) return attacker;
   return { ...attacker, attack: { ...attacker.attack, hitTargets: [...attacker.attack.hitTargets, targetId].sort() } };
 }
 
@@ -192,6 +192,7 @@ export function stepCombatFrame(
     let attacker: CombatantState = initialAttacker;
     const attack = attacks.get(initialAttacker.attack.attackId);
     if (!attack) throw new Error(`missing attack definition ${initialAttacker.attack.attackId}`);
+    const hitTargets = new Set(initialAttacker.attack.hitTargets);
 
     for (const hitbox of activeHitboxes(attack, initialAttacker.attack.frame)) {
       const hitboxX = fixed.add(attacker.x, fixed.mul(hitbox.offsetX, fixed.fromInt(attacker.facing)));
@@ -199,12 +200,13 @@ export function stepCombatFrame(
       for (let targetIndex = 0; targetIndex < combatants.length; targetIndex += 1) {
         if (targetIndex === attackerIndex) continue;
         const target = combatants[targetIndex];
-        if (!target || target.invulnerableFrames > 0 || attacker.attack?.hitTargets.includes(target.id)) continue;
+        if (!target || target.invulnerableFrames > 0 || hitTargets.has(target.id)) continue;
         const hurtboxY = fixed.add(target.y, target.hurtboxOffsetY);
         if (!circlesOverlap(hitboxX, hitboxY, hitbox.radius, target.x, hurtboxY, target.hurtboxRadius)) continue;
         const resolved: { attacker: CombatantState; target: CombatantState; event: CombatEvent } = target.shielding && target.shieldHealth > 0
           ? resolveBlock(attacker, target, hitbox, attack.id, defenseRules)
           : resolveOneHit(attacker, target, hitbox, attack.id);
+        hitTargets.add(target.id);
         attacker = resolved.attacker;
         combatants[attackerIndex] = attacker;
         combatants[targetIndex] = resolved.target;
