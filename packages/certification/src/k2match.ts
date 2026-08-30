@@ -20,43 +20,20 @@ const attacks = compileFighterAttacks(pack);
 const grabActions = compileFighterGrabActions(pack);
 const jabId = 'greybox:jab';
 assert(attacks.has(jabId), 'greybox jab must compile');
-for (const action of ['pummel','forward-throw','back-throw','up-throw','down-throw'] as const) {
-  assert(grabActions.has(action), `greybox ${action} must compile from fighter pack`);
-}
+for (const action of ['pummel','forward-throw','back-throw','up-throw','down-throw'] as const) assert(grabActions.has(action), `greybox ${action} must compile from fighter pack`);
 
 function fighterInput(frame: number, overrides: Partial<Omit<SimInputFrame, 'frame'>> = {}): SimInputFrame {
   return { frame, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, grabPressed: false, dodgePressed: false, shieldHeld: false, ...overrides };
 }
-
-function step(state: WorldState, input: MatchInputFrame) {
-  return stepMatchWorld(state, input, attacks, jabId, K1_MOVEMENT, grabActions);
-}
-
+function step(state: WorldState, input: MatchInputFrame) { return stepMatchWorld(state, input, attacks, jabId, K1_MOVEMENT, grabActions); }
 function inputForFrame(frame: number): MatchInputFrame {
-  return {
-    frame,
-    byFighterId: {
-      'fighter-a': fighterInput(frame, {
-        moveX: frame >= 40 && frame < 75 ? 650 : 0,
-        jumpPressed: frame === 90,
-        jumpHeld: frame >= 90 && frame < 95,
-        attackPressed: frame === 0 || frame === 130,
-        shieldHeld: frame >= 200 && frame < 220,
-      }),
-      'fighter-b': fighterInput(frame, {
-        moveX: frame >= 50 && frame < 80 ? -450 : 0,
-        dodgePressed: frame === 120,
-        attackPressed: frame === 170 || frame === 202,
-      }),
-    },
-  };
+  return { frame, byFighterId: {
+    'fighter-a': fighterInput(frame, { moveX: frame >= 40 && frame < 75 ? 650 : 0, jumpPressed: frame === 90, jumpHeld: frame >= 90 && frame < 95, attackPressed: frame === 0 || frame === 130, shieldHeld: frame >= 200 && frame < 220 }),
+    'fighter-b': fighterInput(frame, { moveX: frame >= 50 && frame < 80 ? -450 : 0, dodgePressed: frame === 120, attackPressed: frame === 170 || frame === 202 }),
+  }};
 }
-
 function hash(state: WorldState): string { return createHash('sha256').update(serializeWorldState(state)).digest('hex'); }
-function closeForGrab(state: WorldState) {
-  state.fighters[0]!.x = fixed.fromRatio(-3, 5);
-  state.fighters[1]!.x = fixed.fromRatio(3, 5);
-}
+function closeForGrab(state: WorldState) { state.fighters[0]!.x = fixed.fromRatio(-3, 5); state.fighters[1]!.x = fixed.fromRatio(3, 5); }
 function grabAtFrameZero(state: WorldState): WorldState {
   closeForGrab(state);
   return step(state, { frame: state.frame, byFighterId: { 'fighter-a': fighterInput(state.frame, { grabPressed: true }), 'fighter-b': fighterInput(state.frame, { shieldHeld: true }) } }).state;
@@ -69,8 +46,7 @@ for (let frame = 0; frame < 20; frame += 1) {
   if (result.events.some((event) => event.type === 'hit')) hitObserved = true;
 }
 assert(hitObserved, 'authored jab must create a hit event in unified match world');
-const target = state.fighters.find((fighter) => fighter.id === 'fighter-b');
-assert(target?.percentTenths === 35, 'combat damage must persist in authoritative FighterState');
+assert(state.fighters.find((fighter) => fighter.id === 'fighter-b')?.percentTenths === 35, 'combat damage must persist in authoritative FighterState');
 
 state = createTwoFighterMatch(0x53_48_4c_44);
 let blockObserved = false;
@@ -83,8 +59,7 @@ assert(blockObserved && shieldTarget?.percentTenths === 0, 'shield must block au
 assert((shieldTarget?.shieldHealth ?? K2_DEFENSE.shieldMaxHealth) < K2_DEFENSE.shieldMaxHealth, 'block must consume shield health');
 
 state = grabAtFrameZero(createTwoFighterMatch(0x47_52_41_42));
-let held = state.fighters.find((fighter) => fighter.id === 'fighter-b')!;
-let holder = state.fighters.find((fighter) => fighter.id === 'fighter-a')!;
+let held = state.fighters[1]!; let holder = state.fighters[0]!;
 assert(holder.grabTargetId === held.id && held.grabbedById === holder.id, 'grab relationship must be symmetric');
 assert(!held.shielding && held.locomotion === 'grabbed', 'grab must bypass and cancel shield');
 
@@ -124,7 +99,7 @@ assert(holder.grabTargetId === null && held.grabbedById === null, 'throw release
 assert(held.percentTenths === 55 && held.vx > fixed.zero && held.vy > fixed.zero, 'forward throw must apply authored damage and launch');
 
 let throwReplay = restoreWorld(throwCheckpoint);
-for (let i = 7; i < throwHashes.length; i += 1) {
+for (let i = 6; i < throwHashes.length; i += 1) {
   throwReplay = step(throwReplay, { frame: throwReplay.frame, byFighterId: { 'fighter-a': fighterInput(throwReplay.frame), 'fighter-b': fighterInput(throwReplay.frame) } }).state;
   assert(hash(throwReplay) === throwHashes[i], `mid-throw resimulation diverged at sample ${i}`);
 }
@@ -144,15 +119,9 @@ assert(grabReplay.fighters.every((fighter) => fighter.grabTargetId === null && f
 
 const TOTAL = 300; const SNAPSHOT = 110;
 state = createTwoFighterMatch(0x4b_32); const hashes: string[] = []; let checkpoint = snapshotWorld(state);
-for (let frame = 0; frame < TOTAL; frame += 1) {
-  if (frame === SNAPSHOT) checkpoint = snapshotWorld(state);
-  state = step(state, inputForFrame(frame)).state; hashes.push(hash(state));
-}
+for (let frame = 0; frame < TOTAL; frame += 1) { if (frame === SNAPSHOT) checkpoint = snapshotWorld(state); state = step(state, inputForFrame(frame)).state; hashes.push(hash(state)); }
 let replay = restoreWorld(checkpoint);
-for (let frame = SNAPSHOT; frame < TOTAL; frame += 1) {
-  replay = step(replay, inputForFrame(frame)).state;
-  assert(hash(replay) === hashes[frame], `movement+combat+defense resimulation diverged at frame ${frame + 1}`);
-}
+for (let frame = SNAPSHOT; frame < TOTAL; frame += 1) { replay = step(replay, inputForFrame(frame)).state; assert(hash(replay) === hashes[frame], `movement+combat+defense resimulation diverged at frame ${frame + 1}`); }
 
 console.log(`K2 MATCH PASS — attacks, defense, grabs, authored pummels/throws, and ${TOTAL}-frame snapshot/resim certified.`);
 console.log(`Final unified state hash: ${hash(state)}`);
