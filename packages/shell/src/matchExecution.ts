@@ -58,7 +58,7 @@ export function createMatchExecution(constructed: ConstructedMatch, options: Mat
   );
 
   const attributed = withDamageAttribution(rawStep, options.damageAttribution);
-  const directed = withMatchRules(attributed, options.matchRules);
+  const directed = withMatchRules(attributed, options.matchRules, teamRules);
   const initialState: WorldState = {
     ...constructed.world,
     match: createMatchRuntimeState(participantIds, options.matchRules),
