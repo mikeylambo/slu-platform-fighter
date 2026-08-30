@@ -22,6 +22,7 @@ export interface SimInputFrame {
 export interface StageSurface { id: string; kind: 'solid' | 'one-way'; y: Fixed; xMin: Fixed; xMax: Fixed; }
 export interface StageLedge { id: string; x: Fixed; y: Fixed; /** Direction toward the stage interior. */ inward: -1 | 1; }
 export interface FighterAttackState { attackId: string; frame: number; hitTargets: string[]; }
+export interface FighterGrabActionState { actionId: string; frame: number; }
 
 export interface FighterState {
   id: string;
@@ -60,6 +61,8 @@ export interface FighterState {
   grabbedById: string | null;
   /** Frames elapsed in the current grab relationship. */
   grabFrames: number;
+  /** Fighter-authored pummel/throw timeline currently executing while holding a target. */
+  grabAction: FighterGrabActionState | null;
 }
 
 export interface WorldState {
