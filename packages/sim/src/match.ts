@@ -1,5 +1,6 @@
 import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { GrabActionDefinition, GrabActionInput } from '../../content/src/compileGrabActions.js';
+import { resolveStandardAttackId } from './actionResolver.js';
 import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type CombatEvent } from './combat.js';
 import { applyDirectionalInfluence, stepHitlagSDI, stepHitstunKnockback } from './knockback.js';
 import { DEFAULT_STOCK_MATCH_RULES, stepStockLifecycle, type LifecycleEvent, type StockMatchRules } from './lifecycle.js';
@@ -24,7 +25,7 @@ export const GRAB_MAX_HOLD_FRAMES = 90;
 
 export function createTwoFighterMatch(seed: number): WorldState {
   const base = createWorld(seed);
-  return { ...base, fighters: [createFighterState('fighter-a', fixed.fromRatio(-9, 10), 1), createFighterState('fighter-b', fixed.fromRatio(9, 10), -1)] };
+  return { ...base, fighters: [createFighterState('fighter-a', fixed.fromRatio(-9, 10), 1, 'greybox'), createFighterState('fighter-b', fixed.fromRatio(9, 10), -1, 'greybox')] };
 }
 
 function combatantFromFighter(fighter: FighterState): CombatantState {
@@ -50,13 +51,17 @@ function mergeCombat(fighter: FighterState, combatant: CombatantState): FighterS
 }
 
 function neutralInput(frame: number): SimInputFrame {
-  return { frame, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, grabPressed: false, dodgePressed: false, shieldHeld: false };
+  return { frame, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, specialPressed: false, grabPressed: false, smashX: 0, smashY: 0, dodgePressed: false, shieldHeld: false };
+}
+
+function hasAttackRequest(input: SimInputFrame): boolean {
+  return Boolean(input.attackPressed || input.specialPressed || Math.abs(input.smashX ?? 0) >= 500 || Math.abs(input.smashY ?? 0) >= 500);
 }
 
 function movementInputForDefense(input: SimInputFrame, fighter: FighterState): SimInputFrame {
   const wantsShield = input.shieldHeld && fighter.grounded && fighter.shieldHealth > 0 && fighter.hitstunFrames === 0;
   if (!wantsShield || input.dodgePressed || input.grabPressed) return input;
-  return { ...input, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, grabPressed: false };
+  return { ...input, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, specialPressed: false, smashX: 0, smashY: 0, grabPressed: false };
 }
 
 function abs(value: Fixed): Fixed { return value < fixed.zero ? fixed.sub(fixed.zero, value) : value; }
@@ -227,6 +232,7 @@ export function stepMatchWorld(
     if (input.frame !== state.frame) throw new Error(`${fighter.id} input frame ${input.frame} does not match world frame ${state.frame}`);
     canonicalInputs[fighter.id] = input;
   }
+  const availableAttackIds = new Set(attacks.keys());
 
   const moved = [...state.fighters].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => {
     const input = canonicalInputs[fighter.id] ?? neutralInput(state.frame);
@@ -240,8 +246,13 @@ export function stepMatchWorld(
       : stepFighterMovement(fighter, movementInput, state.surfaces, state.ledges, movementRules);
     const canShield = input.shieldHeld && next.grounded && next.shieldHealth > 0 && next.hitstunFrames === 0 && !input.dodgePressed && !input.grabPressed && next.grabTargetId === null;
     next = { ...next, shielding: canShield };
-    if (input.attackPressed && next.attack === null && next.hitstunFrames === 0 && next.invulnerableFrames === 0 && !next.shielding && next.shieldStunFrames === 0 && next.grabTargetId === null) {
-      const started = beginAttack(combatantFromFighter(next), defaultAttackId); next = { ...next, attack: started.attack };
+    if (hasAttackRequest(input) && next.attack === null && next.hitstunFrames === 0 && next.invulnerableFrames === 0 && !next.shielding && next.shieldStunFrames === 0 && next.grabTargetId === null) {
+      const semanticAttackId = resolveStandardAttackId(next.definitionId, next, input, availableAttackIds);
+      const attackId = semanticAttackId ?? (input.attackPressed ? defaultAttackId : null);
+      if (attackId && attacks.has(attackId)) {
+        const started = beginAttack(combatantFromFighter(next), attackId);
+        next = { ...next, attack: started.attack };
+      }
     }
     return next;
   });
