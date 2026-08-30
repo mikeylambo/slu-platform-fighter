@@ -15,7 +15,12 @@ type MutableMove = {
   totalFrames: number;
   timeline: Array<{ frame: number; type: string; data?: Record<string, unknown> }>;
 };
-type MutablePack = { id: string; moves: Record<string, MutableMove> };
+type MutablePack = {
+  id: string;
+  attributes: { weight: number; hurtboxWidth: number; hurtboxHeight: number };
+  movement: Record<string, number>;
+  moves: Record<string, MutableMove>;
+};
 
 function neutral(frame: number, overrides: Partial<Omit<SimInputFrame, 'frame'>> = {}): SimInputFrame {
   return {
@@ -30,6 +35,16 @@ const greybox = ALL_FIGHTER_PACKS.find((candidate) => candidate.id === 'greybox'
 assert(greybox !== undefined, 'greybox pack must exist');
 const variant = structuredClone(greybox) as unknown as MutablePack;
 variant.id = 'cert-variant';
+variant.attributes.weight = 140000;
+variant.attributes.hurtboxWidth = 1200000;
+variant.attributes.hurtboxHeight = 2200000;
+variant.movement.walkSpeed = 650000;
+variant.movement.initialDashSpeed = 1300000;
+variant.movement.runSpeed = 1100000;
+variant.movement.fullHopVelocity = 1450000;
+variant.movement.shortHopVelocity = 1050000;
+variant.movement.gravity = 70000;
+variant.movement.airSpeed = 850000;
 for (const move of Object.values(variant.moves)) {
   move.timeline = move.timeline.filter((event) => event.type !== 'entity_spawn' && event.type !== 'entity_command');
   if (move.grabAction !== 'forward-throw') continue;
@@ -51,6 +66,9 @@ assert(runtime.fighterDefinitionIds.join(',') === 'cert-variant,greybox', 'roste
 assert(runtime.grabActions.has('greybox:forward-throw') && runtime.grabActions.has('cert-variant:forward-throw'), 'scoped grab registry must retain both fighters independent forward throws');
 assert(runtime.attacks.has('greybox:jab') && runtime.attacks.has('cert-variant:jab'), 'mixed roster must compile independently scoped standard attacks');
 assert(runtime.moveRuntime.has('greybox:up-special') && runtime.moveRuntime.has('cert-variant:up-special'), 'mixed roster must compile independently scoped move runtime definitions');
+const variantPhysics = runtime.fighterPhysics.get('cert-variant');
+assert(variantPhysics?.runSpeed === 1100000 && variantPhysics.fullHopVelocity === 1450000, 'mixed roster must compile fighter-local movement values');
+assert(variantPhysics.hurtboxWidth === 1200000 && variantPhysics.weight === 140000, 'mixed roster must compile fighter-local body and weight data');
 
 function step(world: WorldState, byFighterId: Record<string, SimInputFrame>) {
   return stepMatchWorld(
@@ -64,6 +82,7 @@ function step(world: WorldState, byFighterId: Record<string, SimInputFrame>) {
     runtime.entityDefinitions,
     runtime.entitySpawnsByMoveId,
     runtime.moveRuntime,
+    runtime.fighterPhysics,
   );
 }
 
@@ -107,4 +126,21 @@ assert(variantResult.event.actionId === 'cert-variant:forward-throw', 'variant c
 assert(variantResult.event.damageTenths === 123 && variantResult.event.hitstunFrames === 27, 'variant forward throw must use its own authored damage/hitstun rather than Greybox values');
 assert(fixed.abs(variantResult.event.knockbackX) > fixed.abs(greyResult.event.knockbackX), 'mechanically divergent fighter throw launch must remain independently authored in the shared match');
 
-console.log('K12 MIXED ROSTER PASS — two fighter definitions share one match runtime while resolving independent attacks, move timelines and scoped throw data.');
+// Fighter-local locomotion: same stick input, same universal policy, different authored stats.
+let movementWorld = createTwoFighterMatch(0x4b_12_5048);
+movementWorld.fighters[0]!.definitionId = 'greybox';
+movementWorld.fighters[1]!.definitionId = 'cert-variant';
+movementWorld.fighters[0]!.x = fixed.fromInt(-8);
+movementWorld.fighters[1]!.x = fixed.fromInt(8);
+for (let i = 0; i < 18; i += 1) {
+  const result = step(movementWorld, {
+    'fighter-a': neutral(movementWorld.frame, { moveX: 1000 }),
+    'fighter-b': neutral(movementWorld.frame, { moveX: -1000 }),
+  });
+  movementWorld = result.state;
+}
+const greyMover = movementWorld.fighters.find((fighter) => fighter.id === 'fighter-a')!;
+const variantMover = movementWorld.fighters.find((fighter) => fighter.id === 'fighter-b')!;
+assert(fixed.abs(variantMover.vx) > fixed.abs(greyMover.vx), 'same universal run policy must resolve different fighter-authored run speeds');
+
+console.log('K12 MIXED ROSTER PASS — two fighter definitions share one match while resolving independent attacks, throws, move timelines, body data and locomotion physics.');
