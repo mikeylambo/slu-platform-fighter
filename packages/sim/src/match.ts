@@ -1,7 +1,7 @@
 import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { GrabActionDefinition, GrabActionInput } from '../../content/src/compileGrabActions.js';
 import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type CombatEvent } from './combat.js';
-import { stepHitstunKnockback } from './knockback.js';
+import { applyDirectionalInfluence, stepHitlagSDI, stepHitstunKnockback } from './knockback.js';
 import { DEFAULT_STOCK_MATCH_RULES, stepStockLifecycle, type LifecycleEvent, type StockMatchRules } from './lifecycle.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
 import { createFighterState, createWorld } from './world.js';
@@ -189,16 +189,17 @@ function stepGrabActions(
       const postPercent = captive.percentTenths + definition.damageTenths;
       const magnitude = fixed.add(definition.baseKnockback, fixed.mul(definition.growthPer100Percent, fixed.fromRatio(postPercent, 1000)));
       const direction = normalizedThrowDirection(definition, captor.facing);
-      const knockbackX = fixed.mul(direction.x, magnitude);
-      const knockbackY = fixed.mul(direction.y, magnitude);
+      const baseKnockbackX = fixed.mul(direction.x, magnitude);
+      const baseKnockbackY = fixed.mul(direction.y, magnitude);
+      const influenced = applyDirectionalInfluence(baseKnockbackX, baseKnockbackY, inputs[captive.id] ?? neutralInput(0));
       captive = {
-        ...captive, percentTenths: postPercent, vx: knockbackX, vy: knockbackY,
+        ...captive, percentTenths: postPercent, vx: influenced.vx, vy: influenced.vy,
         hitstunFrames: Math.max(captive.hitstunFrames, definition.hitstunFrames), grabbedById: null, grabFrames: 0,
         locomotion: 'airborne', locomotionFrame: 0, grounded: false, groundSurfaceId: null,
       };
       captor = { ...captor, grabTargetId: null, grabFrames: 0, grabAction: null };
       fighters[captorIndex] = captor; fighters[captiveIndex] = captive;
-      events.push({ type: 'throw', attackerId: captor.id, targetId: captive.id, actionId: definition.id, damageTenths: definition.damageTenths, knockbackX, knockbackY, hitstunFrames: definition.hitstunFrames });
+      events.push({ type: 'throw', attackerId: captor.id, targetId: captive.id, actionId: definition.id, damageTenths: definition.damageTenths, knockbackX: influenced.vx, knockbackY: influenced.vy, hitstunFrames: definition.hitstunFrames });
       continue;
     }
 
@@ -230,7 +231,8 @@ export function stepMatchWorld(
   const moved = [...state.fighters].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => {
     const input = canonicalInputs[fighter.id] ?? neutralInput(state.frame);
     if (fighter.eliminated || fighter.respawnFrames > 0) return fighter;
-    if (fighter.grabbedById !== null || fighter.hitlagFrames > 0) return fighter;
+    if (fighter.grabbedById !== null) return fighter;
+    if (fighter.hitlagFrames > 0) return fighter.hitstunFrames > 0 ? stepHitlagSDI(fighter, input, movementRules) : fighter;
     if (fighter.hitstunFrames > 0) return stepHitstunKnockback({ ...fighter, shielding: false }, input, state.surfaces, movementRules);
     const movementInput = movementInputForDefense(input, fighter);
     let next = fighter.grabTargetId !== null
@@ -247,7 +249,13 @@ export function stepMatchWorld(
   const grabbed = resolveGrabAttempts(moved, canonicalInputs);
   const combatEligible = grabbed.fighters.map((fighter) => fighter.grabbedById !== null || fighter.eliminated || fighter.respawnFrames > 0 ? { ...fighter, invulnerableFrames: Math.max(1, fighter.invulnerableFrames) } : fighter);
   const combat = stepCombatFrame(combatEligible.map(combatantFromFighter), attacks);
-  const combatById = new Map(combat.combatants.map((entry) => [entry.id, entry] as const));
+  const newlyHitTargets = new Set(combat.events.filter((event): event is Extract<CombatEvent, { type: 'hit' }> => event.type === 'hit').map((event) => event.targetId));
+  const influencedCombatants = combat.combatants.map((entry) => {
+    if (!newlyHitTargets.has(entry.id)) return entry;
+    const influenced = applyDirectionalInfluence(entry.vx, entry.vy, canonicalInputs[entry.id] ?? neutralInput(state.frame));
+    return { ...entry, vx: influenced.vx, vy: influenced.vy };
+  });
+  const combatById = new Map(influencedCombatants.map((entry) => [entry.id, entry] as const));
   const combatMerged = grabbed.fighters.map((fighter) => {
     const resolved = combatById.get(fighter.id); if (!resolved) throw new Error(`combat resolution lost fighter ${fighter.id}`);
     return mergeCombat(fighter, resolved);
