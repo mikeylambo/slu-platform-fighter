@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SLU Platform Fighter — Combat Lab</title>
+    <style>
+      html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090b10;color:#eef2ff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}canvas{display:block}
+      #hud,#events{position:fixed;top:16px;padding:12px 14px;background:rgba(8,10,16,.86);border:1px solid rgba(255,255,255,.16);border-radius:8px;white-space:pre;line-height:1.45;pointer-events:none}
+      #hud{left:16px}#events{right:16px;text-align:right;min-width:260px}
+      #help{position:fixed;inset:auto 16px 16px 16px;padding:10px 12px;background:rgba(8,10,16,.72);border:1px solid rgba(255,255,255,.12);border-radius:8px;text-align:center;pointer-events:none}
+    </style>
+  </head>
+  <body>
+    <div id="hud"></div><div id="events">NO HIT EVENTS YET</div>
+    <div id="help">P1: A/D move · Space jump · F attack · K dodge · S down/fastfall · R reset · P pause · . frame step · Gamepad: Left stick / A jump / X attack / B dodge</div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
