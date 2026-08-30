@@ -81,6 +81,7 @@ function resolveGrabAttempts(fightersInput: FighterState[], inputs: Readonly<Rec
     const target = candidates[0]; if (!target) continue;
     const attackerIndex = fighters.findIndex((entry) => entry.id === attacker.id);
     const targetIndex = fighters.findIndex((entry) => entry.id === target.id);
+    if (attackerIndex < 0 || targetIndex < 0) continue;
     const heldX = fixed.add(attacker.x, fixed.mul(GRAB_HOLD_OFFSET, fixed.fromInt(attacker.facing)));
     fighters[attackerIndex] = { ...attacker, grabTargetId: target.id, grabFrames: 0, grabAction: null, shielding: false, attack: null, vx: fixed.zero };
     fighters[targetIndex] = {
@@ -100,11 +101,13 @@ function maintainGrabRelationships(fightersInput: FighterState[]): { fighters: F
     if (captor.grabTargetId === null) continue;
     const captive = fighters.find((fighter) => fighter.id === captor.grabTargetId);
     const captorIndex = fighters.findIndex((fighter) => fighter.id === captor.id);
+    if (captorIndex < 0) continue;
     if (!captive || captive.grabbedById !== captor.id) {
       fighters[captorIndex] = { ...captor, grabTargetId: null, grabFrames: 0, grabAction: null };
       continue;
     }
     const captiveIndex = fighters.findIndex((fighter) => fighter.id === captive.id);
+    if (captiveIndex < 0) continue;
     const nextFrames = captor.grabFrames + 1;
     if (nextFrames >= GRAB_MAX_HOLD_FRAMES && captor.grabAction === null) {
       fighters[captorIndex] = { ...captor, grabTargetId: null, grabFrames: 0, grabAction: null };
@@ -144,16 +147,22 @@ function stepGrabActions(
   inputs: Readonly<Record<string, SimInputFrame>>,
   definitions: ReadonlyMap<GrabActionInput, GrabActionDefinition>,
 ): { fighters: FighterState[]; events: (PummelEvent | ThrowEvent)[] } {
-  const fighters = fightersInput.map((fighter) => ({ ...fighter, grabAction: fighter.grabAction ? { ...fighter.grabAction } : null }));
+  const fighters: FighterState[] = fightersInput.map((fighter) => ({ ...fighter, grabAction: fighter.grabAction ? { ...fighter.grabAction } : null }));
   const events: (PummelEvent | ThrowEvent)[] = [];
-  const byId = new Map([...definitions.values()].map((definition) => [definition.id, definition]));
+  const byId = new Map([...definitions.values()].map((definition) => [definition.id, definition] as const));
 
   for (const initialCaptor of [...fighters].sort((a, b) => a.id.localeCompare(b.id))) {
     if (initialCaptor.grabTargetId === null) continue;
     const captorIndex = fighters.findIndex((fighter) => fighter.id === initialCaptor.id);
-    let captor = fighters[captorIndex]; if (!captor) continue;
+    if (captorIndex < 0) continue;
+    const indexedCaptor = fighters[captorIndex];
+    if (!indexedCaptor) continue;
+    let captor: FighterState = indexedCaptor;
     const captiveIndex = fighters.findIndex((fighter) => fighter.id === captor.grabTargetId);
-    let captive = fighters[captiveIndex]; if (!captive || captive.grabbedById !== captor.id) continue;
+    if (captiveIndex < 0) continue;
+    const indexedCaptive = fighters[captiveIndex];
+    if (!indexedCaptive || indexedCaptive.grabbedById !== captor.id) continue;
+    let captive: FighterState = indexedCaptive;
     const input = inputs[captor.id] ?? neutralInput(0);
 
     if (captor.grabAction === null && input.attackPressed) {
@@ -190,8 +199,9 @@ function stepGrabActions(
     }
 
     const nextFrame = actionFrame + 1;
-    captor = { ...captor, grabAction: nextFrame >= definition.totalFrames ? null : { ...captor.grabAction, frame: nextFrame } };
-    fighters[captorIndex] = captor; fighters[captiveIndex] = captive;
+    captor = { ...captor, grabAction: nextFrame >= definition.totalFrames ? null : { actionId: definition.id, frame: nextFrame } };
+    fighters[captorIndex] = captor;
+    fighters[captiveIndex] = captive;
   }
   return { fighters, events };
 }
@@ -231,7 +241,7 @@ export function stepMatchWorld(
   const grabbed = resolveGrabAttempts(moved, canonicalInputs);
   const combatEligible = grabbed.fighters.map((fighter) => fighter.grabbedById !== null ? { ...fighter, invulnerableFrames: Math.max(1, fighter.invulnerableFrames) } : fighter);
   const combat = stepCombatFrame(combatEligible.map(combatantFromFighter), attacks);
-  const combatById = new Map(combat.combatants.map((entry) => [entry.id, entry]));
+  const combatById = new Map(combat.combatants.map((entry) => [entry.id, entry] as const));
   const combatMerged = grabbed.fighters.map((fighter) => {
     const resolved = combatById.get(fighter.id); if (!resolved) throw new Error(`combat resolution lost fighter ${fighter.id}`);
     return mergeCombat(fighter, resolved);
