@@ -1,0 +1,15 @@
+{
+  "$schema": "../../content/render.schema.json",
+  "schemaVersion": 1,
+  "fighterId": "greybox",
+  "kind": "3d",
+  "model": "assets/model.glb",
+  "armature": "Armature",
+  "rigProfile": "slu-humanoid-v1",
+  "scale": 1,
+  "facing": "right",
+  "materials": {"primary": "Primary", "secondary": "Secondary", "accent": "Accent", "skin": "Skin", "hair": "Hair", "metal": "Metal", "energy": "Energy"},
+  "sockets": {"hand_r": "Hand.R", "hand_l": "Hand.L", "head": "Head", "root": "Root"},
+  "animations": {},
+  "sources": []
+}
