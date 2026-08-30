@@ -30,7 +30,8 @@
     "certify:k3knockback": "node dist/packages/certification/src/k3knockback.js",
     "certify:k4stage": "node dist/packages/certification/src/k4stage.js",
     "certify:k5actions": "node dist/packages/certification/src/k5actions.js",
-    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run lab:movement:build && npm run lab:combat:build"
+    "certify:k6entities": "node dist/packages/certification/src/k6entities.js",
+    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run lab:movement:build && npm run lab:combat:build"
   },
   "dependencies": {
     "three": "^0.185.0"
