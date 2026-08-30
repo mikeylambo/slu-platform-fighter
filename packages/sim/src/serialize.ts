@@ -1,11 +1,11 @@
 import type { FighterState, LocomotionState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
 
-export const WORLD_BINARY_VERSION = 6;
+export const WORLD_BINARY_VERSION = 7;
 
 const locomotionCode: Record<LocomotionState, number> = {
   idle: 0, walk: 1, dash: 2, run: 3, turn: 4, crouch: 5, 'jump-squat': 6, airborne: 7,
   landing: 8, 'ledge-hang': 9, 'air-dodge': 10, 'spot-dodge': 11, roll: 12,
-  'tech-in-place': 13, 'tech-roll': 14, knockdown: 15, grabbed: 16,
+  'tech-in-place': 13, 'tech-roll': 14, knockdown: 15, grabbed: 16, respawn: 17,
 };
 
 class ByteWriter {
@@ -80,6 +80,9 @@ function writeFighter(writer: ByteWriter, fighter: FighterState) {
     writer.string(fighter.grabAction.actionId);
     writer.u16(fighter.grabAction.frame);
   }
+  writer.u8(fighter.stocks);
+  writer.bool(fighter.eliminated);
+  writer.u16(fighter.respawnFrames);
   if (fighter.inputHistory.length > 0xffff) throw new Error('input history exceeds binary format capacity');
   writer.u16(fighter.inputHistory.length); for (const input of fighter.inputHistory) writeInput(writer, input);
 }
@@ -88,6 +91,7 @@ export function serializeWorldState(state: WorldState): Uint8Array {
   const writer = new ByteWriter();
   writer.u8(0x53); writer.u8(0x4c); writer.u8(0x50); writer.u8(0x46);
   writer.u16(WORLD_BINARY_VERSION); writer.u32(state.frame); writer.u32(state.seed);
+  writeOptionalString(writer, state.winnerId);
   const surfaces = [...state.surfaces].sort((a, b) => a.id.localeCompare(b.id));
   writer.u16(surfaces.length); for (const surface of surfaces) writeSurface(writer, surface);
   const ledges = [...state.ledges].sort((a, b) => a.id.localeCompare(b.id));
