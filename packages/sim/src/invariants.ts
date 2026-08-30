@@ -26,12 +26,13 @@ export function checkWorldInvariants(state: WorldState): InvariantViolation[] {
       percentTenths: fighter.percentTenths, hitlagFrames: fighter.hitlagFrames, hitstunFrames: fighter.hitstunFrames,
       shieldHealth: fighter.shieldHealth, shieldStunFrames: fighter.shieldStunFrames, shieldRegenDelayFrames: fighter.shieldRegenDelayFrames,
       stocks: fighter.stocks, respawnFrames: fighter.respawnFrames, invulnerableFrames: fighter.invulnerableFrames,
-      grabFrames: fighter.grabFrames, lastHitFrame: fighter.lastHitFrame,
+      grabFrames: fighter.grabFrames, lastHitFrame: fighter.lastHitFrame, landingLagFrames: fighter.landingLagFrames,
     })) {
       if (!safeInteger(value)) violations.push({ code: 'fighter.non-integer', fighterId: fighter.id, message: `${fighter.id}.${key} is not a safe integer: ${value}` });
     }
     if (fighter.percentTenths < 0) violations.push({ code: 'fighter.negative-percent', fighterId: fighter.id, message: `${fighter.id} has negative percent` });
     if (fighter.stocks < 0) violations.push({ code: 'fighter.negative-stocks', fighterId: fighter.id, message: `${fighter.id} has negative stocks` });
+    if (fighter.landingLagFrames < 0 || fighter.landingLagFrames > 65535) violations.push({ code: 'fighter.landing-lag', fighterId: fighter.id, message: `${fighter.id} has invalid landingLagFrames ${fighter.landingLagFrames}` });
     if (fighter.eliminated && fighter.stocks !== 0) violations.push({ code: 'fighter.eliminated-stock', fighterId: fighter.id, message: `${fighter.id} eliminated with ${fighter.stocks} stocks` });
     if (fighter.lastHitById === null && fighter.lastHitFrame !== -1) violations.push({ code: 'fighter.attribution-frame', fighterId: fighter.id, message: `${fighter.id} has attribution frame without attacker` });
     if (fighter.lastHitById !== null) {
