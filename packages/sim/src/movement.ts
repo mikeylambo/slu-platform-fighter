@@ -126,13 +126,7 @@ function surfaceAt(fighter: FighterState, surfaces: StageSurface[]): StageSurfac
   return surfaces.find((surface) => surface.id === fighter.groundSurfaceId);
 }
 
-function findLandingSurface(
-  oldY: Fixed,
-  newY: Fixed,
-  x: Fixed,
-  surfaces: StageSurface[],
-  ignoreOneWay: boolean,
-): StageSurface | undefined {
+function findLandingSurface(oldY: Fixed, newY: Fixed, x: Fixed, surfaces: StageSurface[], ignoreOneWay: boolean): StageSurface | undefined {
   if (newY > oldY) return undefined;
   const candidates = surfaces
     .filter((surface) => (!ignoreOneWay || surface.kind !== 'one-way'))
@@ -142,11 +136,7 @@ function findLandingSurface(
   return candidates[0];
 }
 
-function findGrabbableLedge(
-  fighter: FighterState,
-  ledges: StageLedge[],
-  rules: MovementRules,
-): StageLedge | undefined {
+function findGrabbableLedge(fighter: FighterState, ledges: StageLedge[], rules: MovementRules): StageLedge | undefined {
   return [...ledges]
     .filter((ledge) => fixed.abs(fixed.sub(fighter.x, ledge.x)) <= rules.ledgeGrabXRadius)
     .filter((ledge) => fighter.y <= fixed.add(ledge.y, rules.ledgeGrabAbove))
@@ -173,18 +163,10 @@ function directionalDodgeVelocity(input: SimInputFrame, facing: -1 | 1, rules: M
 }
 
 export function sanitizeInput(input: SimInputFrame, rules: MovementRules = K1_MOVEMENT): SimInputFrame {
-  return {
-    ...input,
-    moveX: clampStick(input.moveX, rules),
-    moveY: clampStick(input.moveY, rules),
-  };
+  return { ...input, moveX: clampStick(input.moveX, rules), moveY: clampStick(input.moveY, rules) };
 }
 
-export function resolveGroundImpact(
-  fighter: FighterState,
-  horizontalIntent: -1 | 0 | 1,
-  rules: MovementRules = K1_MOVEMENT,
-): FighterState {
+export function resolveGroundImpact(fighter: FighterState, horizontalIntent: -1 | 0 | 1, rules: MovementRules = K1_MOVEMENT): FighterState {
   if (fighter.techBufferFrames > 0) {
     const techRoll = horizontalIntent !== 0;
     return {
@@ -199,23 +181,11 @@ export function resolveGroundImpact(
       techBufferFrames: 0,
     };
   }
-  return {
-    ...fighter,
-    grounded: true,
-    vy: fixed.zero,
-    vx: fixed.zero,
-    locomotion: 'knockdown',
-    locomotionFrame: 0,
-  };
+  return { ...fighter, grounded: true, vy: fixed.zero, vx: fixed.zero, locomotion: 'knockdown', locomotionFrame: 0 };
 }
 
-export function canWallJump(rules: MovementRules = K1_MOVEMENT): boolean {
-  return rules.wallJumpEnabled;
-}
-
-export function canWallCling(rules: MovementRules = K1_MOVEMENT): boolean {
-  return rules.wallClingEnabled;
-}
+export function canWallJump(rules: MovementRules = K1_MOVEMENT): boolean { return rules.wallJumpEnabled; }
+export function canWallCling(rules: MovementRules = K1_MOVEMENT): boolean { return rules.wallClingEnabled; }
 
 export function stepFighterMovement(
   fighter: FighterState,
@@ -256,30 +226,19 @@ export function stepFighterMovement(
     if (!ledge) throw new Error(`fighter ${fighter.id} references missing ledge ${ledgeId}`);
     x = fixed.sub(ledge.x, fixed.mul(fixed.fromInt(ledge.inward), rules.ledgeHangXOffset));
     y = fixed.sub(ledge.y, rules.ledgeHangYOffset);
-    vx = fixed.zero;
-    vy = fixed.zero;
-    grounded = false;
-    groundSurfaceId = null;
-    facing = ledge.inward;
-
+    vx = fixed.zero; vy = fixed.zero; grounded = false; groundSurfaceId = null; facing = ledge.inward;
     if (input.jumpPressed) {
-      locomotion = 'airborne';
-      locomotionFrame = 0;
-      ledgeId = null;
+      locomotion = 'airborne'; locomotionFrame = 0; ledgeId = null;
       ledgeRegrabLockoutFrames = rules.ledgeRegrabLockoutFrames;
       vx = fixed.mul(fixed.fromInt(ledge.inward), rules.ledgeJumpHorizontalSpeed);
-      vy = rules.shortHopSpeed;
-      jumpBufferFrames = 0;
+      vy = rules.shortHopSpeed; jumpBufferFrames = 0;
     } else if (downPressed || horizontal === -ledge.inward) {
-      locomotion = 'airborne';
-      locomotionFrame = 0;
-      ledgeId = null;
+      locomotion = 'airborne'; locomotionFrame = 0; ledgeId = null;
       ledgeRegrabLockoutFrames = rules.ledgeRegrabLockoutFrames;
       y = fixed.sub(y, fixed.fromRatio(1, 1000));
     } else {
       return {
-        ...fighter,
-        x, y, vx, vy, grounded, groundSurfaceId, facing, locomotion, locomotionFrame,
+        ...fighter, x, y, vx, vy, grounded, groundSurfaceId, facing, locomotion, locomotionFrame,
         jumpsRemaining, fastFalling, dropThroughFrames, jumpBufferFrames, inputHistory: history,
         ledgeId, ledgeRegrabLockoutFrames, invulnerableFrames, dodgeCooldownFrames, techBufferFrames,
       };
@@ -288,8 +247,7 @@ export function stepFighterMovement(
 
   if (grounded && input.dodgePressed && dodgeCooldownFrames === 0 && locomotion !== 'jump-squat') {
     const rolling = horizontal !== 0;
-    locomotion = rolling ? 'roll' : 'spot-dodge';
-    locomotionFrame = 0;
+    locomotion = rolling ? 'roll' : 'spot-dodge'; locomotionFrame = 0;
     vx = rolling ? fixed.mul(fixed.fromInt(horizontal), rules.rollSpeed) : fixed.zero;
     if (rolling) facing = horizontal;
     invulnerableFrames = rules.groundDodgeInvulnFrames;
@@ -298,50 +256,28 @@ export function stepFighterMovement(
 
   if (!grounded && locomotion === 'airborne' && input.dodgePressed && dodgeCooldownFrames === 0) {
     const dodge = directionalDodgeVelocity(input, facing, rules);
-    locomotion = 'air-dodge';
-    locomotionFrame = 0;
-    vx = dodge.vx;
-    vy = dodge.vy;
-    fastFalling = false;
-    invulnerableFrames = rules.airDodgeInvulnFrames;
-    dodgeCooldownFrames = rules.dodgeCooldownFrames;
+    locomotion = 'air-dodge'; locomotionFrame = 0; vx = dodge.vx; vy = dodge.vy;
+    fastFalling = false; invulnerableFrames = rules.airDodgeInvulnFrames; dodgeCooldownFrames = rules.dodgeCooldownFrames;
   }
 
   if (grounded && locomotion === 'spot-dodge') {
     vx = fixed.zero;
-    if (locomotionFrame >= rules.spotDodgeFrames) {
-      locomotion = 'idle';
-      locomotionFrame = 0;
-    }
+    if (locomotionFrame >= rules.spotDodgeFrames) { locomotion = 'idle'; locomotionFrame = 0; }
   } else if (grounded && locomotion === 'roll') {
-    if (locomotionFrame >= rules.rollFrames) {
-      locomotion = 'idle';
-      locomotionFrame = 0;
-      vx = fixed.zero;
-    }
+    if (locomotionFrame >= rules.rollFrames) { locomotion = 'idle'; locomotionFrame = 0; vx = fixed.zero; }
   } else if (grounded && (locomotion === 'tech-in-place' || locomotion === 'tech-roll')) {
-    if (locomotionFrame >= rules.techFrames) {
-      locomotion = 'idle';
-      locomotionFrame = 0;
-      vx = fixed.zero;
-    }
+    if (locomotionFrame >= rules.techFrames) { locomotion = 'idle'; locomotionFrame = 0; vx = fixed.zero; }
   } else if (grounded && locomotion === 'knockdown') {
     vx = fixed.zero;
   } else {
     const currentSurface = surfaceAt(fighter, surfaces);
     if (grounded && currentSurface?.kind === 'one-way' && downPressed) {
-      grounded = false;
-      groundSurfaceId = null;
-      dropThroughFrames = rules.platformDropFrames;
-      locomotion = 'airborne';
-      locomotionFrame = 0;
-      y = fixed.sub(y, fixed.fromRatio(1, 1000));
+      grounded = false; groundSurfaceId = null; dropThroughFrames = rules.platformDropFrames;
+      locomotion = 'airborne'; locomotionFrame = 0; y = fixed.sub(y, fixed.fromRatio(1, 1000));
     }
 
     if (grounded && jumpBufferFrames > 0 && locomotion !== 'jump-squat') {
-      locomotion = 'jump-squat';
-      locomotionFrame = 0;
-      jumpBufferFrames = 0;
+      locomotion = 'jump-squat'; locomotionFrame = 0; jumpBufferFrames = 0;
       vx = horizontal === 0 ? vx : stickToFixed(input.moveX, rules.runSpeed, rules);
     }
 
@@ -349,16 +285,11 @@ export function stepFighterMovement(
       if (locomotion === 'jump-squat') {
         vx = approach(vx, stickToFixed(input.moveX, rules.runSpeed, rules), rules.groundAccel);
         if (locomotionFrame >= rules.jumpSquatFrames) {
-          grounded = false;
-          groundSurfaceId = null;
-          locomotion = 'airborne';
-          locomotionFrame = 0;
-          vy = input.jumpHeld ? rules.fullHopSpeed : rules.shortHopSpeed;
-          jumpsRemaining = 1;
+          grounded = false; groundSurfaceId = null; locomotion = 'airborne'; locomotionFrame = 0;
+          vy = input.jumpHeld ? rules.fullHopSpeed : rules.shortHopSpeed; jumpsRemaining = 1;
         }
       } else if (downPressed) {
-        locomotion = 'crouch';
-        locomotionFrame = locomotion === fighter.locomotion ? locomotionFrame : 0;
+        locomotion = 'crouch'; locomotionFrame = locomotion === fighter.locomotion ? locomotionFrame : 0;
         vx = approach(vx, fixed.zero, rules.groundFriction);
       } else if (horizontal === 0) {
         locomotion = locomotion === 'landing' && locomotionFrame < rules.landingFrames ? 'landing' : 'idle';
@@ -367,44 +298,30 @@ export function stepFighterMovement(
         facing = horizontal;
         const reversed = previousHorizontal !== 0 && horizontal !== previousHorizontal;
         if (reversed && (fighter.locomotion === 'dash' || fighter.locomotion === 'run')) {
-          locomotion = 'turn';
-          locomotionFrame = 0;
+          locomotion = 'turn'; locomotionFrame = 0;
         } else if (locomotion === 'turn' && locomotionFrame < rules.turnFrames) {
           vx = approach(vx, fixed.zero, rules.groundFriction);
         } else if (Math.abs(input.moveX) >= rules.runThreshold) {
           if (fighter.locomotion === 'idle' || fighter.locomotion === 'walk' || fighter.locomotion === 'landing' || previousHorizontal === 0) {
-            locomotion = 'dash';
-            locomotionFrame = 0;
-            vx = fixed.mul(fixed.fromInt(horizontal), rules.dashSpeed);
+            locomotion = 'dash'; locomotionFrame = 0; vx = fixed.mul(fixed.fromInt(horizontal), rules.dashSpeed);
           } else if (locomotion === 'dash' && locomotionFrame < rules.dashFrames) {
             vx = fixed.mul(fixed.fromInt(horizontal), rules.dashSpeed);
           } else {
-            locomotion = 'run';
-            vx = approach(vx, fixed.mul(fixed.fromInt(horizontal), rules.runSpeed), rules.groundAccel);
+            locomotion = 'run'; vx = approach(vx, fixed.mul(fixed.fromInt(horizontal), rules.runSpeed), rules.groundAccel);
           }
         } else {
-          locomotion = 'walk';
-          vx = approach(vx, stickToFixed(input.moveX, rules.walkSpeed, rules), rules.groundAccel);
+          locomotion = 'walk'; vx = approach(vx, stickToFixed(input.moveX, rules.walkSpeed, rules), rules.groundAccel);
         }
       }
     } else if (locomotion === 'air-dodge') {
-      if (locomotionFrame >= rules.airDodgeFrames) {
-        locomotion = 'airborne';
-        locomotionFrame = 0;
-      }
+      if (locomotionFrame >= rules.airDodgeFrames) { locomotion = 'airborne'; locomotionFrame = 0; }
     } else {
       locomotion = 'airborne';
       if (jumpBufferFrames > 0 && jumpsRemaining > 0) {
-        vy = rules.doubleJumpSpeed;
-        jumpsRemaining -= 1;
-        fastFalling = false;
-        jumpBufferFrames = 0;
-        locomotionFrame = 0;
+        vy = rules.doubleJumpSpeed; jumpsRemaining -= 1; fastFalling = false; jumpBufferFrames = 0; locomotionFrame = 0;
       }
-
       const targetAirVx = stickToFixed(input.moveX, rules.maxAirSpeed, rules);
       vx = approach(vx, targetAirVx, rules.airAccel);
-
       if (downFlick && vy < fixed.zero) fastFalling = true;
       if (fastFalling) {
         vy = fixed.mul(fixed.fromInt(-1), rules.fastFallSpeed);
@@ -420,56 +337,27 @@ export function stepFighterMovement(
   x = fixed.add(x, vx);
   y = fixed.add(y, vy);
 
-  if (!grounded && locomotion !== 'ledge-hang' && vy <= fixed.zero) {
+  if (!grounded && vy <= fixed.zero) {
     const landing = findLandingSurface(oldY, y, x, surfaces, dropThroughFrames > 0);
     if (landing) {
-      y = landing.y;
-      vy = fixed.zero;
-      grounded = true;
-      groundSurfaceId = landing.id;
-      locomotion = 'landing';
-      locomotionFrame = 0;
-      jumpsRemaining = 1;
-      fastFalling = false;
-      ledgeId = null;
+      y = landing.y; vy = fixed.zero; grounded = true; groundSurfaceId = landing.id;
+      locomotion = 'landing'; locomotionFrame = 0; jumpsRemaining = 1; fastFalling = false; ledgeId = null;
     } else if (ledgeRegrabLockoutFrames === 0 && locomotion !== 'air-dodge') {
       const probe: FighterState = { ...fighter, x, y, vx, vy, grounded: false };
       const ledge = findGrabbableLedge(probe, ledges, rules);
       if (ledge) {
-        ledgeId = ledge.id;
-        locomotion = 'ledge-hang';
-        locomotionFrame = 0;
-        facing = ledge.inward;
-        vx = fixed.zero;
-        vy = fixed.zero;
+        ledgeId = ledge.id; locomotion = 'ledge-hang'; locomotionFrame = 0; facing = ledge.inward;
+        vx = fixed.zero; vy = fixed.zero;
         x = fixed.sub(ledge.x, fixed.mul(fixed.fromInt(ledge.inward), rules.ledgeHangXOffset));
         y = fixed.sub(ledge.y, rules.ledgeHangYOffset);
-        invulnerableFrames = rules.ledgeInvulnFrames;
-        fastFalling = false;
+        invulnerableFrames = rules.ledgeInvulnFrames; fastFalling = false;
       }
     }
   }
 
   return {
-    ...fighter,
-    x,
-    y,
-    vx,
-    vy,
-    grounded,
-    groundSurfaceId,
-    facing,
-    locomotion,
-    locomotionFrame,
-    jumpsRemaining,
-    fastFalling,
-    dropThroughFrames,
-    jumpBufferFrames,
-    inputHistory: history,
-    ledgeId,
-    ledgeRegrabLockoutFrames,
-    invulnerableFrames,
-    dodgeCooldownFrames,
-    techBufferFrames,
+    ...fighter, x, y, vx, vy, grounded, groundSurfaceId, facing, locomotion, locomotionFrame,
+    jumpsRemaining, fastFalling, dropThroughFrames, jumpBufferFrames, inputHistory: history,
+    ledgeId, ledgeRegrabLockoutFrames, invulnerableFrames, dodgeCooldownFrames, techBufferFrames,
   };
 }
