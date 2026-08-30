@@ -1,34 +1,19 @@
 import { fixed } from '../../deterministic-math/src/fixed.js';
-import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState } from '../../sim/src/combat.js';
+import { compileFighterAttacks } from '../../content/src/compileMoves.js';
+import { ALL_FIGHTER_PACKS } from '../../content/src/generated/fighterRegistry.js';
+import { beginAttack, stepCombatFrame, type CombatantState } from '../../sim/src/combat.js';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`K2 certification failure: ${message}`);
 }
 
-const jab: AttackDefinition = {
-  id: 'greybox-jab',
-  totalFrames: 18,
-  hitboxes: [
-    {
-      startFrame: 3,
-      endFrame: 5,
-      hitbox: {
-        id: 'jab-main',
-        offsetX: fixed.fromRatio(11, 10),
-        offsetY: fixed.fromRatio(3, 2),
-        radius: fixed.fromRatio(3, 4),
-        damageTenths: 35,
-        baseKnockback: fixed.fromRatio(9, 50),
-        growthPer100Percent: fixed.fromRatio(13, 50),
-        directionX: 1000,
-        directionY: 420,
-        hitlagFrames: 4,
-        hitstunFrames: 11,
-      },
-    },
-  ],
-};
-const attacks = new Map([[jab.id, jab]]);
+const greybox = ALL_FIGHTER_PACKS.find((pack) => pack.id === 'greybox');
+assert(greybox !== undefined, 'generated registry must expose draft greybox pack to certification tooling');
+const attacks = compileFighterAttacks(greybox);
+const jab = attacks.get('greybox:jab');
+assert(jab !== undefined, 'greybox fighter pack must compile authored jab');
+assert(jab.totalFrames === 18, 'greybox jab total frames must come from fighter pack');
+assert(jab.hitboxes.length === 1 && jab.hitboxes[0]?.startFrame === 3 && jab.hitboxes[0]?.endFrame === 5, 'greybox jab active window must compile from hitbox_on/off timeline');
 
 function body(id: string, x: number, facing: -1 | 1): CombatantState {
   return {
@@ -61,14 +46,13 @@ for (let frame = 0; frame < 12; frame += 1) {
     const event = result.events[0];
     assert(event?.attackerId === 'a' && event.targetId === 'b', 'hit event must use stable attacker/target ids');
     assert(event.hitboxId === 'jab-main', 'active hitbox id must survive into event stream');
-    assert(event.damageTenths === 35, 'damage must be integer tenths');
+    assert(event.damageTenths === 35, 'damage must be integer tenths from fighter pack');
     assert(event.knockbackX > fixed.zero && event.knockbackY > fixed.zero, 'forward-up hit must create positive knockback components');
     const currentAttacker = combatants.find((entry) => entry.id === 'a');
     attackFrameAtHit = currentAttacker?.attack?.frame ?? -1;
   }
 }
 
-attacker = combatants.find((entry) => entry.id === 'a')!;
 target = combatants.find((entry) => entry.id === 'b')!;
 assert(eventCount === 1, 'one attack instance must hit a target at most once across multi-frame active window');
 assert(target.percentTenths === 35, 'target percent must accumulate deterministic integer damage');
@@ -94,4 +78,4 @@ assert(mirrorEvent !== undefined, 'mirrored setup must produce a hit event');
 assert(mirrorEvent.knockbackX < fixed.zero, 'fighter facing must mirror authored horizontal launch direction');
 assert(mirrorEvent.knockbackY > fixed.zero, 'fighter facing must not mirror vertical launch direction');
 
-console.log('K2 PASS — attack timelines, active hitboxes, stable collision ordering, once-per-attack hits, damage, hitlag/hitstun, percent scaling, and mirrored knockback certified.');
+console.log('K2 PASS — fighter-pack move compilation, attack timelines, stable collision ordering, once-per-attack hits, damage, hitlag/hitstun, percent scaling, and mirrored knockback certified.');
