@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slu.local/schemas/rig-profile.schema.json",
+  "title": "SLU Platform Fighter - Rig Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "rootBone", "requiredBones", "requiredSockets"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "rootBone": {"type": "string", "minLength": 1},
+    "requiredBones": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "requiredSockets": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "notes": {"type": "string"}
+  }
+}
