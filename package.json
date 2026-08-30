@@ -38,8 +38,9 @@
     "certify:k9replay": "node dist/packages/certification/src/k9replay.js",
     "certify:k10soak": "node dist/packages/certification/src/k10soak.js",
     "certify:k11camera": "node dist/packages/certification/src/k11camera.js",
+    "certify:k12mixed-roster": "node dist/packages/certification/src/k12mixedRoster.js",
     "soak:matches": "node dist/packages/certification/src/k10soak.js",
-    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run lab:movement:build && npm run lab:combat:build"
+    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run certify:k12mixed-roster && npm run lab:movement:build && npm run lab:combat:build"
   },
   "dependencies": {
     "three": "^0.185.0"
