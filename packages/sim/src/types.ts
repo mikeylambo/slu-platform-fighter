@@ -103,9 +103,10 @@ export interface WorldState {
   frame: number;
   seed: number;
   fighters: FighterState[];
-  entities: OwnedEntityState[];
-  /** Monotonic serial used to mint deterministic runtime entity ids. */
-  nextEntitySerial: number;
+  /** Authoritative entity collection. Optional only while legacy constructors migrate; canonical worlds always provide it. */
+  entities?: OwnedEntityState[];
+  /** Monotonic entity serial. Optional only while legacy constructors migrate; canonical worlds start at 1. */
+  nextEntitySerial?: number;
   surfaces: StageSurface[];
   ledges: StageLedge[];
   /** Stable winner participant id once a stock match is resolved; null while unresolved. */
