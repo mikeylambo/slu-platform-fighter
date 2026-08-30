@@ -11,8 +11,6 @@ export interface StockMatchRules {
   respawnY: Fixed;
   respawnFrames: number;
   respawnInvulnerableFrames: number;
-  /** Maximum frames after damaging contact that still receives KO credit. */
-  koCreditWindowFrames?: number;
 }
 
 export const DEFAULT_STOCK_MATCH_RULES: StockMatchRules = {
@@ -24,7 +22,6 @@ export const DEFAULT_STOCK_MATCH_RULES: StockMatchRules = {
   respawnY: fixed.fromInt(8),
   respawnFrames: 60,
   respawnInvulnerableFrames: 120,
-  koCreditWindowFrames: 600,
 };
 
 export interface KoEvent {
@@ -91,10 +88,8 @@ function clearForRespawn(fighter: FighterState, x: Fixed, rules: StockMatchRules
   };
 }
 
-function koCredit(fighter: FighterState, currentFrame: number, rules: StockMatchRules): { creditedAttackerId: string | null; selfDestruct: boolean } {
-  const creditWindow = rules.koCreditWindowFrames ?? 600;
-  const recent = fighter.lastHitById !== null && fighter.lastHitFrame >= 0 && currentFrame - fighter.lastHitFrame <= creditWindow;
-  const creditedAttackerId = recent && fighter.lastHitById !== fighter.id ? fighter.lastHitById : null;
+function koCredit(fighter: FighterState): { creditedAttackerId: string | null; selfDestruct: boolean } {
+  const creditedAttackerId = fighter.lastHitById !== null && fighter.lastHitById !== fighter.id ? fighter.lastHitById : null;
   return { creditedAttackerId, selfDestruct: creditedAttackerId === null };
 }
 
@@ -102,7 +97,6 @@ export function stepStockLifecycle(
   fightersInput: FighterState[],
   winnerIdInput: string | null,
   rules: StockMatchRules = DEFAULT_STOCK_MATCH_RULES,
-  currentFrame = 0,
 ): { fighters: FighterState[]; winnerId: string | null; events: LifecycleEvent[] } {
   const sorted = [...fightersInput].sort((a, b) => a.id.localeCompare(b.id));
   const spawnIndex = new Map(sorted.map((fighter, index) => [fighter.id, index] as const));
@@ -128,7 +122,7 @@ export function stepStockLifecycle(
     if (!outsideBlastZone(fighter, rules)) continue;
     const stocksAfter = Math.max(0, fighter.stocks - 1);
     const eliminated = stocksAfter === 0;
-    const credit = koCredit(fighter, currentFrame, rules);
+    const credit = koCredit(fighter);
     if (eliminated) {
       fighters[index] = {
         ...fighter,
