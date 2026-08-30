@@ -5,11 +5,20 @@ import { withDamageAttribution, type DamageAttributionRules } from '../../sim/sr
 import { stepMatchWorld, type MatchInputFrame, type MatchStepResult } from '../../sim/src/match.js';
 import { createMatchRuntimeState, stockLifecycleRulesForMatch, withMatchRules, type MatchRules } from '../../sim/src/matchRules.js';
 import { stageSurfacesAt, withStageMotion } from '../../sim/src/stageRuntime.js';
+import { withUniversalLocomotion, type UniversalLocomotionRules } from '../../sim/src/universalLocomotion.js';
 import { createTeamInteractionPolicy, validateTeamRules, type TeamRules } from '../../sim/src/teamPolicy.js';
 import type { WorldState } from '../../sim/src/types.js';
 import type { ConstructedMatch } from './matchFactory.js';
 
-export interface MatchExecutionOptions { matchRules: MatchRules; friendlyFire?: boolean; damageAttribution?: DamageAttributionRules; stockRules?: StockMatchRules; }
+export interface MatchExecutionOptions {
+  matchRules: MatchRules;
+  friendlyFire?: boolean;
+  damageAttribution?: DamageAttributionRules;
+  stockRules?: StockMatchRules;
+  wallJumpEnabled?: boolean;
+  wallClingEnabled?: boolean;
+  universalLocomotionRules?: UniversalLocomotionRules;
+}
 export interface MatchExecution { initialState: WorldState; step(state: WorldState, input: MatchInputFrame): MatchStepResult; teamRules: TeamRules; matchRules: MatchRules; stockRules: StockMatchRules; }
 
 /** Canonical production composition root. Conventional fighters add content, not glue code. */
@@ -22,10 +31,13 @@ export function createMatchExecution(constructed: ConstructedMatch, options: Mat
   const interactionPolicy = createTeamInteractionPolicy(teamRules);
   const runtime = constructed.runtime;
   const rawStep = (state: WorldState, input: MatchInputFrame): MatchStepResult => stepMatchWorld(state,input,runtime.attacks,'__no-global-default-attack__',undefined,runtime.grabActions,stockRules,runtime.entityDefinitions,runtime.entitySpawnsByMoveId,runtime.moveRuntime,runtime.fighterPhysics,interactionPolicy);
-  // Cancel permission must be applied before raw movement/action routing; armor is
-  // reconciled after ordinary hit resolution. Both are pure authored move-frame policy.
   const authoredCombatAware = withAuthoredCombatPolicies(rawStep, runtime.moveRuntime);
-  const landingAware = withAerialLandingPolicies(authoredCombatAware, runtime.aerialLanding, runtime.fighterPhysics);
+  const locomotionAware = withUniversalLocomotion(authoredCombatAware, constructed.stage.walls, runtime.attacks, {
+    wallJumpEnabled: options.wallJumpEnabled ?? true,
+    wallClingEnabled: options.wallClingEnabled ?? false,
+    ...(options.universalLocomotionRules ? { rules: options.universalLocomotionRules } : {}),
+  });
+  const landingAware = withAerialLandingPolicies(locomotionAware, runtime.aerialLanding, runtime.fighterPhysics);
   const stageAware = withStageMotion(landingAware, constructed.stage);
   const attributed = withDamageAttribution(stageAware, options.damageAttribution);
   const directed = withMatchRules(attributed, options.matchRules, teamRules);
