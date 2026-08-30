@@ -3,26 +3,21 @@ import { createWorld, restoreWorld, snapshotWorld, stepWorld } from '../../sim/s
 import type { SimInputFrame, WorldState } from '../../sim/src/types.js';
 
 function inputForFrame(frame: number): SimInputFrame {
+  const jumping = frame >= 60 && frame <= 64;
   return {
     frame,
-    moveX: frame < 60 || (frame >= 65 && frame < 100) ? 1 : 0,
+    moveX: frame < 60 || (frame >= 65 && frame < 100) ? 1000 : 0,
+    moveY: 0,
     jumpPressed: frame === 60,
+    jumpHeld: jumping,
   };
 }
 
 function canonicalState(state: WorldState): string {
-  return JSON.stringify({
-    frame: state.frame,
-    seed: state.seed,
-    fighters: state.fighters.map((fighter) => ({
-      id: fighter.id,
-      x: fighter.x,
-      y: fighter.y,
-      vx: fighter.vx,
-      vy: fighter.vy,
-      grounded: fighter.grounded,
-    })),
-  });
+  // Authoritative state is intentionally composed only of primitives, arrays,
+  // and plain objects with stable construction order. Binary serialization will
+  // replace this JSON harness before cross-engine golden vectors are frozen.
+  return JSON.stringify(state);
 }
 
 function hashState(state: WorldState): string {
