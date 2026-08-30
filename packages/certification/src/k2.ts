@@ -49,7 +49,7 @@ function body(id: string, x: number, facing: -1 | 1): CombatantState {
 
 let attacker = beginAttack(body('a', 0, 1), jab.id);
 let target = body('b', 18, -1);
-let combatants = [target, attacker]; // Deliberately reversed input order; core must canonicalize by id.
+let combatants = [target, attacker];
 let eventCount = 0;
 let attackFrameAtHit = -1;
 
@@ -75,7 +75,6 @@ assert(target.percentTenths === 35, 'target percent must accumulate deterministi
 assert(target.hitstunFrames > 0, 'successful hit must leave target in hitstun after hitlag');
 assert(attackFrameAtHit >= 3, 'hit must not occur before active frame window');
 
-// Percent scaling: same hit at higher percent must create larger knockback magnitude.
 let low = body('low', 18, -1);
 let high = { ...body('high', 18, -1), percentTenths: 1000 };
 const sourceLow = { ...beginAttack(body('source', 0, 1), jab.id), attack: { attackId: jab.id, frame: 3, hitTargets: [] } };
@@ -87,12 +86,12 @@ high = highResult.combatants.find((entry) => entry.id === 'high')!;
 assert(fixed.abs(high.vx) > fixed.abs(low.vx), 'knockback growth must increase horizontal launch at higher percent');
 assert(fixed.abs(high.vy) > fixed.abs(low.vy), 'knockback growth must increase vertical launch at higher percent');
 
-// Facing mirrors the same authored hitbox and launch direction.
 const mirroredSource = { ...beginAttack(body('source', 0, -1), jab.id), attack: { attackId: jab.id, frame: 3, hitTargets: [] } };
 const mirroredTarget = body('target', -18, 1);
 const mirrored = stepCombatFrame([mirroredSource, mirroredTarget], attacks);
 const mirrorEvent = mirrored.events[0];
-assert(mirrorEvent?.knockbackX < fixed.zero, 'fighter facing must mirror authored horizontal launch direction');
+assert(mirrorEvent !== undefined, 'mirrored setup must produce a hit event');
+assert(mirrorEvent.knockbackX < fixed.zero, 'fighter facing must mirror authored horizontal launch direction');
 assert(mirrorEvent.knockbackY > fixed.zero, 'fighter facing must not mirror vertical launch direction');
 
 console.log('K2 PASS — attack timelines, active hitboxes, stable collision ordering, once-per-attack hits, damage, hitlag/hitstun, percent scaling, and mirrored knockback certified.');
