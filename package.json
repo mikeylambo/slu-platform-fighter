@@ -17,7 +17,8 @@
     "fighter:audit:greybox": "blender --background --python scripts/blender/audit_fighter.py -- fighters/greybox/render.json",
     "certify:k0": "node dist/packages/certification/src/k0.js",
     "certify:k1": "node dist/packages/certification/src/k1.js",
-    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run lab:movement:build"
+    "certify:k1b": "node dist/packages/certification/src/k1b.js",
+    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run lab:movement:build"
   },
   "dependencies": {
     "three": "^0.185.0"
