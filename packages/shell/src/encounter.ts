@@ -47,13 +47,14 @@ export function validateEncounter(definition: EncounterDefinition): void {
 
 export function compileEncounterLaunch(definition: EncounterDefinition): EncounterLaunch {
   validateEncounter(definition);
-  return {
+  const launch: EncounterLaunch = {
     encounterId: definition.id,
     stageId: definition.stageId,
     rulesetId: definition.rulesetId,
-    seed: definition.seed,
     participants: definition.participants.map((entry) => ({ ...entry })),
   };
+  if (definition.seed !== undefined) launch.seed = definition.seed;
+  return launch;
 }
 
 export class EncounterSequence {
