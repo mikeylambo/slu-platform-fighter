@@ -45,10 +45,14 @@ export function checkWorldInvariants(state: WorldState): InvariantViolation[] {
   for (const entity of state.entities ?? []) {
     if (entityIds.has(entity.id)) violations.push({ code: 'entity.duplicate-id', entityId: entity.id, message: `duplicate entity id ${entity.id}` });
     entityIds.add(entity.id);
-    for (const [key, value] of Object.entries({ x: entity.x, y: entity.y, vx: entity.vx, vy: entity.vy, ageFrames: entity.ageFrames, hitCount: entity.hitCount })) {
+    for (const [key, value] of Object.entries({
+      x: entity.x, y: entity.y, vx: entity.vx, vy: entity.vy,
+      ageFrames: entity.ageFrames, lifetimeFrames: entity.lifetimeFrames, hitsRemaining: entity.hitsRemaining,
+    })) {
       if (!safeInteger(value)) violations.push({ code: 'entity.non-integer', entityId: entity.id, message: `${entity.id}.${key} is not a safe integer: ${value}` });
     }
-    if (entity.ageFrames < 0 || entity.hitCount < 0) violations.push({ code: 'entity.negative-counter', entityId: entity.id, message: `${entity.id} has negative age/hit count` });
+    if (entity.ageFrames < 0 || entity.lifetimeFrames < 1 || entity.hitsRemaining < 0) violations.push({ code: 'entity.counter', entityId: entity.id, message: `${entity.id} has invalid age/lifetime/hitsRemaining` });
+    if (new Set(entity.hitTargets).size !== entity.hitTargets.length) violations.push({ code: 'entity.duplicate-hit-target', entityId: entity.id, message: `${entity.id} contains duplicate hit target memory` });
     if (!fighterIds.has(entity.ownerId)) violations.push({ code: 'entity.missing-owner', entityId: entity.id, message: `${entity.id} owner ${entity.ownerId} is not in authoritative fighter state` });
   }
 
