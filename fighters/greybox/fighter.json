@@ -7,7 +7,32 @@
   "rigProfile": "slu-humanoid-v1",
   "attributes": {"weight": 100000, "hurtboxWidth": 800, "hurtboxHeight": 1800},
   "movement": {"walkSpeed": 400, "initialDashSpeed": 900, "runSpeed": 720, "gravity": 55, "fallSpeed": 1050, "fastFallSpeed": 1500, "shortHopVelocity": 760, "fullHopVelocity": 1050, "doubleJumpVelocity": 950, "airAcceleration": 28, "airSpeed": 650, "traction": 45, "jumpSquatFrames": 3},
-  "moves": {},
+  "moves": {
+    "jab": {
+      "animationRole": "jab",
+      "totalFrames": 18,
+      "timeline": [
+        {
+          "frame": 3,
+          "type": "hitbox_on",
+          "data": {
+            "id": "jab-main",
+            "offsetX": 1100,
+            "offsetY": 1500,
+            "radius": 750,
+            "damageTenths": 35,
+            "baseKnockback": 180000,
+            "growthPer100Percent": 260000,
+            "directionX": 1000,
+            "directionY": 420,
+            "hitlagFrames": 4,
+            "hitstunFrames": 11
+          }
+        },
+        {"frame": 6, "type": "hitbox_off", "data": {"id": "jab-main"}}
+      ]
+    }
+  },
   "ownedEntities": [],
   "palettes": {"00": {"primary": "#808080", "secondary": "#D0D0D0", "accent": "#FFFFFF", "skin": "#B0B0B0", "hair": "#404040", "metal": "#A0A0A0", "energy": "#80C0FF"}},
   "provenance": {"code": "Original SLU certification content", "assets": []}
