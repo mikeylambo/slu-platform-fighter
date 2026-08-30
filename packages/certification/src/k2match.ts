@@ -92,11 +92,10 @@ state = createTwoFighterMatch(0x49_46_52_41); closeForGrab(state); state.fighter
 let result = step(state, { frame: 0, byFighterId: { 'fighter-a': fighterInput(0, { grabPressed: true }), 'fighter-b': fighterInput(0) } });
 assert(!result.events.some((event) => event.type === 'grab'), 'grab must fail against active invulnerability');
 
-// Neutral attack while holding starts authored pummel; it damages but preserves the grab.
 state = grabAtFrameZero(createTwoFighterMatch(0x50_55_4d_4d));
 result = step(state, { frame: state.frame, byFighterId: { 'fighter-a': fighterInput(state.frame, { attackPressed: true }), 'fighter-b': fighterInput(state.frame) } });
 state = result.state;
-assert(state.fighters[0]!.grabAction?.actionId === 'greybox:pummel', 'neutral held attack must start authored pummel');
+assert(String(state.fighters[0]?.grabAction?.actionId ?? '') === 'greybox:pummel', 'neutral held attack must start authored pummel');
 let pummelObserved = false;
 for (let i = 0; i < 12; i += 1) {
   result = step(state, { frame: state.frame, byFighterId: { 'fighter-a': fighterInput(state.frame), 'fighter-b': fighterInput(state.frame) } });
@@ -106,11 +105,10 @@ held = state.fighters[1]!; holder = state.fighters[0]!;
 assert(pummelObserved && held.percentTenths === 15, 'authored pummel must apply fighter-pack damage exactly once');
 assert(holder.grabTargetId === held.id && held.grabbedById === holder.id, 'pummel must preserve grab relationship');
 
-// Forward directional held attack starts authored throw and releases with deterministic launch.
 state = grabAtFrameZero(createTwoFighterMatch(0x54_48_52_57));
 result = step(state, { frame: state.frame, byFighterId: { 'fighter-a': fighterInput(state.frame, { attackPressed: true, moveX: 1000 }), 'fighter-b': fighterInput(state.frame) } });
 state = result.state;
-assert(state.fighters[0]!.grabAction?.actionId === 'greybox:forward-throw', 'forward held attack must select authored forward throw');
+assert(String(state.fighters[0]?.grabAction?.actionId ?? '') === 'greybox:forward-throw', 'forward held attack must select authored forward throw');
 let throwObserved = false;
 let throwCheckpoint = snapshotWorld(state);
 const throwHashes: string[] = [];
@@ -131,7 +129,6 @@ for (let i = 7; i < throwHashes.length; i += 1) {
   assert(hash(throwReplay) === throwHashes[i], `mid-throw resimulation diverged at sample ${i}`);
 }
 
-// Holding without action still auto-releases deterministically.
 state = grabAtFrameZero(createTwoFighterMatch(0x47_52_52_42));
 const grabCheckpoint = snapshotWorld(state); const grabHashes: string[] = [];
 for (let i = 1; i <= GRAB_MAX_HOLD_FRAMES + 2; i += 1) {
