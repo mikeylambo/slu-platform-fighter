@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slu.local/schemas/fighter.schema.json",
+  "title": "SLU Platform Fighter - Fighter Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "id", "identity", "rigProfile", "attributes", "movement", "moves", "ownedEntities", "palettes", "provenance"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["draft", "playable", "certified", "release"]},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["displayName", "archetype", "playstyle"],
+      "properties": {
+        "displayName": {"type": "string", "minLength": 1},
+        "archetype": {"type": "string", "minLength": 1},
+        "playstyle": {"type": "string", "minLength": 1},
+        "guideSummary": {"type": "string"}
+      }
+    },
+    "rigProfile": {"const": "slu-humanoid-v1"},
+    "attributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weight", "hurtboxWidth", "hurtboxHeight"],
+      "properties": {
+        "weight": {"type": "integer", "minimum": 1},
+        "hurtboxWidth": {"type": "integer", "minimum": 1},
+        "hurtboxHeight": {"type": "integer", "minimum": 1}
+      }
+    },
+    "movement": {
+      "type": "object",
+      "additionalProperties": {"type": "integer"}
+    },
+    "moves": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/move"}
+    },
+    "ownedEntities": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+      "uniqueItems": true
+    },
+    "palettes": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/palette"}
+    },
+    "provenance": {"$ref": "#/$defs/provenance"}
+  },
+  "$defs": {
+    "move": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["animationRole", "timeline"],
+      "properties": {
+        "animationRole": {"type": "string"},
+        "timeline": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["frame", "type"],
+            "properties": {
+              "frame": {"type": "integer", "minimum": 0},
+              "type": {"enum": ["hitbox_on", "hitbox_off", "hurtbox", "impulse", "velocity", "cancel_on", "cancel_off", "armor_on", "armor_off", "invuln_on", "invuln_off", "entity_spawn", "entity_command", "event"]},
+              "data": {"type": "object"}
+            }
+          }
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "secondary", "accent", "skin", "hair", "metal", "energy"],
+      "properties": {
+        "primary": {"$ref": "#/$defs/color"}, "secondary": {"$ref": "#/$defs/color"}, "accent": {"$ref": "#/$defs/color"},
+        "skin": {"$ref": "#/$defs/color"}, "hair": {"$ref": "#/$defs/color"}, "metal": {"$ref": "#/$defs/color"}, "energy": {"$ref": "#/$defs/color"}
+      }
+    },
+    "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "assets"],
+      "properties": {
+        "code": {"type": "string"},
+        "assets": {"type": "array", "items": {"$ref": "#/$defs/source"}}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "name", "author", "license", "sourceUrl"],
+      "properties": {
+        "role": {"type": "string"}, "name": {"type": "string"}, "author": {"type": "string"}, "license": {"type": "string"},
+        "sourceUrl": {"type": "string"}, "licenseUrl": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"}
+      }
+    }
+  }
+}
