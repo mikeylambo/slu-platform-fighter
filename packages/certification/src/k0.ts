@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { nextRngU32 } from '../../deterministic-math/src/rng.js';
+import { serializeWorldState } from '../../sim/src/serialize.js';
 import { createWorld, restoreWorld, snapshotWorld, stepWorld } from '../../sim/src/world.js';
 import type { SimInputFrame, WorldState } from '../../sim/src/types.js';
 
@@ -13,15 +15,17 @@ function inputForFrame(frame: number): SimInputFrame {
   };
 }
 
-function canonicalState(state: WorldState): string {
-  // Authoritative state is intentionally composed only of primitives, arrays,
-  // and plain objects with stable construction order. Binary serialization will
-  // replace this JSON harness before cross-engine golden vectors are frozen.
-  return JSON.stringify(state);
+function hashState(state: WorldState): string {
+  return createHash('sha256').update(serializeWorldState(state)).digest('hex');
 }
 
-function hashState(state: WorldState): string {
-  return createHash('sha256').update(canonicalState(state)).digest('hex');
+const RNG_GOLDEN = [0x87985aa5, 0x155b24a3, 0x4820f4c4, 0x81b3ac98, 0x703a0788] as const;
+let rng = 0x12345678;
+for (let i = 0; i < RNG_GOLDEN.length; i += 1) {
+  rng = nextRngU32(rng);
+  if (rng !== RNG_GOLDEN[i]) {
+    throw new Error(`K0 RNG golden-vector failure at index ${i}: expected ${RNG_GOLDEN[i]}, got ${rng}`);
+  }
 }
 
 const TOTAL_FRAMES = 100_000;
@@ -49,4 +53,5 @@ for (let frame = SNAPSHOT_FRAME; frame < TOTAL_FRAMES; frame += 1) {
 }
 
 console.log(`K0 PASS — ${TOTAL_FRAMES.toLocaleString()} deterministic frames; restore/resim identical from frame ${SNAPSHOT_FRAME.toLocaleString()}.`);
-console.log(`Final state hash: ${hashState(world)}`);
+console.log('RNG golden vector PASS — xorshift32 sequence locked.');
+console.log(`Final binary state hash: ${hashState(world)}`);
