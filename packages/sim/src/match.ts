@@ -1,6 +1,7 @@
 import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { GrabActionDefinition, GrabActionInput } from '../../content/src/compileGrabActions.js';
 import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type CombatEvent } from './combat.js';
+import { stepHitstunKnockback } from './knockback.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
 import { createFighterState, createWorld } from './world.js';
 import type { FighterState, SimInputFrame, WorldState } from './types.js';
@@ -225,7 +226,7 @@ export function stepMatchWorld(
   const moved = [...state.fighters].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => {
     const input = canonicalInputs[fighter.id] ?? neutralInput(state.frame);
     if (fighter.grabbedById !== null || fighter.hitlagFrames > 0) return fighter;
-    if (fighter.hitstunFrames > 0) return { ...fighter, shielding: false };
+    if (fighter.hitstunFrames > 0) return stepHitstunKnockback({ ...fighter, shielding: false }, input, state.surfaces, movementRules);
     const movementInput = movementInputForDefense(input, fighter);
     let next = fighter.grabTargetId !== null
       ? { ...fighter, vx: fixed.zero, shielding: false, attack: null }
