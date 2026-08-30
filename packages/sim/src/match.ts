@@ -1,12 +1,14 @@
 import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { EntityDefinition, EntitySpawnDefinition } from '../../content/src/compileEntities.js';
 import type { GrabActionDefinition, GrabActionInput } from '../../content/src/compileGrabActions.js';
+import type { MoveRuntimeDefinition } from '../../content/src/compileMoveRuntime.js';
 import { resolveStandardAttackId } from './actionResolver.js';
 import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type CombatEvent } from './combat.js';
 import { spawnEntitiesFromAttacks, stepOwnedEntities, type EntityEvent } from './entities.js';
 import { applyDirectionalInfluence, stepHitlagSDI, stepHitstunKnockback } from './knockback.js';
 import { DEFAULT_STOCK_MATCH_RULES, stepStockLifecycle, type LifecycleEvent, type StockMatchRules } from './lifecycle.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
+import { applyMoveRuntimeFrames } from './moveRuntime.js';
 import { createFighterState, createWorld } from './world.js';
 import type { FighterState, SimInputFrame, WorldState } from './types.js';
 
@@ -228,6 +230,7 @@ export function stepMatchWorld(
   stockRules: StockMatchRules = DEFAULT_STOCK_MATCH_RULES,
   entityDefinitions: ReadonlyMap<string, EntityDefinition> = new Map(),
   entitySpawnsByMoveId: ReadonlyMap<string, readonly EntitySpawnDefinition[]> = new Map(),
+  moveRuntimeDefinitions: ReadonlyMap<string, MoveRuntimeDefinition> = new Map(),
 ): MatchStepResult {
   if (matchInput.frame !== state.frame) throw new Error(`match input frame ${matchInput.frame} does not match world frame ${state.frame}`);
   const canonicalInputs: Record<string, SimInputFrame> = {};
@@ -261,7 +264,8 @@ export function stepMatchWorld(
     return next;
   });
 
-  const grabbed = resolveGrabAttempts(moved, canonicalInputs);
+  const runtimeApplied = applyMoveRuntimeFrames(moved, moveRuntimeDefinitions);
+  const grabbed = resolveGrabAttempts(runtimeApplied, canonicalInputs);
   const spawned = spawnEntitiesFromAttacks(
     grabbed.fighters,
     state.entities ?? [],
