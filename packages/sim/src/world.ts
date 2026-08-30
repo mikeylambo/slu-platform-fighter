@@ -1,6 +1,6 @@
 import { fixed } from '../../deterministic-math/src/fixed.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
-import type { FighterState, SimInputFrame, StageSurface, WorldSnapshot, WorldState } from './types.js';
+import type { FighterState, SimInputFrame, StageLedge, StageSurface, WorldSnapshot, WorldState } from './types.js';
 
 const GROUND_Y = fixed.zero;
 
@@ -23,6 +23,13 @@ function createTrainingSurfaces(): StageSurface[] {
   ];
 }
 
+function createTrainingLedges(): StageLedge[] {
+  return [
+    { id: 'platform-center-left', x: fixed.fromInt(-4), y: fixed.fromInt(4), inward: 1 },
+    { id: 'platform-center-right', x: fixed.fromInt(4), y: fixed.fromInt(4), inward: -1 },
+  ];
+}
+
 export function createWorld(seed: number): WorldState {
   const fighter: FighterState = {
     id: 'fighter-a',
@@ -40,6 +47,11 @@ export function createWorld(seed: number): WorldState {
     dropThroughFrames: 0,
     jumpBufferFrames: 0,
     inputHistory: [],
+    ledgeId: null,
+    ledgeRegrabLockoutFrames: 0,
+    invulnerableFrames: 0,
+    dodgeCooldownFrames: 0,
+    techBufferFrames: 0,
   };
 
   return {
@@ -47,6 +59,7 @@ export function createWorld(seed: number): WorldState {
     seed,
     fighters: [fighter],
     surfaces: createTrainingSurfaces(),
+    ledges: createTrainingLedges(),
   };
 }
 
@@ -65,8 +78,9 @@ export function stepWorld(
   return {
     frame: state.frame + 1,
     seed: state.seed,
-    fighters: [stepFighterMovement(fighter, input, state.surfaces, movementRules)],
+    fighters: [stepFighterMovement(fighter, input, state.surfaces, state.ledges, movementRules)],
     surfaces: state.surfaces,
+    ledges: state.ledges,
   };
 }
 
