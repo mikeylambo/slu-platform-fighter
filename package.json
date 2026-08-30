@@ -47,8 +47,9 @@
     "certify:k17attribution": "node dist/packages/certification/src/k17attribution.js",
     "certify:k18match-rules": "node dist/packages/certification/src/k18matchRules.js",
     "certify:k19execution": "node dist/packages/certification/src/k19execution.js",
+    "certify:k20team-results": "node dist/packages/certification/src/k20teamResults.js",
     "soak:matches": "node dist/packages/certification/src/k10soak.js",
-    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run certify:k12mixed-roster && npm run certify:k13shell && npm run certify:k14match-factory && npm run certify:k15teams && npm run certify:k16training && npm run certify:k17attribution && npm run certify:k18match-rules && npm run certify:k19execution && npm run lab:movement:build && npm run lab:combat:build"
+    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run certify:k12mixed-roster && npm run certify:k13shell && npm run certify:k14match-factory && npm run certify:k15teams && npm run certify:k16training && npm run certify:k17attribution && npm run certify:k18match-rules && npm run certify:k19execution && npm run certify:k20team-results && npm run lab:movement:build && npm run lab:combat:build"
   },
   "dependencies": {
     "three": "^0.185.0"
