@@ -37,8 +37,8 @@ export function resolveFighterAnimation(fighter: FighterState, registry: Animati
     const role = registry.attackRoleById?.get(fighter.attack.attackId);
     if (role) return { role, frame: fighter.attack.frame, loop: false };
   }
-  if (fighter.hitstunFrames > 0) return { role: fighter.grounded ? 'hit_heavy' : 'tumble', frame: fighter.locomotionFrame, loop: false };
   if (fighter.shieldHealth <= 0 && fighter.hitstunFrames > 0) return { role: 'shield_break', frame: fighter.locomotionFrame, loop: false };
+  if (fighter.hitstunFrames > 0) return { role: fighter.grounded ? 'hit_heavy' : 'tumble', frame: fighter.locomotionFrame, loop: false };
   if (fighter.shielding) return { role: 'shield_hold', frame: fighter.locomotionFrame, loop: true };
 
   switch (fighter.locomotion) {
