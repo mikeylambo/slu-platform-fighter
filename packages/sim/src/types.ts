@@ -1,22 +1,8 @@
 import type { Fixed } from '../../deterministic-math/src/fixed.js';
 
 export type LocomotionState =
-  | 'idle'
-  | 'walk'
-  | 'dash'
-  | 'run'
-  | 'turn'
-  | 'crouch'
-  | 'jump-squat'
-  | 'airborne'
-  | 'landing'
-  | 'ledge-hang'
-  | 'air-dodge'
-  | 'spot-dodge'
-  | 'roll'
-  | 'tech-in-place'
-  | 'tech-roll'
-  | 'knockdown';
+  | 'idle' | 'walk' | 'dash' | 'run' | 'turn' | 'crouch' | 'jump-squat' | 'airborne' | 'landing'
+  | 'ledge-hang' | 'air-dodge' | 'spot-dodge' | 'roll' | 'tech-in-place' | 'tech-roll' | 'knockdown';
 
 export interface SimInputFrame {
   frame: number;
@@ -26,32 +12,15 @@ export interface SimInputFrame {
   moveY: number;
   jumpPressed: boolean;
   jumpHeld: boolean;
-  attackPressed: boolean;
+  /** Movement-only adapters may omit this; combat adapters must provide it explicitly. */
+  attackPressed?: boolean;
   dodgePressed: boolean;
   shieldHeld: boolean;
 }
 
-export interface StageSurface {
-  id: string;
-  kind: 'solid' | 'one-way';
-  y: Fixed;
-  xMin: Fixed;
-  xMax: Fixed;
-}
-
-export interface StageLedge {
-  id: string;
-  x: Fixed;
-  y: Fixed;
-  /** Direction toward the stage interior when hanging from this ledge. */
-  inward: -1 | 1;
-}
-
-export interface FighterAttackState {
-  attackId: string;
-  frame: number;
-  hitTargets: string[];
-}
+export interface StageSurface { id: string; kind: 'solid' | 'one-way'; y: Fixed; xMin: Fixed; xMax: Fixed; }
+export interface StageLedge { id: string; x: Fixed; y: Fixed; /** Direction toward the stage interior. */ inward: -1 | 1; }
+export interface FighterAttackState { attackId: string; frame: number; hitTargets: string[]; }
 
 export interface FighterState {
   id: string;
@@ -89,6 +58,4 @@ export interface WorldState {
   ledges: StageLedge[];
 }
 
-export interface WorldSnapshot {
-  state: WorldState;
-}
+export interface WorldSnapshot { state: WorldState; }
