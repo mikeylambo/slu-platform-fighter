@@ -1,12 +1,19 @@
 import { compileEntityDefinitionRegistry, compileEntitySpawns, type EntityDefinition, type EntitySpawnDefinition } from './compileEntities.js';
 import { compileFighterPhysicsRegistry, type FighterPhysicsDefinition } from './compileFighterPhysics.js';
 import { compileGrabActionRegistry, type GrabActionDefinition } from './compileGrabActions.js';
+import { compileFighterLandingPolicies, type AerialLandingDefinition } from './compileLanding.js';
 import { compileFighterMoveRuntime, type MoveRuntimeDefinition } from './compileMoveRuntime.js';
 import { compileFighterAttacks } from './compileMoves.js';
 import type { AttackDefinition } from '../../sim/src/combat.js';
 
 interface TimelineEvent { frame: number; type: string; data?: Record<string, unknown>; }
-interface PackMove { animationRole: string; grabAction?: 'pummel' | 'forward-throw' | 'back-throw' | 'up-throw' | 'down-throw'; totalFrames: number; timeline: readonly TimelineEvent[]; }
+interface PackMove {
+  animationRole: string;
+  grabAction?: 'pummel' | 'forward-throw' | 'back-throw' | 'up-throw' | 'down-throw';
+  landing?: { landingLagFrames: number; autoCancelWindows: readonly { startFrame: number; endFrame: number }[] };
+  totalFrames: number;
+  timeline: readonly TimelineEvent[];
+}
 export interface RuntimeFighterPack {
   id: string;
   attributes: { weight: number; hurtboxWidth: number; hurtboxHeight: number };
@@ -31,6 +38,7 @@ export interface RosterRuntime {
   /** Scoped key: `${fighterDefinitionId}:${semanticGrabInput}`. */
   grabActions: ReadonlyMap<string, GrabActionDefinition>;
   moveRuntime: ReadonlyMap<string, MoveRuntimeDefinition>;
+  aerialLanding: ReadonlyMap<string, AerialLandingDefinition>;
   entityDefinitions: ReadonlyMap<string, EntityDefinition>;
   entitySpawnsByMoveId: ReadonlyMap<string, readonly EntitySpawnDefinition[]>;
 }
@@ -52,11 +60,13 @@ export function compileRosterRuntime(fighterPacksInput: readonly RuntimeFighterP
   const entityDefinitions = compileEntityDefinitionRegistry(entityPacks);
   const attacks = new Map<string, AttackDefinition>();
   const moveRuntime = new Map<string, MoveRuntimeDefinition>();
+  const aerialLanding = new Map<string, AerialLandingDefinition>();
   const spawns = new Map<string, readonly EntitySpawnDefinition[]>();
 
   for (const pack of fighterPacks) {
     mergeUnique(attacks, compileFighterAttacks(pack), 'attack');
     mergeUnique(moveRuntime, compileFighterMoveRuntime(pack), 'move runtime');
+    mergeUnique(aerialLanding, compileFighterLandingPolicies(pack), 'aerial landing policy');
     mergeUnique(spawns, compileEntitySpawns(pack, entityDefinitions), 'entity spawn move');
   }
 
@@ -66,6 +76,7 @@ export function compileRosterRuntime(fighterPacksInput: readonly RuntimeFighterP
     attacks,
     grabActions: compileGrabActionRegistry(fighterPacks),
     moveRuntime,
+    aerialLanding,
     entityDefinitions,
     entitySpawnsByMoveId: spawns,
   };
