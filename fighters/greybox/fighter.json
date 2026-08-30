@@ -5,8 +5,8 @@
   "id": "greybox",
   "identity": {"displayName": "Greybox", "archetype": "Certification", "playstyle": "Neutral reference fighter for kernel and tooling certification."},
   "rigProfile": "slu-humanoid-v1",
-  "attributes": {"weight": 100000, "hurtboxWidth": 800, "hurtboxHeight": 1800},
-  "movement": {"walkSpeed": 400, "initialDashSpeed": 900, "runSpeed": 720, "gravity": 55, "fallSpeed": 1050, "fastFallSpeed": 1500, "shortHopVelocity": 760, "fullHopVelocity": 1050, "doubleJumpVelocity": 950, "airAcceleration": 28, "airSpeed": 650, "traction": 45, "jumpSquatFrames": 3},
+  "attributes": {"weight": 100000, "hurtboxWidth": 800000, "hurtboxHeight": 1800000},
+  "movement": {"walkSpeed": 400000, "initialDashSpeed": 900000, "runSpeed": 720000, "gravity": 55000, "fallSpeed": 1050000, "fastFallSpeed": 1500000, "shortHopVelocity": 760000, "fullHopVelocity": 1050000, "doubleJumpVelocity": 950000, "airAcceleration": 28000, "airSpeed": 650000, "traction": 45000, "jumpSquatFrames": 3},
   "moves": {
     "jab": {
       "animationRole": "jab",
@@ -17,9 +17,9 @@
           "type": "hitbox_on",
           "data": {
             "id": "jab-main",
-            "offsetX": 1100,
-            "offsetY": 1500,
-            "radius": 750,
+            "offsetX": 1100000,
+            "offsetY": 1500000,
+            "radius": 750000,
             "damageTenths": 35,
             "baseKnockback": 180000,
             "growthPer100Percent": 260000,
