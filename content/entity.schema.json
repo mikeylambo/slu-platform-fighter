@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slu.local/schemas/entity.schema.json",
+  "title": "SLU Platform Fighter - Fighter Owned Entities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "fighterId", "entities"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "fighterId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "entities": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/entity"}
+    }
+  },
+  "$defs": {
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "lifetimeFrames", "radius", "spawnOffsetX", "spawnOffsetY", "velocityX", "velocityY", "gravity", "damageTenths", "baseKnockback", "growthPer100Percent", "directionX", "directionY", "hitlagFrames", "hitstunFrames", "destroyOnHit", "maxHits"],
+      "properties": {
+        "kind": {"enum": ["projectile", "trap", "summon", "weapon"]},
+        "lifetimeFrames": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "radius": {"type": "integer", "minimum": 1},
+        "spawnOffsetX": {"type": "integer"},
+        "spawnOffsetY": {"type": "integer"},
+        "velocityX": {"type": "integer"},
+        "velocityY": {"type": "integer"},
+        "gravity": {"type": "integer", "minimum": 0},
+        "damageTenths": {"type": "integer", "minimum": 0},
+        "baseKnockback": {"type": "integer", "minimum": 0},
+        "growthPer100Percent": {"type": "integer", "minimum": 0},
+        "directionX": {"type": "integer"},
+        "directionY": {"type": "integer"},
+        "hitlagFrames": {"type": "integer", "minimum": 0},
+        "hitstunFrames": {"type": "integer", "minimum": 0},
+        "destroyOnHit": {"type": "boolean"},
+        "maxHits": {"type": "integer", "minimum": 1, "maximum": 255}
+      }
+    }
+  }
+}
