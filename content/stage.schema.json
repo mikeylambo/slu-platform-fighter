@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slu.local/schemas/stage.schema.json",
+  "title": "SLU Platform Fighter - Stage Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "id", "identity", "surfaces", "ledges", "spawns", "blastZone", "camera", "movingPlatforms", "hazards", "provenance"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["draft", "playable", "certified", "release"]},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["displayName", "description"],
+      "properties": {"displayName": {"type": "string", "minLength": 1}, "description": {"type": "string"}}
+    },
+    "surfaces": {"type": "array", "items": {"$ref": "#/$defs/surface"}, "minItems": 1},
+    "ledges": {"type": "array", "items": {"$ref": "#/$defs/ledge"}},
+    "spawns": {"type": "array", "items": {"$ref": "#/$defs/spawn"}, "minItems": 1},
+    "blastZone": {"$ref": "#/$defs/rect"},
+    "camera": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bounds", "padding", "minZoom", "maxZoom"],
+      "properties": {
+        "bounds": {"$ref": "#/$defs/rect"},
+        "padding": {"type": "integer", "minimum": 0},
+        "minZoom": {"type": "integer", "minimum": 1},
+        "maxZoom": {"type": "integer", "minimum": 1}
+      }
+    },
+    "movingPlatforms": {"type": "array", "items": {"$ref": "#/$defs/movingPlatform"}},
+    "hazards": {"type": "array", "items": {"$ref": "#/$defs/hazard"}},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["code", "assets"], "properties": {"code": {"type": "string"}, "assets": {"type": "array", "items": {"type": "object"}}}}
+  },
+  "$defs": {
+    "rect": {
+      "type": "object", "additionalProperties": false,
+      "required": ["left", "right", "bottom", "top"],
+      "properties": {"left": {"type": "integer"}, "right": {"type": "integer"}, "bottom": {"type": "integer"}, "top": {"type": "integer"}}
+    },
+    "surface": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "kind", "y", "xMin", "xMax"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "kind": {"enum": ["solid", "one-way"]},
+        "y": {"type": "integer"}, "xMin": {"type": "integer"}, "xMax": {"type": "integer"}
+      }
+    },
+    "ledge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "x", "y", "inward"],
+      "properties": {"id": {"type": "string", "minLength": 1}, "x": {"type": "integer"}, "y": {"type": "integer"}, "inward": {"enum": [-1, 1]}}
+    },
+    "spawn": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "x", "y", "facing"],
+      "properties": {"id": {"type": "string", "minLength": 1}, "x": {"type": "integer"}, "y": {"type": "integer"}, "facing": {"enum": [-1, 1]}}
+    },
+    "movingPlatform": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "kind", "width", "path", "periodFrames", "phaseFrames"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "kind": {"enum": ["solid", "one-way"]}, "width": {"type": "integer", "minimum": 1},
+        "path": {"type": "array", "minItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": {"x": {"type": "integer"}, "y": {"type": "integer"}}}},
+        "periodFrames": {"type": "integer", "minimum": 2}, "phaseFrames": {"type": "integer", "minimum": 0}
+      }
+    },
+    "hazard": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "kind", "x", "y", "radius", "activeFrames", "inactiveFrames", "phaseFrames"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "kind": {"enum": ["damage", "launch", "ko"]},
+        "x": {"type": "integer"}, "y": {"type": "integer"}, "radius": {"type": "integer", "minimum": 1},
+        "activeFrames": {"type": "integer", "minimum": 1}, "inactiveFrames": {"type": "integer", "minimum": 0}, "phaseFrames": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
