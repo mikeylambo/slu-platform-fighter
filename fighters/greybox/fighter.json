@@ -8,54 +8,91 @@
   "attributes": {"weight": 100000, "hurtboxWidth": 800000, "hurtboxHeight": 1800000},
   "movement": {"walkSpeed": 400000, "initialDashSpeed": 900000, "runSpeed": 720000, "gravity": 55000, "fallSpeed": 1050000, "fastFallSpeed": 1500000, "shortHopVelocity": 760000, "fullHopVelocity": 1050000, "doubleJumpVelocity": 950000, "airAcceleration": 28000, "airSpeed": 650000, "traction": 45000, "jumpSquatFrames": 3},
   "moves": {
-    "jab": {
-      "animationRole": "jab_1",
-      "totalFrames": 18,
-      "timeline": [
-        {"frame": 3, "type": "hitbox_on", "data": {"id": "jab-main", "offsetX": 1100000, "offsetY": 1500000, "radius": 750000, "damageTenths": 35, "baseKnockback": 180000, "growthPer100Percent": 260000, "directionX": 1000, "directionY": 420, "hitlagFrames": 4, "hitstunFrames": 11}},
-        {"frame": 6, "type": "hitbox_off", "data": {"id": "jab-main"}}
-      ]
-    },
-    "pummel": {
-      "animationRole": "pummel",
-      "grabAction": "pummel",
-      "totalFrames": 12,
-      "timeline": [
-        {"frame": 5, "type": "grab_damage", "data": {"damageTenths": 15, "hitlagFrames": 2}}
-      ]
-    },
-    "forward-throw": {
-      "animationRole": "forward_throw",
-      "grabAction": "forward-throw",
-      "totalFrames": 28,
-      "timeline": [
-        {"frame": 15, "type": "throw_release", "data": {"damageTenths": 55, "baseKnockback": 260000, "growthPer100Percent": 360000, "directionX": 1000, "directionY": 300, "hitstunFrames": 18}}
-      ]
-    },
-    "back-throw": {
-      "animationRole": "back_throw",
-      "grabAction": "back-throw",
-      "totalFrames": 31,
-      "timeline": [
-        {"frame": 17, "type": "throw_release", "data": {"damageTenths": 60, "baseKnockback": 280000, "growthPer100Percent": 390000, "directionX": -1000, "directionY": 340, "hitstunFrames": 20}}
-      ]
-    },
-    "up-throw": {
-      "animationRole": "up_throw",
-      "grabAction": "up-throw",
-      "totalFrames": 30,
-      "timeline": [
-        {"frame": 16, "type": "throw_release", "data": {"damageTenths": 50, "baseKnockback": 245000, "growthPer100Percent": 350000, "directionX": 100, "directionY": 1000, "hitstunFrames": 19}}
-      ]
-    },
-    "down-throw": {
-      "animationRole": "down_throw",
-      "grabAction": "down-throw",
-      "totalFrames": 32,
-      "timeline": [
-        {"frame": 18, "type": "throw_release", "data": {"damageTenths": 45, "baseKnockback": 185000, "growthPer100Percent": 260000, "directionX": 500, "directionY": 520, "hitstunFrames": 22}}
-      ]
-    }
+    "jab": {"animationRole": "jab_1", "totalFrames": 18, "timeline": [
+      {"frame": 3, "type": "hitbox_on", "data": {"id": "jab-main", "offsetX": 1100000, "offsetY": 1500000, "radius": 750000, "damageTenths": 35, "baseKnockback": 180000, "growthPer100Percent": 260000, "directionX": 1000, "directionY": 420, "hitlagFrames": 4, "hitstunFrames": 11}},
+      {"frame": 6, "type": "hitbox_off", "data": {"id": "jab-main"}}
+    ]},
+    "dash-attack": {"animationRole": "dash_attack", "totalFrames": 31, "timeline": [
+      {"frame": 7, "type": "hitbox_on", "data": {"id": "dash-main", "offsetX": 1200000, "offsetY": 1200000, "radius": 900000, "damageTenths": 80, "baseKnockback": 260000, "growthPer100Percent": 350000, "directionX": 1000, "directionY": 300, "hitlagFrames": 5, "hitstunFrames": 17}},
+      {"frame": 11, "type": "hitbox_off", "data": {"id": "dash-main"}}
+    ]},
+    "forward-tilt": {"animationRole": "forward_tilt", "totalFrames": 25, "timeline": [
+      {"frame": 6, "type": "hitbox_on", "data": {"id": "ftilt-main", "offsetX": 1350000, "offsetY": 1450000, "radius": 800000, "damageTenths": 70, "baseKnockback": 230000, "growthPer100Percent": 330000, "directionX": 1000, "directionY": 250, "hitlagFrames": 5, "hitstunFrames": 15}},
+      {"frame": 9, "type": "hitbox_off", "data": {"id": "ftilt-main"}}
+    ]},
+    "up-tilt": {"animationRole": "up_tilt", "totalFrames": 27, "timeline": [
+      {"frame": 6, "type": "hitbox_on", "data": {"id": "utilt-main", "offsetX": 250000, "offsetY": 2400000, "radius": 950000, "damageTenths": 65, "baseKnockback": 210000, "growthPer100Percent": 320000, "directionX": 160, "directionY": 1000, "hitlagFrames": 5, "hitstunFrames": 16}},
+      {"frame": 10, "type": "hitbox_off", "data": {"id": "utilt-main"}}
+    ]},
+    "down-tilt": {"animationRole": "down_tilt", "totalFrames": 22, "timeline": [
+      {"frame": 5, "type": "hitbox_on", "data": {"id": "dtilt-main", "offsetX": 1250000, "offsetY": 500000, "radius": 700000, "damageTenths": 55, "baseKnockback": 190000, "growthPer100Percent": 300000, "directionX": 1000, "directionY": 180, "hitlagFrames": 4, "hitstunFrames": 13}},
+      {"frame": 8, "type": "hitbox_off", "data": {"id": "dtilt-main"}}
+    ]},
+    "forward-smash": {"animationRole": "forward_smash", "totalFrames": 48, "timeline": [
+      {"frame": 14, "type": "hitbox_on", "data": {"id": "fsmash-main", "offsetX": 1550000, "offsetY": 1450000, "radius": 950000, "damageTenths": 140, "baseKnockback": 360000, "growthPer100Percent": 500000, "directionX": 1000, "directionY": 260, "hitlagFrames": 8, "hitstunFrames": 26}},
+      {"frame": 18, "type": "hitbox_off", "data": {"id": "fsmash-main"}}
+    ]},
+    "up-smash": {"animationRole": "up_smash", "totalFrames": 51, "timeline": [
+      {"frame": 13, "type": "hitbox_on", "data": {"id": "usmash-main", "offsetX": 0, "offsetY": 2550000, "radius": 1050000, "damageTenths": 130, "baseKnockback": 340000, "growthPer100Percent": 490000, "directionX": 80, "directionY": 1000, "hitlagFrames": 8, "hitstunFrames": 27}},
+      {"frame": 18, "type": "hitbox_off", "data": {"id": "usmash-main"}}
+    ]},
+    "down-smash": {"animationRole": "down_smash", "totalFrames": 45, "timeline": [
+      {"frame": 11, "type": "hitbox_on", "data": {"id": "dsmash-front", "offsetX": 1250000, "offsetY": 450000, "radius": 850000, "damageTenths": 120, "baseKnockback": 320000, "growthPer100Percent": 460000, "directionX": 1000, "directionY": 220, "hitlagFrames": 7, "hitstunFrames": 24}},
+      {"frame": 11, "type": "hitbox_on", "data": {"id": "dsmash-back", "offsetX": -1250000, "offsetY": 450000, "radius": 850000, "damageTenths": 120, "baseKnockback": 320000, "growthPer100Percent": 460000, "directionX": -1000, "directionY": 220, "hitlagFrames": 7, "hitstunFrames": 24}},
+      {"frame": 15, "type": "hitbox_off", "data": {"id": "dsmash-front"}},
+      {"frame": 15, "type": "hitbox_off", "data": {"id": "dsmash-back"}}
+    ]},
+    "neutral-air": {"animationRole": "neutral_air", "totalFrames": 38, "timeline": [
+      {"frame": 5, "type": "hitbox_on", "data": {"id": "nair-main", "offsetX": 0, "offsetY": 1400000, "radius": 1100000, "damageTenths": 75, "baseKnockback": 220000, "growthPer100Percent": 330000, "directionX": 850, "directionY": 420, "hitlagFrames": 5, "hitstunFrames": 16}},
+      {"frame": 11, "type": "hitbox_off", "data": {"id": "nair-main"}}
+    ]},
+    "forward-air": {"animationRole": "forward_air", "totalFrames": 41, "timeline": [
+      {"frame": 8, "type": "hitbox_on", "data": {"id": "fair-main", "offsetX": 1450000, "offsetY": 1350000, "radius": 850000, "damageTenths": 95, "baseKnockback": 270000, "growthPer100Percent": 390000, "directionX": 1000, "directionY": 320, "hitlagFrames": 6, "hitstunFrames": 20}},
+      {"frame": 12, "type": "hitbox_off", "data": {"id": "fair-main"}}
+    ]},
+    "back-air": {"animationRole": "back_air", "totalFrames": 36, "timeline": [
+      {"frame": 6, "type": "hitbox_on", "data": {"id": "bair-main", "offsetX": -1350000, "offsetY": 1450000, "radius": 850000, "damageTenths": 105, "baseKnockback": 300000, "growthPer100Percent": 410000, "directionX": -1000, "directionY": 280, "hitlagFrames": 6, "hitstunFrames": 21}},
+      {"frame": 10, "type": "hitbox_off", "data": {"id": "bair-main"}}
+    ]},
+    "up-air": {"animationRole": "up_air", "totalFrames": 34, "timeline": [
+      {"frame": 6, "type": "hitbox_on", "data": {"id": "uair-main", "offsetX": 0, "offsetY": 2250000, "radius": 850000, "damageTenths": 80, "baseKnockback": 240000, "growthPer100Percent": 370000, "directionX": 120, "directionY": 1000, "hitlagFrames": 5, "hitstunFrames": 18}},
+      {"frame": 10, "type": "hitbox_off", "data": {"id": "uair-main"}}
+    ]},
+    "down-air": {"animationRole": "down_air", "totalFrames": 46, "timeline": [
+      {"frame": 11, "type": "hitbox_on", "data": {"id": "dair-main", "offsetX": 0, "offsetY": 300000, "radius": 900000, "damageTenths": 110, "baseKnockback": 300000, "growthPer100Percent": 420000, "directionX": 100, "directionY": -1000, "hitlagFrames": 7, "hitstunFrames": 23}},
+      {"frame": 15, "type": "hitbox_off", "data": {"id": "dair-main"}}
+    ]},
+    "neutral-special": {"animationRole": "neutral_special", "totalFrames": 42, "timeline": [
+      {"frame": 12, "type": "hitbox_on", "data": {"id": "nspecial-main", "offsetX": 1700000, "offsetY": 1500000, "radius": 750000, "damageTenths": 90, "baseKnockback": 260000, "growthPer100Percent": 380000, "directionX": 1000, "directionY": 260, "hitlagFrames": 6, "hitstunFrames": 19}},
+      {"frame": 16, "type": "hitbox_off", "data": {"id": "nspecial-main"}}
+    ]},
+    "side-special": {"animationRole": "side_special", "totalFrames": 50, "timeline": [
+      {"frame": 10, "type": "hitbox_on", "data": {"id": "sspecial-main", "offsetX": 1550000, "offsetY": 1200000, "radius": 950000, "damageTenths": 115, "baseKnockback": 310000, "growthPer100Percent": 420000, "directionX": 1000, "directionY": 240, "hitlagFrames": 7, "hitstunFrames": 22}},
+      {"frame": 15, "type": "hitbox_off", "data": {"id": "sspecial-main"}}
+    ]},
+    "up-special": {"animationRole": "up_special", "totalFrames": 48, "timeline": [
+      {"frame": 7, "type": "hitbox_on", "data": {"id": "uspecial-main", "offsetX": 300000, "offsetY": 2000000, "radius": 900000, "damageTenths": 90, "baseKnockback": 250000, "growthPer100Percent": 390000, "directionX": 250, "directionY": 1000, "hitlagFrames": 6, "hitstunFrames": 20}},
+      {"frame": 12, "type": "hitbox_off", "data": {"id": "uspecial-main"}}
+    ]},
+    "down-special": {"animationRole": "down_special", "totalFrames": 44, "timeline": [
+      {"frame": 9, "type": "hitbox_on", "data": {"id": "dspecial-main", "offsetX": 0, "offsetY": 900000, "radius": 1200000, "damageTenths": 100, "baseKnockback": 280000, "growthPer100Percent": 400000, "directionX": 700, "directionY": 600, "hitlagFrames": 6, "hitstunFrames": 21}},
+      {"frame": 14, "type": "hitbox_off", "data": {"id": "dspecial-main"}}
+    ]},
+    "pummel": {"animationRole": "pummel", "grabAction": "pummel", "totalFrames": 12, "timeline": [
+      {"frame": 5, "type": "grab_damage", "data": {"damageTenths": 15, "hitlagFrames": 2}}
+    ]},
+    "forward-throw": {"animationRole": "forward_throw", "grabAction": "forward-throw", "totalFrames": 28, "timeline": [
+      {"frame": 15, "type": "throw_release", "data": {"damageTenths": 55, "baseKnockback": 260000, "growthPer100Percent": 360000, "directionX": 1000, "directionY": 300, "hitstunFrames": 18}}
+    ]},
+    "back-throw": {"animationRole": "back_throw", "grabAction": "back-throw", "totalFrames": 31, "timeline": [
+      {"frame": 17, "type": "throw_release", "data": {"damageTenths": 60, "baseKnockback": 280000, "growthPer100Percent": 390000, "directionX": -1000, "directionY": 340, "hitstunFrames": 20}}
+    ]},
+    "up-throw": {"animationRole": "up_throw", "grabAction": "up-throw", "totalFrames": 30, "timeline": [
+      {"frame": 16, "type": "throw_release", "data": {"damageTenths": 50, "baseKnockback": 245000, "growthPer100Percent": 350000, "directionX": 100, "directionY": 1000, "hitstunFrames": 19}}
+    ]},
+    "down-throw": {"animationRole": "down_throw", "grabAction": "down-throw", "totalFrames": 32, "timeline": [
+      {"frame": 18, "type": "throw_release", "data": {"damageTenths": 45, "baseKnockback": 185000, "growthPer100Percent": 260000, "directionX": 500, "directionY": 520, "hitstunFrames": 22}}
+    ]}
   },
   "ownedEntities": [],
   "palettes": {"00": {"primary": "#808080", "secondary": "#D0D0D0", "accent": "#FFFFFF", "skin": "#B0B0B0", "hair": "#404040", "metal": "#A0A0A0", "energy": "#80C0FF"}},
