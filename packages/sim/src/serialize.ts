@@ -1,6 +1,6 @@
 import type { FighterState, LocomotionState, OwnedEntityState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
 
-export const WORLD_BINARY_VERSION = 10;
+export const WORLD_BINARY_VERSION = 11;
 
 const locomotionCode: Record<LocomotionState, number> = {
   idle: 0, walk: 1, dash: 2, run: 3, turn: 4, crouch: 5, 'jump-squat': 6, airborne: 7,
@@ -83,6 +83,8 @@ function writeFighter(writer: ByteWriter, fighter: FighterState) {
     writer.string(fighter.grabAction.actionId);
     writer.u16(fighter.grabAction.frame);
   }
+  writeOptionalString(writer, fighter.lastHitById);
+  writer.i32(fighter.lastHitFrame);
   writer.u8(fighter.stocks);
   writer.bool(fighter.eliminated);
   writer.u16(fighter.respawnFrames);
