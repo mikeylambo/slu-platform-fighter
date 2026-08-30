@@ -2,6 +2,7 @@ import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { GrabActionDefinition, GrabActionInput } from '../../content/src/compileGrabActions.js';
 import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type CombatEvent } from './combat.js';
 import { stepHitstunKnockback } from './knockback.js';
+import { DEFAULT_STOCK_MATCH_RULES, stepStockLifecycle, type LifecycleEvent, type StockMatchRules } from './lifecycle.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
 import { createFighterState, createWorld } from './world.js';
 import type { FighterState, SimInputFrame, WorldState } from './types.js';
@@ -11,7 +12,7 @@ export interface GrabEvent { type: 'grab'; attackerId: string; targetId: string;
 export interface GrabReleaseEvent { type: 'grab-release'; attackerId: string; targetId: string; }
 export interface PummelEvent { type: 'pummel'; attackerId: string; targetId: string; actionId: string; damageTenths: number; }
 export interface ThrowEvent { type: 'throw'; attackerId: string; targetId: string; actionId: string; damageTenths: number; knockbackX: Fixed; knockbackY: Fixed; hitstunFrames: number; }
-export type MatchEvent = CombatEvent | GrabEvent | GrabReleaseEvent | PummelEvent | ThrowEvent;
+export type MatchEvent = CombatEvent | GrabEvent | GrabReleaseEvent | PummelEvent | ThrowEvent | LifecycleEvent;
 export interface MatchStepResult { state: WorldState; events: MatchEvent[]; }
 
 const HURTBOX_RADIUS = fixed.fromRatio(3, 4);
@@ -62,6 +63,7 @@ function abs(value: Fixed): Fixed { return value < fixed.zero ? fixed.sub(fixed.
 
 function eligibleGrabTarget(attacker: FighterState, target: FighterState): boolean {
   if (attacker.id === target.id || target.grabbedById !== null || target.grabTargetId !== null) return false;
+  if (target.eliminated || target.respawnFrames > 0) return false;
   if (target.invulnerableFrames > 0 || target.hitstunFrames > 0) return false;
   const dx = fixed.sub(target.x, attacker.x);
   if ((attacker.facing === 1 && dx < fixed.zero) || (attacker.facing === -1 && dx > fixed.zero)) return false;
@@ -74,6 +76,7 @@ function resolveGrabAttempts(fightersInput: FighterState[], inputs: Readonly<Rec
   for (const attacker of [...fighters].sort((a, b) => a.id.localeCompare(b.id))) {
     const input = inputs[attacker.id];
     if (!input?.grabPressed || attacker.grabTargetId !== null || attacker.grabbedById !== null) continue;
+    if (attacker.eliminated || attacker.respawnFrames > 0) continue;
     if (attacker.hitstunFrames > 0 || attacker.hitlagFrames > 0 || attacker.invulnerableFrames > 0 || attacker.attack !== null) continue;
     const candidates = fighters.filter((target) => eligibleGrabTarget(attacker, target)).sort((a, b) => {
       const da = abs(fixed.sub(a.x, attacker.x)); const db = abs(fixed.sub(b.x, attacker.x));
@@ -153,7 +156,7 @@ function stepGrabActions(
   const byId = new Map([...definitions.values()].map((definition) => [definition.id, definition] as const));
 
   for (const initialCaptor of [...fighters].sort((a, b) => a.id.localeCompare(b.id))) {
-    if (initialCaptor.grabTargetId === null) continue;
+    if (initialCaptor.grabTargetId === null || initialCaptor.eliminated || initialCaptor.respawnFrames > 0) continue;
     const captorIndex = fighters.findIndex((fighter) => fighter.id === initialCaptor.id);
     if (captorIndex < 0) continue;
     const indexedCaptor = fighters[captorIndex];
@@ -214,6 +217,7 @@ export function stepMatchWorld(
   defaultAttackId: string,
   movementRules: MovementRules = K1_MOVEMENT,
   grabActions: ReadonlyMap<GrabActionInput, GrabActionDefinition> = new Map(),
+  stockRules: StockMatchRules = DEFAULT_STOCK_MATCH_RULES,
 ): MatchStepResult {
   if (matchInput.frame !== state.frame) throw new Error(`match input frame ${matchInput.frame} does not match world frame ${state.frame}`);
   const canonicalInputs: Record<string, SimInputFrame> = {};
@@ -225,6 +229,7 @@ export function stepMatchWorld(
 
   const moved = [...state.fighters].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => {
     const input = canonicalInputs[fighter.id] ?? neutralInput(state.frame);
+    if (fighter.eliminated || fighter.respawnFrames > 0) return fighter;
     if (fighter.grabbedById !== null || fighter.hitlagFrames > 0) return fighter;
     if (fighter.hitstunFrames > 0) return stepHitstunKnockback({ ...fighter, shielding: false }, input, state.surfaces, movementRules);
     const movementInput = movementInputForDefense(input, fighter);
@@ -240,7 +245,7 @@ export function stepMatchWorld(
   });
 
   const grabbed = resolveGrabAttempts(moved, canonicalInputs);
-  const combatEligible = grabbed.fighters.map((fighter) => fighter.grabbedById !== null ? { ...fighter, invulnerableFrames: Math.max(1, fighter.invulnerableFrames) } : fighter);
+  const combatEligible = grabbed.fighters.map((fighter) => fighter.grabbedById !== null || fighter.eliminated || fighter.respawnFrames > 0 ? { ...fighter, invulnerableFrames: Math.max(1, fighter.invulnerableFrames) } : fighter);
   const combat = stepCombatFrame(combatEligible.map(combatantFromFighter), attacks);
   const combatById = new Map(combat.combatants.map((entry) => [entry.id, entry] as const));
   const combatMerged = grabbed.fighters.map((fighter) => {
@@ -249,9 +254,10 @@ export function stepMatchWorld(
   });
   const maintained = maintainGrabRelationships(combatMerged);
   const grabActionResult = stepGrabActions(maintained.fighters, canonicalInputs, grabActions);
+  const lifecycle = stepStockLifecycle(grabActionResult.fighters, state.winnerId, stockRules);
 
   return {
-    state: { frame: state.frame + 1, seed: state.seed, fighters: grabActionResult.fighters, surfaces: state.surfaces, ledges: state.ledges },
-    events: [...grabbed.events, ...combat.events, ...maintained.events, ...grabActionResult.events],
+    state: { frame: state.frame + 1, seed: state.seed, fighters: lifecycle.fighters, surfaces: state.surfaces, ledges: state.ledges, winnerId: lifecycle.winnerId },
+    events: [...grabbed.events, ...combat.events, ...maintained.events, ...grabActionResult.events, ...lifecycle.events],
   };
 }
