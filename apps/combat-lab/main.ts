@@ -119,6 +119,7 @@ function drawHitboxes(fighter: FighterState, visual: FighterVisual) {
 function interpolateFighter(id: string, alpha: number) {
   const current = world.fighters.find((entry) => entry.id === id); if (!current) return;
   const old = previous.fighters.find((entry) => entry.id === id) ?? current; const visual = visuals.get(id); if (!visual) return;
+  visual.root.visible = !current.eliminated;
   visual.root.position.set(THREE.MathUtils.lerp(fixed.toNumber(old.x), fixed.toNumber(current.x), alpha), THREE.MathUtils.lerp(fixed.toNumber(old.y), fixed.toNumber(current.y), alpha), 0);
   visual.root.scale.x = current.facing; visual.hurtbox.visible = current.invulnerableFrames === 0 || world.frame % 4 < 2; visual.shield.visible = current.shielding;
   visual.shield.scale.setScalar(0.65 + (current.shieldHealth / 600) * 0.35);
@@ -131,6 +132,7 @@ function fighterHud(label: string, fighter: FighterState): string[] {
   const grab = fighter.grabTargetId ? `holding ${fighter.grabTargetId} [${fighter.grabFrames}]` : fighter.grabbedById ? `grabbed by ${fighter.grabbedById} [${fighter.grabFrames}]` : 'none';
   return [
     `${label} ${(fighter.percentTenths / 10).toFixed(1).padStart(5)}%  ${fighter.locomotion}`,
+    `   stocks   ${fighter.stocks}  ${fighter.eliminated ? 'ELIMINATED' : fighter.respawnFrames > 0 ? `respawn ${fighter.respawnFrames}` : 'active'}`,
     `   attack   ${fighter.attack ? `${fighter.attack.attackId} [${fighter.attack.frame}]` : 'none'}`,
     `   grab     ${grab}`,
     `   action   ${fighter.grabAction ? `${fighter.grabAction.actionId} [${fighter.grabAction.frame}]` : 'none'}`,
@@ -141,13 +143,15 @@ function fighterHud(label: string, fighter: FighterState): string[] {
 
 function renderHud() {
   const a = world.fighters.find((entry) => entry.id === 'fighter-a'); const b = world.fighters.find((entry) => entry.id === 'fighter-b'); if (!a || !b) return;
-  hud.textContent = ['SLU PLATFORM FIGHTER — K2 COMBAT / DEFENSE LAB', `frame      ${world.frame}`, '', ...fighterHud('P1', a), '', ...fighterHud('P2', b), `   dummy shield toggle ${dummyShield ? 'ON' : 'off'}`, '', `sim        ${paused ? 'PAUSED' : 'RUNNING'} @ ${SIM_HZ} Hz`].join('\n');
+  hud.textContent = ['SLU PLATFORM FIGHTER — K2 COMBAT / DEFENSE LAB', `frame      ${world.frame}`, `winner     ${world.winnerId ?? 'unresolved'}`, '', ...fighterHud('P1', a), '', ...fighterHud('P2', b), `   dummy shield toggle ${dummyShield ? 'ON' : 'off'}`, '', `sim        ${paused ? 'PAUSED' : 'RUNNING'} @ ${SIM_HZ} Hz`].join('\n');
   if (!lastEvent) return;
   if (lastEvent.type === 'hit') eventsHud.textContent = [flashFrames > 0 ? 'HIT!' : 'LAST HIT', `${lastEvent.attackerId} → ${lastEvent.targetId}`, `${lastEvent.attackId} / ${lastEvent.hitboxId}`, `damage ${(lastEvent.damageTenths / 10).toFixed(1)}%`, `hitlag ${lastEvent.hitlagFrames} / hitstun ${lastEvent.hitstunFrames}`].join('\n');
   else if (lastEvent.type === 'block') eventsHud.textContent = [lastEvent.broken ? 'SHIELD BREAK!' : flashFrames > 0 ? 'BLOCK!' : 'LAST BLOCK', `${lastEvent.attackerId} → ${lastEvent.targetId}`, `${lastEvent.attackId} / ${lastEvent.hitboxId}`, `shield -${lastEvent.shieldDamage} → ${lastEvent.shieldHealthAfter}`, `shieldstun ${lastEvent.shieldStunFrames}`].join('\n');
   else if (lastEvent.type === 'pummel') eventsHud.textContent = [flashFrames > 0 ? 'PUMMEL!' : 'LAST PUMMEL', `${lastEvent.attackerId} → ${lastEvent.targetId}`, lastEvent.actionId, `damage ${(lastEvent.damageTenths / 10).toFixed(1)}%`].join('\n');
   else if (lastEvent.type === 'throw') eventsHud.textContent = [flashFrames > 0 ? 'THROW!' : 'LAST THROW', `${lastEvent.attackerId} → ${lastEvent.targetId}`, lastEvent.actionId, `damage ${(lastEvent.damageTenths / 10).toFixed(1)}%`, `hitstun ${lastEvent.hitstunFrames}`].join('\n');
-  else eventsHud.textContent = [lastEvent.type === 'grab' ? (flashFrames > 0 ? 'GRAB!' : 'LAST GRAB') : 'GRAB RELEASE', `${lastEvent.attackerId} → ${lastEvent.targetId}`].join('\n');
+  else if (lastEvent.type === 'ko') eventsHud.textContent = [lastEvent.eliminated ? 'FINAL KO!' : 'KO!', lastEvent.fighterId, `stocks ${lastEvent.stocksAfter}`, lastEvent.eliminated ? 'ELIMINATED' : 'RESPAWNING'].join('\n');
+  else if (lastEvent.type === 'respawn') eventsHud.textContent = ['RESPAWN', lastEvent.fighterId].join('\n');
+  else if (lastEvent.type === 'grab' || lastEvent.type === 'grab-release') eventsHud.textContent = [lastEvent.type === 'grab' ? (flashFrames > 0 ? 'GRAB!' : 'LAST GRAB') : 'GRAB RELEASE', `${lastEvent.attackerId} → ${lastEvent.targetId}`].join('\n');
 }
 
 function frame(now: number) {
