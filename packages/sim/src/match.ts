@@ -4,15 +4,8 @@ import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement
 import { createFighterState, createWorld } from './world.js';
 import type { FighterState, SimInputFrame, WorldState } from './types.js';
 
-export interface MatchInputFrame {
-  frame: number;
-  byFighterId: Readonly<Record<string, SimInputFrame>>;
-}
-
-export interface MatchStepResult {
-  state: WorldState;
-  events: HitEvent[];
-}
+export interface MatchInputFrame { frame: number; byFighterId: Readonly<Record<string, SimInputFrame>>; }
+export interface MatchStepResult { state: WorldState; events: HitEvent[]; }
 
 const HURTBOX_RADIUS = fixed.fromRatio(3, 4);
 const HURTBOX_OFFSET_Y = fixed.fromRatio(3, 2);
@@ -41,6 +34,7 @@ function combatantFromFighter(fighter: FighterState): CombatantState {
     percentTenths: fighter.percentTenths,
     hitlagFrames: fighter.hitlagFrames,
     hitstunFrames: fighter.hitstunFrames,
+    invulnerableFrames: fighter.invulnerableFrames,
     attack: fighter.attack,
   };
 }
@@ -63,16 +57,7 @@ function mergeCombat(fighter: FighterState, combatant: CombatantState): FighterS
 }
 
 function neutralInput(frame: number): SimInputFrame {
-  return {
-    frame,
-    moveX: 0,
-    moveY: 0,
-    jumpPressed: false,
-    jumpHeld: false,
-    attackPressed: false,
-    dodgePressed: false,
-    shieldHeld: false,
-  };
+  return { frame, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, dodgePressed: false, shieldHeld: false };
 }
 
 export function stepMatchWorld(
@@ -107,13 +92,7 @@ export function stepMatchWorld(
   });
 
   return {
-    state: {
-      frame: state.frame + 1,
-      seed: state.seed,
-      fighters,
-      surfaces: state.surfaces,
-      ledges: state.ledges,
-    },
+    state: { frame: state.frame + 1, seed: state.seed, fighters, surfaces: state.surfaces, ledges: state.ledges },
     events: combat.events,
   };
 }
