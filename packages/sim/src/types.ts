@@ -6,15 +6,19 @@ export type LocomotionState =
 
 export interface SimInputFrame {
   frame: number;
-  /** Quantized analogue horizontal axis in [-1000, 1000]. */
+  /** Quantized analogue horizontal movement axis in [-1000, 1000]. */
   moveX: number;
-  /** Quantized analogue vertical axis in [-1000, 1000]. */
+  /** Quantized analogue vertical movement axis in [-1000, 1000]. */
   moveY: number;
   jumpPressed: boolean;
   jumpHeld: boolean;
   /** Movement-only adapters may omit combat semantics; combat adapters should provide them explicitly. */
   attackPressed?: boolean;
+  specialPressed?: boolean;
   grabPressed?: boolean;
+  /** Quantized semantic smash/right-stick axes in [-1000, 1000]. Zero means no smash-stick request. */
+  smashX?: number;
+  smashY?: number;
   dodgePressed: boolean;
   shieldHeld: boolean;
 }
