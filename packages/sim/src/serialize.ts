@@ -1,6 +1,6 @@
-import type { FighterState, LocomotionState, OwnedEntityState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
+import type { FighterState, LocomotionState, MatchRuntimeState, OwnedEntityState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
 
-export const WORLD_BINARY_VERSION = 11;
+export const WORLD_BINARY_VERSION = 12;
 
 const locomotionCode: Record<LocomotionState, number> = {
   idle: 0, walk: 1, dash: 2, run: 3, turn: 4, crouch: 5, 'jump-squat': 6, airborne: 7,
@@ -107,11 +107,25 @@ function writeEntity(writer: ByteWriter, entity: OwnedEntityState) {
   for (const target of targets) writer.string(target);
 }
 
+function writeMatch(writer: ByteWriter, match: MatchRuntimeState | undefined) {
+  writer.bool(match !== undefined);
+  if (!match) return;
+  writer.u8(match.mode === 'stock' ? 0 : match.mode === 'time' ? 1 : 2);
+  writer.bool(match.framesRemaining !== null);
+  if (match.framesRemaining !== null) writer.u32(match.framesRemaining);
+  const scores = Object.entries(match.scores).sort(([a], [b]) => a.localeCompare(b));
+  writer.u16(scores.length);
+  for (const [participantId, score] of scores) { writer.string(participantId); writer.i32(score); }
+  writer.bool(match.suddenDeath);
+  writer.bool(match.ended);
+}
+
 export function serializeWorldState(state: WorldState): Uint8Array {
   const writer = new ByteWriter();
   writer.u8(0x53); writer.u8(0x4c); writer.u8(0x50); writer.u8(0x46);
   writer.u16(WORLD_BINARY_VERSION); writer.u32(state.frame); writer.u32(state.seed);
   writeOptionalString(writer, state.winnerId);
+  writeMatch(writer, state.match);
   writer.u32(state.nextEntitySerial ?? 1);
   const surfaces = [...state.surfaces].sort((a, b) => a.id.localeCompare(b.id));
   writer.u16(surfaces.length); for (const surface of surfaces) writeSurface(writer, surface);
