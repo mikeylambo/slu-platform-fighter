@@ -6,12 +6,12 @@ import type { WorldState } from '../../sim/src/types.js';
 
 function assert(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(`K34 authoring-automation certification failure: ${message}`); }
 
-let captured: MatchInputFrame | null = null;
-const passthroughStep = (state: WorldState, input: MatchInputFrame): MatchStepResult => { captured = structuredClone(input); return { state: { ...state, frame: state.frame + 1 }, events: [] }; };
+const captures: MatchInputFrame[] = [];
+const passthroughStep = (state: WorldState, input: MatchInputFrame): MatchStepResult => { captures.push(structuredClone(input)); return { state: { ...state, frame: state.frame + 1 }, events: [] }; };
 const session = new TrainingSession(createTwoFighterMatch(1234), ['fighter-a', 'fighter-b'], passthroughStep);
 session.setDummyProfile('fighter-b', 'tech-left');
 session.stepFrame();
-assert(captured?.byFighterId['fighter-b']?.moveX === -1000, 'tech-left preset must produce deterministic directional input');
+const tech = captures.at(-1); assert(tech !== undefined && tech.byFighterId['fighter-b']?.moveX === -1000, 'tech-left preset must produce deterministic directional input');
 
 const playback: DummyPlayback = {
   loop: true,
@@ -21,9 +21,9 @@ const playback: DummyPlayback = {
   ],
 };
 session.setDummyPlayback('fighter-b', playback);
-session.stepFrame(); const a = captured!;
-session.stepFrame(); const b = captured!;
-session.stepFrame(); const c = captured!;
+session.stepFrame(); const a = captures.at(-1); assert(a !== undefined, 'first playback frame must be captured');
+session.stepFrame(); const b = captures.at(-1); assert(b !== undefined, 'second playback frame must be captured');
+session.stepFrame(); const c = captures.at(-1); assert(c !== undefined, 'looped playback frame must be captured');
 assert(a.byFighterId['fighter-b']?.attackPressed === true && b.byFighterId['fighter-b']?.moveX === 500 && c.byFighterId['fighter-b']?.attackPressed === true, 'dummy playback must loop authored deterministic input sequences');
 
 assert(SCENARIO_BOT_CATALOG.length >= 8, 'scenario bot catalog must cover reusable attack/defense/grab/recovery/tech cases');
