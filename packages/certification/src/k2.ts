@@ -1,7 +1,7 @@
 import { fixed } from '../../deterministic-math/src/fixed.js';
 import { compileFighterAttacks } from '../../content/src/compileMoves.js';
 import { ALL_FIGHTER_PACKS } from '../../content/src/generated/fighterRegistry.js';
-import { beginAttack, stepCombatFrame, type CombatantState } from '../../sim/src/combat.js';
+import { beginAttack, K2_DEFENSE, stepCombatFrame, type CombatantState } from '../../sim/src/combat.js';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`K2 certification failure: ${message}`);
@@ -30,6 +30,10 @@ function body(id: string, x: number, facing: -1 | 1): CombatantState {
     hitstunFrames: 0,
     invulnerableFrames: 0,
     attack: null,
+    shielding: false,
+    shieldHealth: K2_DEFENSE.shieldMaxHealth,
+    shieldStunFrames: 0,
+    shieldRegenDelayFrames: 0,
   };
 }
 
@@ -45,7 +49,8 @@ for (let frame = 0; frame < 12; frame += 1) {
   if (result.events.length > 0) {
     eventCount += result.events.length;
     const event = result.events[0];
-    assert(event?.attackerId === 'a' && event.targetId === 'b', 'hit event must use stable attacker/target ids');
+    assert(event?.type === 'hit', 'unshielded overlap must emit hit event');
+    assert(event.attackerId === 'a' && event.targetId === 'b', 'hit event must use stable attacker/target ids');
     assert(event.hitboxId === 'jab-main', 'active hitbox id must survive into event stream');
     assert(event.damageTenths === 35, 'damage must be integer tenths from fighter pack');
     assert(event.knockbackX > fixed.zero && event.knockbackY > fixed.zero, 'forward-up hit must create positive knockback components');
@@ -75,7 +80,7 @@ const mirroredSource = { ...beginAttack(body('source', 0, -1), jab.id), attack: 
 const mirroredTarget = body('target', -18, 1);
 const mirrored = stepCombatFrame([mirroredSource, mirroredTarget], attacks);
 const mirrorEvent = mirrored.events[0];
-assert(mirrorEvent !== undefined, 'mirrored setup must produce a hit event');
+assert(mirrorEvent?.type === 'hit', 'mirrored setup must produce a hit event');
 assert(mirrorEvent.knockbackX < fixed.zero, 'fighter facing must mirror authored horizontal launch direction');
 assert(mirrorEvent.knockbackY > fixed.zero, 'fighter facing must not mirror vertical launch direction');
 
@@ -86,4 +91,24 @@ const dodgedTarget = dodged.combatants.find((entry) => entry.id === 'target');
 assert(dodged.events.length === 0, 'active hitbox must not hit an invulnerable target');
 assert(dodgedTarget?.percentTenths === 0, 'invulnerability must prevent percent damage');
 
-console.log('K2 PASS — fighter-pack move compilation, attack timelines, stable collision ordering, once-per-attack hits, damage, hitlag/hitstun, percent scaling, mirrored knockback, and dodge invulnerability certified.');
+const shieldSource = { ...beginAttack(body('source', 0, 1), jab.id), attack: { attackId: jab.id, frame: 3, hitTargets: [] } };
+const shieldTarget = { ...body('target', 18, -1), shielding: true };
+const blocked = stepCombatFrame([shieldSource, shieldTarget], attacks);
+const blockEvent = blocked.events[0];
+const blockedTarget = blocked.combatants.find((entry) => entry.id === 'target');
+assert(blockEvent?.type === 'block', 'shielded overlap must emit block event rather than hit');
+assert(blockEvent.shieldDamage > 0 && blockEvent.shieldHealthAfter < K2_DEFENSE.shieldMaxHealth, 'block must consume shield health');
+assert(blockedTarget?.percentTenths === 0, 'shield block must prevent percent damage');
+assert((blockedTarget?.shieldStunFrames ?? 0) > 0, 'shield block must create shieldstun');
+assert((blockedTarget?.shieldRegenDelayFrames ?? 0) > 0, 'shield block must delay regeneration');
+
+const breakSource = { ...beginAttack(body('source', 0, 1), jab.id), attack: { attackId: jab.id, frame: 3, hitTargets: [] } };
+const breakTarget = { ...body('target', 18, -1), shielding: true, shieldHealth: 1 };
+const broken = stepCombatFrame([breakSource, breakTarget], attacks);
+const breakEvent = broken.events[0];
+const brokenTarget = broken.combatants.find((entry) => entry.id === 'target');
+assert(breakEvent?.type === 'block' && breakEvent.broken, 'depleted shield must flag deterministic shield break');
+assert(brokenTarget?.shieldHealth === 0 && !brokenTarget.shielding, 'shield break must deplete and release shield');
+assert((brokenTarget?.hitstunFrames ?? 0) > 0, 'shield break must create break stun');
+
+console.log('K2 PASS — fighter-pack attacks, hits, dodge invulnerability, shield blocks, shieldstun, regeneration delay, and shield break certified.');
