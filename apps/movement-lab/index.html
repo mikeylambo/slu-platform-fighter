@@ -7,12 +7,22 @@
     <style>
       html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #090b10; color: #eef2ff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
       canvas { display: block; }
-      #hud { position: fixed; inset: 16px auto auto 16px; padding: 12px 14px; background: rgba(8,10,16,.82); border: 1px solid rgba(255,255,255,.16); border-radius: 8px; white-space: pre; line-height: 1.45; pointer-events: none; }
+      #hud, #tuner { position: fixed; top: 16px; padding: 12px 14px; background: rgba(8,10,16,.86); border: 1px solid rgba(255,255,255,.16); border-radius: 8px; line-height: 1.45; }
+      #hud { left: 16px; white-space: pre; pointer-events: none; }
+      #tuner { right: 16px; width: min(330px, calc(100vw - 32px)); max-height: calc(100vh - 92px); overflow: auto; }
+      #tuner h2 { margin: 0 0 8px; font-size: 14px; }
+      .control { display: grid; grid-template-columns: 1fr 72px; gap: 8px; align-items: center; margin: 7px 0; font-size: 11px; }
+      .control input[type="range"] { grid-column: 1 / -1; width: 100%; }
+      .control output { text-align: right; }
+      .buttons { display: flex; gap: 8px; margin-top: 12px; }
+      button { flex: 1; background: #202838; color: #eef2ff; border: 1px solid rgba(255,255,255,.16); border-radius: 6px; padding: 7px; cursor: pointer; }
       #help { position: fixed; inset: auto 16px 16px 16px; padding: 10px 12px; background: rgba(8,10,16,.72); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; text-align: center; pointer-events: none; }
+      @media (max-width: 760px) { #tuner { top: auto; bottom: 58px; max-height: 42vh; } #hud { font-size: 10px; } }
     </style>
   </head>
   <body>
     <div id="hud"></div>
+    <aside id="tuner"><h2>MOVEMENT RULES — LIVE LAB</h2><div id="controls"></div><div class="buttons"><button id="defaults">Defaults</button><button id="copy-rules">Copy JSON</button></div></aside>
     <div id="help">A/D or Left/Right: move · S/Down: crouch/drop/fastfall · Space: jump · P: pause · .: frame step · R: reset · Gamepad supported</div>
     <script type="module" src="./main.ts"></script>
   </body>
