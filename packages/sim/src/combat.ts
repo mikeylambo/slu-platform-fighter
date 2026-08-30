@@ -83,6 +83,7 @@ export interface BlockEvent {
 
 export type CombatEvent = HitEvent | BlockEvent;
 export interface CombatStepResult { combatants: CombatantState[]; events: CombatEvent[]; }
+export type CombatTargetPolicy = (attackerId: string, targetId: string) => boolean;
 
 export function beginAttack(combatant: CombatantState, attackId: string): CombatantState {
   if (combatant.hitlagFrames > 0 || combatant.hitstunFrames > 0 || combatant.shieldStunFrames > 0 || combatant.shielding) return combatant;
@@ -180,6 +181,7 @@ export function stepCombatFrame(
   combatantsInput: CombatantState[],
   attacks: ReadonlyMap<string, AttackDefinition>,
   defenseRules: CombatDefenseRules = K2_DEFENSE,
+  canTarget: CombatTargetPolicy = () => true,
 ): CombatStepResult {
   const combatants: CombatantState[] = [...combatantsInput]
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -200,7 +202,7 @@ export function stepCombatFrame(
       for (let targetIndex = 0; targetIndex < combatants.length; targetIndex += 1) {
         if (targetIndex === attackerIndex) continue;
         const target = combatants[targetIndex];
-        if (!target || target.invulnerableFrames > 0 || hitTargets.has(target.id)) continue;
+        if (!target || !canTarget(attacker.id, target.id) || target.invulnerableFrames > 0 || hitTargets.has(target.id)) continue;
         const hurtboxY = fixed.add(target.y, target.hurtboxOffsetY);
         if (!circlesOverlap(hitboxX, hitboxY, hitbox.radius, target.x, hurtboxY, target.hurtboxRadius)) continue;
         const resolved: { attacker: CombatantState; target: CombatantState; event: CombatEvent } = target.shielding && target.shieldHealth > 0
