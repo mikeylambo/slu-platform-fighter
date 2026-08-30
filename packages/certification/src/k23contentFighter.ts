@@ -27,7 +27,7 @@ assert(heavyJab.totalFrames !== greyJab.totalFrames, 'pack-authored attack timin
 assert((heavyJab.hitboxes[0]?.hitbox.damageTenths ?? 0) > (greyJab.hitboxes[0]?.hitbox.damageTenths ?? 0), 'cert-bruiser jab must carry its own damage data');
 
 const heavySide = runtime.moveRuntime.get('cert-bruiser:side-special');
-assert(heavySide?.velocityEvents.length === 1 && heavySide.invulnerabilityWindows.length === 1, 'cert-bruiser side special must compile authored velocity and invulnerability');
+assert(heavySide?.velocities.length === 1 && heavySide.invulnerability.length === 1, 'cert-bruiser side special must compile authored velocity and invulnerability');
 
 let world = createTwoFighterMatch(0x4b_23_0001);
 world = {
