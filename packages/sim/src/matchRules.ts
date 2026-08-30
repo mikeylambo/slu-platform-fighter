@@ -1,5 +1,6 @@
 import type { KoEvent, StockMatchRules } from './lifecycle.js';
 import type { MatchInputFrame, MatchStepResult } from './match.js';
+import { resolveWinningTeam, type TeamRules } from './teamPolicy.js';
 import type { MatchMode, MatchRuntimeState, WorldState } from './types.js';
 
 export interface MatchRules {
@@ -32,6 +33,7 @@ export function createMatchRuntimeState(participantIds: readonly string[], rules
     mode: rules.mode,
     framesRemaining: rules.mode === 'stock' ? null : rules.timeLimitFrames!,
     scores,
+    winningTeamId: null,
     suddenDeath: false,
     ended: false,
   };
@@ -82,41 +84,96 @@ function uniqueLeaderByStocksThenScore(state: WorldState, scores: Readonly<Recor
   return scoreLeaders.length === 1 ? scoreLeaders[0]!.id : null;
 }
 
+function teamIds(teamRules: TeamRules): string[] {
+  return [...new Set(Object.values(teamRules.teamByParticipant).filter((team): team is NonNullable<typeof team> => team !== null))].sort();
+}
+
+function teamScoreTable(scores: Readonly<Record<string, number>>, teamRules: TeamRules): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const teamId of teamIds(teamRules)) result[teamId] = 0;
+  for (const [participantId, score] of Object.entries(scores)) {
+    const teamId = teamRules.teamByParticipant[participantId];
+    if (teamId !== undefined && teamId !== null) result[teamId] = (result[teamId] ?? 0) + score;
+  }
+  return result;
+}
+
+function teamStockTable(state: WorldState, teamRules: TeamRules): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const teamId of teamIds(teamRules)) result[teamId] = 0;
+  for (const fighter of state.fighters) {
+    const teamId = teamRules.teamByParticipant[fighter.id];
+    if (teamId !== undefined && teamId !== null) result[teamId] = (result[teamId] ?? 0) + fighter.stocks;
+  }
+  return result;
+}
+
+function uniqueTeamLeaderByStocksThenScore(state: WorldState, scores: Readonly<Record<string, number>>, teamRules: TeamRules): string | null {
+  const stocks = teamStockTable(state, teamRules);
+  const teamScores = teamScoreTable(scores, teamRules);
+  const entries = Object.entries(stocks).sort(([a], [b]) => a.localeCompare(b));
+  if (entries.length === 0) return null;
+  const bestStocks = Math.max(...entries.map(([, total]) => total));
+  const stockLeaders = entries.filter(([, total]) => total === bestStocks).map(([teamId]) => teamId);
+  if (stockLeaders.length === 1) return stockLeaders[0] ?? null;
+  const bestScore = Math.max(...stockLeaders.map((teamId) => teamScores[teamId] ?? 0));
+  const scoreLeaders = stockLeaders.filter((teamId) => (teamScores[teamId] ?? 0) === bestScore);
+  return scoreLeaders.length === 1 ? scoreLeaders[0] ?? null : null;
+}
+
 /**
  * Advances match-level timer/score/end policy after the ordinary fighter sim.
- * This mutates no gameplay outcome from the frame that just ran; it only commits
- * authoritative match metadata for the next rollback snapshot.
+ * Static team assignment is supplied separately so it never bloats per-frame
+ * fighter state, while the resolved winning team remains rollback-authoritative.
  */
-export function applyMatchRules(previousState: WorldState, result: MatchStepResult, rules: MatchRules): MatchStepResult {
+export function applyMatchRules(previousState: WorldState, result: MatchStepResult, rules: MatchRules, teamRules?: TeamRules): MatchStepResult {
   validateRules(rules);
   const prior = previousState.match ?? createMatchRuntimeState(previousState.fighters.map((fighter) => fighter.id), rules);
   if (prior.mode !== rules.mode) throw new Error(`world match mode ${prior.mode} does not match active rules ${rules.mode}`);
   if (prior.ended) return { ...result, state: { ...result.state, match: prior, winnerId: previousState.winnerId } };
 
+  const teamsEnabled = teamRules?.enabled === true;
   const scores = scoreKOs(prior.scores, result, rules);
   const framesRemaining = prior.framesRemaining === null ? null : Math.max(0, prior.framesRemaining - 1);
-  let winnerId = result.state.winnerId;
+  let winnerId = teamsEnabled ? null : result.state.winnerId;
+  let winningTeamId: string | null = null;
   let ended = false;
   let suddenDeath = false;
 
   if (rules.mode === 'stock') {
-    ended = winnerId !== null;
-  } else if (rules.mode === 'stock-time' && winnerId !== null) {
-    ended = true;
-  } else if (framesRemaining === 0) {
-    winnerId = rules.mode === 'time'
-      ? uniqueLeaderByScore(scores)
-      : uniqueLeaderByStocksThenScore(result.state, scores);
-    ended = true;
-    suddenDeath = winnerId === null && (rules.suddenDeathOnTie ?? true);
+    if (teamsEnabled && teamRules) winningTeamId = resolveWinningTeam(result.state.fighters, teamRules);
+    ended = teamsEnabled ? winningTeamId !== null : winnerId !== null;
+  } else if (rules.mode === 'stock-time') {
+    if (teamsEnabled && teamRules) {
+      winningTeamId = resolveWinningTeam(result.state.fighters, teamRules);
+      if (winningTeamId !== null) ended = true;
+    } else if (winnerId !== null) {
+      ended = true;
+    }
   }
 
-  const match: MatchRuntimeState = { mode: rules.mode, framesRemaining, scores, suddenDeath, ended };
+  if (!ended && framesRemaining === 0 && rules.mode !== 'stock') {
+    if (teamsEnabled && teamRules) {
+      winningTeamId = rules.mode === 'time'
+        ? uniqueLeaderByScore(teamScoreTable(scores, teamRules))
+        : uniqueTeamLeaderByStocksThenScore(result.state, scores, teamRules);
+      winnerId = null;
+      suddenDeath = winningTeamId === null && (rules.suddenDeathOnTie ?? true);
+    } else {
+      winnerId = rules.mode === 'time'
+        ? uniqueLeaderByScore(scores)
+        : uniqueLeaderByStocksThenScore(result.state, scores);
+      suddenDeath = winnerId === null && (rules.suddenDeathOnTie ?? true);
+    }
+    ended = true;
+  }
+
+  const match: MatchRuntimeState = { mode: rules.mode, framesRemaining, scores, winningTeamId, suddenDeath, ended };
   return { ...result, state: { ...result.state, match, winnerId } };
 }
 
 /** Wraps any canonical fighter-step function with rollback-authoritative match policy. */
-export function withMatchRules(step: DirectedMatchStep, rules: MatchRules): DirectedMatchStep {
+export function withMatchRules(step: DirectedMatchStep, rules: MatchRules, teamRules?: TeamRules): DirectedMatchStep {
   validateRules(rules);
-  return (state, input) => applyMatchRules(state, step(state, input), rules);
+  return (state, input) => applyMatchRules(state, step(state, input), rules, teamRules);
 }
