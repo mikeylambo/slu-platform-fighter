@@ -14,6 +14,7 @@
     "fighter:seed": "node scripts/seed-fighter.mjs",
     "fighter:build": "node scripts/fighter-packs.mjs build",
     "fighter:check": "node scripts/fighter-packs.mjs check",
+    "roster:report": "node scripts/roster-readiness.mjs",
     "entity:build": "node scripts/entity-packs.mjs build",
     "entity:check": "node scripts/entity-packs.mjs check",
     "stage:build": "node scripts/stage-packs.mjs build",
