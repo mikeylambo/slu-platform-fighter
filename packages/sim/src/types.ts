@@ -2,7 +2,7 @@ import type { Fixed } from '../../deterministic-math/src/fixed.js';
 
 export type LocomotionState =
   | 'idle' | 'walk' | 'dash' | 'run' | 'turn' | 'crouch' | 'jump-squat' | 'airborne' | 'landing'
-  | 'ledge-hang' | 'air-dodge' | 'spot-dodge' | 'roll' | 'tech-in-place' | 'tech-roll' | 'knockdown' | 'grabbed';
+  | 'ledge-hang' | 'air-dodge' | 'spot-dodge' | 'roll' | 'tech-in-place' | 'tech-roll' | 'knockdown' | 'grabbed' | 'respawn';
 
 export interface SimInputFrame {
   frame: number;
@@ -63,6 +63,12 @@ export interface FighterState {
   grabFrames: number;
   /** Fighter-authored pummel/throw timeline currently executing while holding a target. */
   grabAction: FighterGrabActionState | null;
+  /** Remaining stocks in stock-based rulesets. */
+  stocks: number;
+  /** True after the fighter has lost its final stock. */
+  eliminated: boolean;
+  /** Frames remaining before control resumes after a non-final-stock KO. */
+  respawnFrames: number;
 }
 
 export interface WorldState {
@@ -71,6 +77,8 @@ export interface WorldState {
   fighters: FighterState[];
   surfaces: StageSurface[];
   ledges: StageLedge[];
+  /** Stable winner id once a stock match is resolved; null while unresolved. */
+  winnerId: string | null;
 }
 
 export interface WorldSnapshot { state: WorldState; }
