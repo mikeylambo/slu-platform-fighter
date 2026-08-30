@@ -18,6 +18,8 @@
     "fighter:landing:check": "node scripts/landing-packs.mjs",
     "fighter:audit": "node scripts/fighter-assets.mjs audit",
     "fighter:autobind": "node scripts/fighter-assets.mjs autobind",
+    "fighter:frame-data": "node scripts/frame-data.mjs",
+    "roster:frame-data": "node scripts/frame-data.mjs --all",
     "roster:report": "node scripts/roster-readiness.mjs",
     "entity:build": "node scripts/entity-packs.mjs build",
     "entity:check": "node scripts/entity-packs.mjs check",
@@ -55,8 +57,9 @@
     "certify:k22animation": "node dist/packages/certification/src/k22animation.js",
     "certify:k23content-fighter": "node dist/packages/certification/src/k23contentFighter.js",
     "certify:k24aerial-landing": "node dist/packages/certification/src/k24aerialLanding.js",
+    "certify:k25training-telemetry": "node dist/packages/certification/src/k25trainingTelemetry.js",
     "soak:matches": "node dist/packages/certification/src/k10soak.js",
-    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run certify:k12mixed-roster && npm run certify:k13shell && npm run certify:k14match-factory && npm run certify:k15teams && npm run certify:k16training && npm run certify:k17attribution && npm run certify:k18match-rules && npm run certify:k19execution && npm run certify:k20team-results && npm run certify:k21netcode && npm run certify:k22animation && npm run certify:k23content-fighter && npm run certify:k24aerial-landing && npm run lab:movement:build && npm run lab:combat:build"
+    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run certify:k12mixed-roster && npm run certify:k13shell && npm run certify:k14match-factory && npm run certify:k15teams && npm run certify:k16training && npm run certify:k17attribution && npm run certify:k18match-rules && npm run certify:k19execution && npm run certify:k20team-results && npm run certify:k21netcode && npm run certify:k22animation && npm run certify:k23content-fighter && npm run certify:k24aerial-landing && npm run certify:k25training-telemetry && npm run lab:movement:build && npm run lab:combat:build"
   },
   "dependencies": {
     "three": "^0.185.0"
