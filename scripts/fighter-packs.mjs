@@ -11,6 +11,8 @@ const cmd = process.argv[2] ?? "check";
 const args = process.argv.slice(3);
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const COLOR = /^#[0-9a-fA-F]{6}$/;
+const FIXED_MIN_GEOMETRY = 10_000;
+const FIXED_MAX_GEOMETRY = 20_000_000;
 const fail = (m) => { throw new Error(m); };
 const assert = (v, m) => { if (!v) fail(m); };
 const object = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -23,13 +25,22 @@ async function directories() {
     .map((e) => e.name).sort();
 }
 
+function plausibleFixedGeometry(value) {
+  const magnitude = Math.abs(value);
+  return magnitude === 0 || (magnitude >= FIXED_MIN_GEOMETRY && magnitude <= FIXED_MAX_GEOMETRY);
+}
+
 function validateHitboxData(data, id, moveName, frame) {
   assert(object(data), `${id}: ${moveName} frame ${frame} hitbox_on requires data`);
   for (const key of ["id"]) assert(typeof data[key] === "string" && data[key], `${id}: ${moveName} frame ${frame} hitbox ${key} missing`);
   for (const key of ["offsetX","offsetY","radius","damageTenths","baseKnockback","growthPer100Percent","directionX","directionY","hitlagFrames","hitstunFrames"]) {
     assert(Number.isInteger(data[key]), `${id}: ${moveName} frame ${frame} hitbox ${key} must be integer`);
   }
+  for (const key of ["offsetX","offsetY","radius"]) {
+    assert(plausibleFixedGeometry(data[key]), `${id}: ${moveName} frame ${frame} hitbox ${key}=${data[key]} looks mis-scaled; geometry uses 1,000,000 fixed units per world unit`);
+  }
   assert(data.radius > 0, `${id}: ${moveName} frame ${frame} hitbox radius must be positive`);
+  assert(data.baseKnockback >= 0 && data.growthPer100Percent >= 0, `${id}: ${moveName} frame ${frame} knockback cannot be negative`);
   assert(data.damageTenths >= 0, `${id}: ${moveName} frame ${frame} damage cannot be negative`);
   assert(data.hitlagFrames >= 0 && data.hitstunFrames >= 0, `${id}: ${moveName} frame ${frame} hit timing cannot be negative`);
 }
@@ -43,6 +54,7 @@ function validateFighter(f, id) {
   assert(object(f.identity) && f.identity.displayName, `${id}: identity.displayName missing`);
   assert(object(f.attributes), `${id}: attributes missing`);
   for (const k of ["weight","hurtboxWidth","hurtboxHeight"]) assert(Number.isInteger(f.attributes[k]) && f.attributes[k] > 0, `${id}: invalid attributes.${k}`);
+  for (const k of ["hurtboxWidth","hurtboxHeight"]) assert(plausibleFixedGeometry(f.attributes[k]), `${id}: attributes.${k}=${f.attributes[k]} looks mis-scaled`);
   assert(object(f.movement), `${id}: movement missing`);
   for (const [k,v] of Object.entries(f.movement)) assert(Number.isInteger(v), `${id}: movement.${k} must be deterministic integer/fixed-point data`);
   assert(object(f.moves), `${id}: moves missing`);
@@ -126,7 +138,7 @@ async function scaffold() {
   const fighter = {
     "$schema": "../../content/fighter.schema.json", schemaVersion: 1, status: "draft", id,
     identity: { displayName, archetype: "TBD", playstyle: "TBD" }, rigProfile: "slu-humanoid-v1",
-    attributes: { weight: 100000, hurtboxWidth: 800, hurtboxHeight: 1800 }, movement: {}, moves: {}, ownedEntities: [],
+    attributes: { weight: 100000, hurtboxWidth: 800000, hurtboxHeight: 1800000 }, movement: {}, moves: {}, ownedEntities: [],
     palettes: { "00": { primary: "#808080", secondary: "#D0D0D0", accent: "#FFFFFF", skin: "#B0B0B0", hair: "#404040", metal: "#A0A0A0", energy: "#80C0FF" } },
     provenance: { code: "Original SLU fighter definition", assets: [] }
   };
