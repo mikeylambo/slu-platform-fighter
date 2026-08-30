@@ -2,12 +2,25 @@ import type { MatchEvent, MatchInputFrame, MatchStepResult } from './match.js';
 import type { FighterState, WorldState } from './types.js';
 
 export type AttributedMatchStep = (state: WorldState, input: MatchInputFrame) => MatchStepResult;
+export interface DamageAttributionRules { creditWindowFrames: number; }
+export const DEFAULT_DAMAGE_ATTRIBUTION_RULES: DamageAttributionRules = { creditWindowFrames: 600 };
 
 function damagingContact(event: MatchEvent): { attackerId: string; targetId: string } | null {
   if (event.type === 'hit') return event.damageTenths > 0 ? { attackerId: event.attackerId, targetId: event.targetId } : null;
   if (event.type === 'entity-hit') return event.damageTenths > 0 ? { attackerId: event.ownerId, targetId: event.targetId } : null;
   if (event.type === 'throw' || event.type === 'pummel') return event.damageTenths > 0 ? { attackerId: event.attackerId, targetId: event.targetId } : null;
   return null;
+}
+
+function expireStaleAttribution(state: WorldState, rules: DamageAttributionRules): WorldState {
+  if (!Number.isInteger(rules.creditWindowFrames) || rules.creditWindowFrames < 0) throw new Error('damage attribution creditWindowFrames must be non-negative integer');
+  return {
+    ...state,
+    fighters: state.fighters.map((fighter) => {
+      const stale = fighter.lastHitById !== null && fighter.lastHitFrame >= 0 && state.frame - fighter.lastHitFrame > rules.creditWindowFrames;
+      return stale ? { ...fighter, lastHitById: null, lastHitFrame: -1 } : fighter;
+    }),
+  };
 }
 
 /**
@@ -42,6 +55,12 @@ export function applyDamageAttribution(result: MatchStepResult, damageFrame: num
 }
 
 /** Wraps the canonical match step without duplicating gameplay logic. */
-export function withDamageAttribution(step: AttributedMatchStep): AttributedMatchStep {
-  return (state, input) => applyDamageAttribution(step(state, input), input.frame);
+export function withDamageAttribution(
+  step: AttributedMatchStep,
+  rules: DamageAttributionRules = DEFAULT_DAMAGE_ATTRIBUTION_RULES,
+): AttributedMatchStep {
+  return (state, input) => {
+    const prepared = expireStaleAttribution(state, rules);
+    return applyDamageAttribution(step(prepared, input), input.frame);
+  };
 }
