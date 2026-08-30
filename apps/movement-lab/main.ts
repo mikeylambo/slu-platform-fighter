@@ -18,7 +18,6 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x090b10);
 scene.fog = new THREE.Fog(0x090b10, 30, 80);
-
 const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 200);
 camera.position.set(0, 7, 22);
 camera.lookAt(0, 3, 0);
@@ -31,13 +30,9 @@ scene.add(keyLight);
 const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x2a3140, roughness: 0.8, metalness: 0.1 });
 const platformMaterial = new THREE.MeshStandardMaterial({ color: 0x59677f, roughness: 0.65, metalness: 0.15 });
 const floor = new THREE.Mesh(new THREE.BoxGeometry(40, 0.5, 6), floorMaterial);
-floor.position.set(0, -0.25, 0);
-floor.receiveShadow = true;
-scene.add(floor);
+floor.position.set(0, -0.25, 0); floor.receiveShadow = true; scene.add(floor);
 const platform = new THREE.Mesh(new THREE.BoxGeometry(8, 0.28, 4), platformMaterial);
-platform.position.set(0, 3.86, 0);
-platform.receiveShadow = true;
-scene.add(platform);
+platform.position.set(0, 3.86, 0); platform.receiveShadow = true; scene.add(platform);
 
 const fighterRoot = new THREE.Group();
 scene.add(fighterRoot);
@@ -54,10 +49,15 @@ const leftArm = box(0.28, 1.15, 0.28, bodyMat); leftArm.position.set(-0.72, 1.68
 const rightArm = box(0.28, 1.15, 0.28, bodyMat); rightArm.position.set(0.72, 1.68, 0); fighterRoot.add(rightArm);
 const leftLeg = box(0.34, 1.15, 0.36, bodyMat); leftLeg.position.set(-0.25, 0.58, 0); fighterRoot.add(leftLeg);
 const rightLeg = box(0.34, 1.15, 0.36, bodyMat); rightLeg.position.set(0.25, 0.58, 0); fighterRoot.add(rightLeg);
+
 const debugGrid = new THREE.GridHelper(40, 40, 0x31405c, 0x1e2533);
-debugGrid.rotation.x = Math.PI / 2;
-debugGrid.position.z = -3.01;
-scene.add(debugGrid);
+debugGrid.rotation.x = Math.PI / 2; debugGrid.position.z = -3.01; scene.add(debugGrid);
+const ecb = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.2, 3.25, 0.12)), new THREE.LineBasicMaterial({ color: 0x7fffd4 }));
+ecb.position.y = 1.62; fighterRoot.add(ecb);
+const hurtbox = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.55, 3.1, 0.9)), new THREE.LineBasicMaterial({ color: 0xff7f9c }));
+hurtbox.position.y = 1.58; fighterRoot.add(hurtbox);
+const ledgeDebug = new THREE.Group();
+scene.add(ledgeDebug);
 
 const hudElement = document.querySelector<HTMLDivElement>('#hud');
 const controlsElement = document.querySelector<HTMLDivElement>('#controls');
@@ -75,22 +75,39 @@ let lastTime = performance.now();
 let paused = false;
 let stepRequested = false;
 let jumpPressedLatch = false;
+let dodgePressedLatch = false;
 let priorPadJump = false;
+let priorPadDodge = false;
 const keys = new Set<string>();
 
-function decimalFixed(value: number): Fixed {
-  return fixed.fromRatio(Math.round(value * 1000), 1000);
-}
-
+function decimalFixed(value: number): Fixed { return fixed.fromRatio(Math.round(value * 1000), 1000); }
 function resetWorld() {
   world = createWorld(LAB_SEED);
   previousWorld = structuredClone(world);
   accumulator = 0;
   jumpPressedLatch = false;
+  dodgePressedLatch = false;
+  rebuildLedgeDebug();
 }
+function rebuildLedgeDebug() {
+  ledgeDebug.clear();
+  for (const ledge of world.ledges) {
+    const marker = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffd166 }));
+    marker.position.set(fixed.toNumber(ledge.x), fixed.toNumber(ledge.y), 0.8);
+    ledgeDebug.add(marker);
+    const grab = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(fixed.toNumber(movementRules.ledgeGrabXRadius) * 2, fixed.toNumber(movementRules.ledgeGrabAbove) + fixed.toNumber(movementRules.ledgeGrabBelow), 0.1)),
+      new THREE.LineBasicMaterial({ color: 0xffd166 }),
+    );
+    grab.position.set(fixed.toNumber(ledge.x), fixed.toNumber(ledge.y) + (fixed.toNumber(movementRules.ledgeGrabAbove) - fixed.toNumber(movementRules.ledgeGrabBelow)) / 2, 0.7);
+    ledgeDebug.add(grab);
+  }
+}
+rebuildLedgeDebug();
 
 window.addEventListener('keydown', (event) => {
   if (!event.repeat && (event.code === 'Space' || event.code === 'KeyJ')) jumpPressedLatch = true;
+  if (!event.repeat && event.code === 'KeyK') dodgePressedLatch = true;
   if (!event.repeat && event.code === 'KeyP') paused = !paused;
   if (!event.repeat && event.code === 'Period') stepRequested = true;
   if (!event.repeat && event.code === 'KeyR') resetWorld();
@@ -111,17 +128,29 @@ function sampleInput(frame: number): SimInputFrame {
   let moveX = keyboardAxis(['KeyA', 'ArrowLeft'], ['KeyD', 'ArrowRight']) * 1000;
   let moveY = keyboardAxis(['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']) * 1000;
   let jumpHeld = keys.has('Space') || keys.has('KeyJ');
+  let shieldHeld = keys.has('KeyL');
   const pad = navigator.getGamepads?.()[0] ?? null;
   if (pad) {
     if (Math.abs(pad.axes[0] ?? 0) > 0.12) moveX = quantizeAxis(pad.axes[0] ?? 0);
     if (Math.abs(pad.axes[1] ?? 0) > 0.12) moveY = quantizeAxis(-(pad.axes[1] ?? 0));
     const padJump = Boolean(pad.buttons[0]?.pressed);
+    const padDodge = Boolean(pad.buttons[1]?.pressed);
     if (padJump && !priorPadJump) jumpPressedLatch = true;
+    if (padDodge && !priorPadDodge) dodgePressedLatch = true;
     priorPadJump = padJump;
+    priorPadDodge = padDodge;
     jumpHeld ||= padJump;
+    shieldHeld ||= Boolean(pad.buttons[5]?.pressed);
   }
-  const result: SimInputFrame = { frame, moveX, moveY, jumpPressed: jumpPressedLatch, jumpHeld };
+  const result: SimInputFrame = {
+    frame, moveX, moveY,
+    jumpPressed: jumpPressedLatch,
+    jumpHeld,
+    dodgePressed: dodgePressedLatch,
+    shieldHeld,
+  };
   jumpPressedLatch = false;
+  dodgePressedLatch = false;
   return result;
 }
 function stepSimulation() {
@@ -131,17 +160,13 @@ function stepSimulation() {
 
 interface FloatTunable {
   label: string;
-  key: keyof Pick<MovementRules, 'walkSpeed' | 'dashSpeed' | 'runSpeed' | 'groundAccel' | 'groundFriction' | 'airAccel' | 'maxAirSpeed' | 'fullHopSpeed' | 'shortHopSpeed' | 'doubleJumpSpeed' | 'gravity' | 'maxFallSpeed' | 'fastFallSpeed'>;
-  min: number;
-  max: number;
-  step: number;
+  key: keyof Pick<MovementRules, 'walkSpeed' | 'dashSpeed' | 'runSpeed' | 'groundAccel' | 'groundFriction' | 'airAccel' | 'maxAirSpeed' | 'fullHopSpeed' | 'shortHopSpeed' | 'doubleJumpSpeed' | 'gravity' | 'maxFallSpeed' | 'fastFallSpeed' | 'airDodgeSpeed' | 'rollSpeed'>;
+  min: number; max: number; step: number;
 }
 interface IntTunable {
   label: string;
-  key: keyof Pick<MovementRules, 'jumpSquatFrames' | 'jumpBufferFrames' | 'dashFrames' | 'turnFrames' | 'landingFrames'>;
-  min: number;
-  max: number;
-  step: number;
+  key: keyof Pick<MovementRules, 'jumpSquatFrames' | 'jumpBufferFrames' | 'dashFrames' | 'turnFrames' | 'landingFrames' | 'airDodgeFrames' | 'spotDodgeFrames' | 'rollFrames'>;
+  min: number; max: number; step: number;
 }
 const floatTunables: FloatTunable[] = [
   { label: 'Walk speed', key: 'walkSpeed', min: 0.04, max: 0.28, step: 0.005 },
@@ -157,6 +182,8 @@ const floatTunables: FloatTunable[] = [
   { label: 'Gravity', key: 'gravity', min: 0.008, max: 0.065, step: 0.001 },
   { label: 'Max fall speed', key: 'maxFallSpeed', min: 0.20, max: 0.80, step: 0.01 },
   { label: 'Fastfall speed', key: 'fastFallSpeed', min: 0.25, max: 1.00, step: 0.01 },
+  { label: 'Air dodge speed', key: 'airDodgeSpeed', min: 0.05, max: 0.35, step: 0.005 },
+  { label: 'Roll speed', key: 'rollSpeed', min: 0.05, max: 0.30, step: 0.005 },
 ];
 const intTunables: IntTunable[] = [
   { label: 'Jump squat', key: 'jumpSquatFrames', min: 1, max: 8, step: 1 },
@@ -164,27 +191,21 @@ const intTunables: IntTunable[] = [
   { label: 'Dash frames', key: 'dashFrames', min: 3, max: 20, step: 1 },
   { label: 'Turn frames', key: 'turnFrames', min: 0, max: 10, step: 1 },
   { label: 'Landing frames', key: 'landingFrames', min: 0, max: 12, step: 1 },
+  { label: 'Air dodge frames', key: 'airDodgeFrames', min: 6, max: 40, step: 1 },
+  { label: 'Spot dodge frames', key: 'spotDodgeFrames', min: 6, max: 35, step: 1 },
+  { label: 'Roll frames', key: 'rollFrames', min: 8, max: 40, step: 1 },
 ];
-
 function addSlider(label: string, min: number, max: number, step: number, value: number, onChange: (value: number) => void) {
-  const row = document.createElement('label');
-  row.className = 'control';
-  const name = document.createElement('span');
-  name.textContent = label;
-  const output = document.createElement('output');
-  output.textContent = String(value);
+  const row = document.createElement('label'); row.className = 'control';
+  const name = document.createElement('span'); name.textContent = label;
+  const output = document.createElement('output'); output.textContent = String(value);
   const slider = document.createElement('input');
   slider.type = 'range'; slider.min = String(min); slider.max = String(max); slider.step = String(step); slider.value = String(value);
   slider.addEventListener('input', () => {
-    const next = Number(slider.value);
-    output.textContent = slider.value;
-    onChange(next);
-    resetWorld();
+    const next = Number(slider.value); output.textContent = slider.value; onChange(next); resetWorld();
   });
-  row.append(name, output, slider);
-  controls.append(row);
+  row.append(name, output, slider); controls.append(row);
 }
-
 function renderControls() {
   controls.replaceChildren();
   for (const tunable of floatTunables) {
@@ -198,20 +219,12 @@ function renderControls() {
     });
   }
 }
-
-defaultsButton.addEventListener('click', () => {
-  movementRules = { ...K1_MOVEMENT };
-  renderControls();
-  resetWorld();
-});
+defaultsButton.addEventListener('click', () => { movementRules = { ...K1_MOVEMENT }; renderControls(); resetWorld(); });
 copyButton.addEventListener('click', async () => {
-  const exportable = Object.fromEntries(Object.entries(movementRules).map(([key, value]) => {
-    const fixedKeys = new Set(floatTunables.map((entry) => entry.key));
-    return [key, fixedKeys.has(key as FloatTunable['key']) ? fixed.toNumber(value as Fixed) : value];
-  }));
+  const fixedKeys = new Set(floatTunables.map((entry) => entry.key));
+  const exportable = Object.fromEntries(Object.entries(movementRules).map(([key, value]) => [key, fixedKeys.has(key as FloatTunable['key']) ? fixed.toNumber(value as Fixed) : value]));
   await navigator.clipboard.writeText(JSON.stringify(exportable, null, 2));
-  copyButton.textContent = 'Copied';
-  window.setTimeout(() => { copyButton.textContent = 'Copy JSON'; }, 900);
+  copyButton.textContent = 'Copied'; window.setTimeout(() => { copyButton.textContent = 'Copy JSON'; }, 900);
 });
 renderControls();
 
@@ -227,18 +240,26 @@ function animateFighter(alpha: number) {
   const moving = current.locomotion === 'walk' || current.locomotion === 'dash' || current.locomotion === 'run';
   const swing = moving ? Math.sin(phase) * (current.locomotion === 'run' ? 0.75 : 0.45) : 0;
   leftArm.rotation.z = swing; rightArm.rotation.z = -swing; leftLeg.rotation.z = -swing * 0.55; rightLeg.rotation.z = swing * 0.55;
-  torso.rotation.z = current.locomotion === 'dash' ? -current.facing * 0.12 : 0;
-  torso.position.y = 1.65 + (current.locomotion === 'crouch' ? -0.38 : moving ? Math.abs(Math.sin(phase)) * 0.06 : 0);
-  head.position.y = 2.78 + (current.locomotion === 'crouch' ? -0.38 : 0);
+  torso.rotation.z = current.locomotion === 'dash' ? -current.facing * 0.12 : current.locomotion === 'ledge-hang' ? current.facing * 0.18 : 0;
+  const crouchOffset = current.locomotion === 'crouch' ? -0.38 : 0;
+  torso.position.y = 1.65 + crouchOffset + (moving ? Math.abs(Math.sin(phase)) * 0.06 : 0);
+  head.position.y = 2.78 + crouchOffset;
+  const invulnerable = current.invulnerableFrames > 0;
+  ecb.visible = true;
+  hurtbox.visible = !invulnerable || world.frame % 4 < 2;
   camera.position.x = THREE.MathUtils.lerp(camera.position.x, x, 0.08);
   camera.lookAt(camera.position.x, 3.0, 0);
   hud.textContent = [
-    'SLU PLATFORM FIGHTER — K1 MOVEMENT LAB',
+    'SLU PLATFORM FIGHTER — K1b MOVEMENT / DEFENSE LAB',
     `frame        ${world.frame}`,
     `state        ${current.locomotion} [${current.locomotionFrame}]`,
     `position     ${fixed.toNumber(current.x).toFixed(3)}, ${fixed.toNumber(current.y).toFixed(3)}`,
     `velocity     ${fixed.toNumber(current.vx).toFixed(3)}, ${fixed.toNumber(current.vy).toFixed(3)}`,
     `grounded     ${current.grounded} (${current.groundSurfaceId ?? 'none'})`,
+    `ledge        ${current.ledgeId ?? 'none'} / lock ${current.ledgeRegrabLockoutFrames}`,
+    `invuln       ${current.invulnerableFrames}`,
+    `dodge cd     ${current.dodgeCooldownFrames}`,
+    `tech buffer  ${current.techBufferFrames}`,
     `facing       ${current.facing > 0 ? 'right' : 'left'}`,
     `air jump     ${current.jumpsRemaining}`,
     `fastfall     ${current.fastFalling}`,
@@ -248,21 +269,20 @@ function animateFighter(alpha: number) {
     `sim          ${paused ? 'PAUSED' : 'RUNNING'} @ ${SIM_HZ} Hz`,
   ].join('\n');
 }
-
 function frame(now: number) {
   const delta = Math.min(100, now - lastTime); lastTime = now;
   if (!paused) accumulator += delta;
   if (paused && stepRequested) { stepSimulation(); stepRequested = false; }
   let steps = 0;
-  while (!paused && accumulator >= STEP_MS && steps < MAX_STEPS_PER_RENDER) {
-    stepSimulation(); accumulator -= STEP_MS; steps += 1;
-  }
+  while (!paused && accumulator >= STEP_MS && steps < MAX_STEPS_PER_RENDER) { stepSimulation(); accumulator -= STEP_MS; steps += 1; }
   if (steps === MAX_STEPS_PER_RENDER) accumulator = 0;
   animateFighter(paused ? 1 : accumulator / STEP_MS);
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 });
 requestAnimationFrame(frame);
