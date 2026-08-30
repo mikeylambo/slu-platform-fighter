@@ -13,9 +13,12 @@
     "content:build": "npm run fighter:build",
     "content:check": "npm run fighter:check",
     "fighter:audit:greybox": "blender --background --python scripts/blender/audit_fighter.py -- fighters/greybox/render.json",
-    "verify": "npm run content:check && npm run content:build && npm run build && node dist/packages/certification/src/k0.js"
+    "certify:k0": "node dist/packages/certification/src/k0.js",
+    "certify:k1": "node dist/packages/certification/src/k1.js",
+    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1"
   },
   "devDependencies": {
+    "@types/node": "^24.3.0",
     "typescript": "^5.9.2"
   }
 }
