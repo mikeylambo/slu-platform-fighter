@@ -82,10 +82,10 @@ let rejectedCorruption = false;
 try { new ReplayPlayer(corrupted, step); } catch { rejectedCorruption = true; }
 assert(rejectedCorruption, 'replay player must reject corrupted checkpoint hashes');
 
-const incompatible = structuredClone(tape) as typeof tape & { metadata: { formatVersion: number } };
+const incompatible = structuredClone(tape) as unknown as { metadata: { formatVersion: number } };
 incompatible.metadata.formatVersion = 999;
 let rejectedVersion = false;
-try { new ReplayPlayer(incompatible as typeof tape, step); } catch { rejectedVersion = true; }
+try { new ReplayPlayer(incompatible as unknown as typeof tape, step); } catch { rejectedVersion = true; }
 assert(rejectedVersion, 'replay player must reject unsupported format versions');
 
 console.log(`K9 REPLAY PASS — ${TOTAL} input frames recorded, ${tape.checkpoints.length} checkpoints, deterministic playback, seek, corruption and version guards certified.`);
