@@ -28,6 +28,7 @@ function body(id: string, x: number, facing: -1 | 1): CombatantState {
     percentTenths: 0,
     hitlagFrames: 0,
     hitstunFrames: 0,
+    invulnerableFrames: 0,
     attack: null,
   };
 }
@@ -78,4 +79,11 @@ assert(mirrorEvent !== undefined, 'mirrored setup must produce a hit event');
 assert(mirrorEvent.knockbackX < fixed.zero, 'fighter facing must mirror authored horizontal launch direction');
 assert(mirrorEvent.knockbackY > fixed.zero, 'fighter facing must not mirror vertical launch direction');
 
-console.log('K2 PASS — fighter-pack move compilation, attack timelines, stable collision ordering, once-per-attack hits, damage, hitlag/hitstun, percent scaling, and mirrored knockback certified.');
+const invulnerableSource = { ...beginAttack(body('source', 0, 1), jab.id), attack: { attackId: jab.id, frame: 3, hitTargets: [] } };
+const invulnerableTarget = { ...body('target', 18, -1), invulnerableFrames: 5 };
+const dodged = stepCombatFrame([invulnerableSource, invulnerableTarget], attacks);
+const dodgedTarget = dodged.combatants.find((entry) => entry.id === 'target');
+assert(dodged.events.length === 0, 'active hitbox must not hit an invulnerable target');
+assert(dodgedTarget?.percentTenths === 0, 'invulnerability must prevent percent damage');
+
+console.log('K2 PASS — fighter-pack move compilation, attack timelines, stable collision ordering, once-per-attack hits, damage, hitlag/hitstun, percent scaling, mirrored knockback, and dodge invulnerability certified.');
