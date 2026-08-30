@@ -15,6 +15,8 @@
     "roster:seed": "node scripts/seed-roster.mjs",
     "fighter:build": "node scripts/fighter-packs.mjs build",
     "fighter:check": "node scripts/fighter-packs.mjs check",
+    "fighter:audit": "node scripts/fighter-assets.mjs audit",
+    "fighter:autobind": "node scripts/fighter-assets.mjs autobind",
     "roster:report": "node scripts/roster-readiness.mjs",
     "entity:build": "node scripts/entity-packs.mjs build",
     "entity:check": "node scripts/entity-packs.mjs check",
