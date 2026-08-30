@@ -1,0 +1,9 @@
+{
+  "$schema": "../rig-profile.schema.json",
+  "schemaVersion": 1,
+  "id": "slu-humanoid-v1",
+  "rootBone": "Root",
+  "requiredBones": ["Root", "Hips", "Spine", "Head", "Hand.L", "Hand.R"],
+  "requiredSockets": ["hand_r", "hand_l", "head", "root"],
+  "notes": "Default retargetable humanoid rig profile for the flagship roster. Custom profiles must satisfy the same semantic socket contract or explicitly extend it."
+}
