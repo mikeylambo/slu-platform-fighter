@@ -49,6 +49,9 @@ export function createFighterState(id: string, x = fixed.fromInt(-10), facing: -
     shieldHealth: DEFAULT_SHIELD_HEALTH,
     shieldStunFrames: 0,
     shieldRegenDelayFrames: 0,
+    grabTargetId: null,
+    grabbedById: null,
+    grabFrames: 0,
   };
 }
 
