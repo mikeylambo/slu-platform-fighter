@@ -35,14 +35,32 @@ export function createFighterState(id: string, x = fixed.fromInt(-10), facing: -
 }
 
 export function createWorld(seed: number): WorldState {
-  return { frame: 0, seed, fighters: [createFighterState('fighter-a')], surfaces: createTrainingSurfaces(), ledges: createTrainingLedges(), winnerId: null };
+  return {
+    frame: 0,
+    seed,
+    fighters: [createFighterState('fighter-a')],
+    entities: [],
+    nextEntitySerial: 1,
+    surfaces: createTrainingSurfaces(),
+    ledges: createTrainingLedges(),
+    winnerId: null,
+  };
 }
 
 export function stepWorld(state: WorldState, input: SimInputFrame, movementRules: MovementRules = K1_MOVEMENT): WorldState {
   if (input.frame !== state.frame) throw new Error(`input frame ${input.frame} does not match world frame ${state.frame}`);
   const fighter = state.fighters[0];
   if (!fighter) throw new Error('K1 world requires fighter-a');
-  return { frame: state.frame + 1, seed: state.seed, fighters: [stepFighterMovement(fighter, input, state.surfaces, state.ledges, movementRules)], surfaces: state.surfaces, ledges: state.ledges, winnerId: state.winnerId };
+  return {
+    frame: state.frame + 1,
+    seed: state.seed,
+    fighters: [stepFighterMovement(fighter, input, state.surfaces, state.ledges, movementRules)],
+    entities: state.entities,
+    nextEntitySerial: state.nextEntitySerial,
+    surfaces: state.surfaces,
+    ledges: state.ledges,
+    winnerId: state.winnerId,
+  };
 }
 
 export function snapshotWorld(state: WorldState): WorldSnapshot { return { state: structuredClone(state) }; }
