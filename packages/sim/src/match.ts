@@ -1,11 +1,11 @@
 import { fixed } from '../../deterministic-math/src/fixed.js';
-import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type HitEvent } from './combat.js';
+import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type CombatEvent } from './combat.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
 import { createFighterState, createWorld } from './world.js';
 import type { FighterState, SimInputFrame, WorldState } from './types.js';
 
 export interface MatchInputFrame { frame: number; byFighterId: Readonly<Record<string, SimInputFrame>>; }
-export interface MatchStepResult { state: WorldState; events: HitEvent[]; }
+export interface MatchStepResult { state: WorldState; events: CombatEvent[]; }
 
 const HURTBOX_RADIUS = fixed.fromRatio(3, 4);
 const HURTBOX_OFFSET_Y = fixed.fromRatio(3, 2);
@@ -36,6 +36,10 @@ function combatantFromFighter(fighter: FighterState): CombatantState {
     hitstunFrames: fighter.hitstunFrames,
     invulnerableFrames: fighter.invulnerableFrames,
     attack: fighter.attack,
+    shielding: fighter.shielding,
+    shieldHealth: fighter.shieldHealth,
+    shieldStunFrames: fighter.shieldStunFrames,
+    shieldRegenDelayFrames: fighter.shieldRegenDelayFrames,
   };
 }
 
@@ -49,6 +53,10 @@ function mergeCombat(fighter: FighterState, combatant: CombatantState): FighterS
     hitlagFrames: combatant.hitlagFrames,
     hitstunFrames: combatant.hitstunFrames,
     attack: combatant.attack,
+    shielding: combatant.shielding,
+    shieldHealth: combatant.shieldHealth,
+    shieldStunFrames: combatant.shieldStunFrames,
+    shieldRegenDelayFrames: combatant.shieldRegenDelayFrames,
     grounded: launched ? false : fighter.grounded,
     groundSurfaceId: launched ? null : fighter.groundSurfaceId,
     locomotion: launched ? 'airborne' : fighter.locomotion,
@@ -58,6 +66,19 @@ function mergeCombat(fighter: FighterState, combatant: CombatantState): FighterS
 
 function neutralInput(frame: number): SimInputFrame {
   return { frame, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, dodgePressed: false, shieldHeld: false };
+}
+
+function movementInputForDefense(input: SimInputFrame, fighter: FighterState): SimInputFrame {
+  const wantsShield = input.shieldHeld && fighter.grounded && fighter.shieldHealth > 0 && fighter.hitstunFrames === 0;
+  if (!wantsShield || input.dodgePressed) return input;
+  return {
+    ...input,
+    moveX: 0,
+    moveY: 0,
+    jumpPressed: false,
+    jumpHeld: false,
+    attackPressed: false,
+  };
 }
 
 export function stepMatchWorld(
@@ -75,8 +96,16 @@ export function stepMatchWorld(
       const input = matchInput.byFighterId[fighter.id] ?? neutralInput(state.frame);
       if (input.frame !== state.frame) throw new Error(`${fighter.id} input frame ${input.frame} does not match world frame ${state.frame}`);
       if (fighter.hitlagFrames > 0) return fighter;
-      let next = stepFighterMovement(fighter, input, state.surfaces, state.ledges, movementRules);
-      if (input.attackPressed && next.attack === null && next.hitstunFrames === 0 && next.invulnerableFrames === 0) {
+      if (fighter.hitstunFrames > 0) {
+        return { ...fighter, shielding: false };
+      }
+
+      const movementInput = movementInputForDefense(input, fighter);
+      let next = stepFighterMovement(fighter, movementInput, state.surfaces, state.ledges, movementRules);
+      const canShield = input.shieldHeld && next.grounded && next.shieldHealth > 0 && next.hitstunFrames === 0 && !input.dodgePressed;
+      next = { ...next, shielding: canShield };
+
+      if (input.attackPressed && next.attack === null && next.hitstunFrames === 0 && next.invulnerableFrames === 0 && !next.shielding && next.shieldStunFrames === 0) {
         const started = beginAttack(combatantFromFighter(next), defaultAttackId);
         next = { ...next, attack: started.attack };
       }
