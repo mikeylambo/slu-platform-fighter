@@ -8,6 +8,7 @@ const fightersRoot = join(root, 'fighters');
 const contractPath = join(root, 'content', 'animation-contract.json');
 const greyboxPath = join(fightersRoot, 'greybox', 'fighter.json');
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const STANDARD_AERIALS = ['neutral-air', 'forward-air', 'back-air', 'up-air', 'down-air'];
 
 function fail(message) { throw new Error(message); }
 function titleCase(id) { return id.split('-').map((part) => part ? part[0].toUpperCase() + part.slice(1) : part).join(' '); }
@@ -31,8 +32,14 @@ baseline.identity = {
 };
 baseline.ownedEntities = [];
 baseline.provenance = { code: 'Original SLU fighter definition seeded from Greybox contract', assets: [] };
-for (const move of Object.values(baseline.moves)) {
+for (const [moveName, move] of Object.entries(baseline.moves)) {
   move.timeline = move.timeline.filter((event) => event.type !== 'entity_spawn' && event.type !== 'entity_command');
+  if (STANDARD_AERIALS.includes(moveName)) {
+    // Draft-neutral placeholder: explicit authoring surface, not a shipping timing choice.
+    move.landing = { landingLagFrames: 0, autoCancelWindows: [] };
+  } else {
+    delete move.landing;
+  }
 }
 
 const render = {
@@ -55,4 +62,4 @@ await mkdir(target, { recursive: true });
 await writeFile(join(target, 'fighter.json'), JSON.stringify(baseline, null, 2) + '\n');
 await writeFile(join(target, 'render.json'), JSON.stringify(render, null, 2) + '\n');
 console.log(`Seeded fighters/${id} (${displayName}) with ${Object.keys(baseline.moves).length} gameplay moves and ${contract.roles.length} animation roles.`);
-console.log('Next: replace identity/movement/move data, add assets/model.glb, bind clips in render.json, and add entities.json only when this fighter owns persistent actors.');
+console.log('Next: author identity/movement/moves + aerial landing data, add assets/model.glb, run fighter:autobind, then fighter:audit.');
