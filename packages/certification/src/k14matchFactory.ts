@@ -10,7 +10,7 @@ function assert(condition: unknown, message: string): asserts condition {
 
 const runtime: RosterRuntime = {
   fighterDefinitionIds: ['grappler', 'greybox', 'rushdown', 'zoner'],
-  fighterPhysics: new Map(), attacks: new Map(), grabActions: new Map(), moveRuntime: new Map(),
+  fighterPhysics: new Map(), attacks: new Map(), grabActions: new Map(), moveRuntime: new Map(), aerialLanding: new Map(),
   entityDefinitions: new Map(), entitySpawnsByMoveId: new Map(),
 };
 const stage: CompiledStageDefinition = {
