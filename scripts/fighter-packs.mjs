@@ -13,6 +13,7 @@ const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const COLOR = /^#[0-9a-fA-F]{6}$/;
 const FIXED_MIN_GEOMETRY = 10_000;
 const FIXED_MAX_GEOMETRY = 20_000_000;
+const GRAB_ACTIONS = new Set(["pummel","forward-throw","back-throw","up-throw","down-throw"]);
 const fail = (m) => { throw new Error(m); };
 const assert = (v, m) => { if (!v) fail(m); };
 const object = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -30,19 +31,33 @@ function plausibleFixedGeometry(value) {
   return magnitude === 0 || (magnitude >= FIXED_MIN_GEOMETRY && magnitude <= FIXED_MAX_GEOMETRY);
 }
 
+function integerFields(data, keys, message) {
+  assert(object(data), `${message} requires data`);
+  for (const key of keys) assert(Number.isInteger(data[key]), `${message} ${key} must be integer`);
+}
+
 function validateHitboxData(data, id, moveName, frame) {
-  assert(object(data), `${id}: ${moveName} frame ${frame} hitbox_on requires data`);
-  for (const key of ["id"]) assert(typeof data[key] === "string" && data[key], `${id}: ${moveName} frame ${frame} hitbox ${key} missing`);
-  for (const key of ["offsetX","offsetY","radius","damageTenths","baseKnockback","growthPer100Percent","directionX","directionY","hitlagFrames","hitstunFrames"]) {
-    assert(Number.isInteger(data[key]), `${id}: ${moveName} frame ${frame} hitbox ${key} must be integer`);
-  }
-  for (const key of ["offsetX","offsetY","radius"]) {
-    assert(plausibleFixedGeometry(data[key]), `${id}: ${moveName} frame ${frame} hitbox ${key}=${data[key]} looks mis-scaled; geometry uses 1,000,000 fixed units per world unit`);
-  }
-  assert(data.radius > 0, `${id}: ${moveName} frame ${frame} hitbox radius must be positive`);
-  assert(data.baseKnockback >= 0 && data.growthPer100Percent >= 0, `${id}: ${moveName} frame ${frame} knockback cannot be negative`);
-  assert(data.damageTenths >= 0, `${id}: ${moveName} frame ${frame} damage cannot be negative`);
-  assert(data.hitlagFrames >= 0 && data.hitstunFrames >= 0, `${id}: ${moveName} frame ${frame} hit timing cannot be negative`);
+  const prefix = `${id}: ${moveName} frame ${frame} hitbox`;
+  integerFields(data, ["offsetX","offsetY","radius","damageTenths","baseKnockback","growthPer100Percent","directionX","directionY","hitlagFrames","hitstunFrames"], prefix);
+  assert(typeof data.id === "string" && data.id, `${prefix} id missing`);
+  for (const key of ["offsetX","offsetY","radius"]) assert(plausibleFixedGeometry(data[key]), `${prefix} ${key}=${data[key]} looks mis-scaled; geometry uses 1,000,000 fixed units per world unit`);
+  assert(data.radius > 0, `${prefix} radius must be positive`);
+  assert(data.baseKnockback >= 0 && data.growthPer100Percent >= 0, `${prefix} knockback cannot be negative`);
+  assert(data.damageTenths >= 0, `${prefix} damage cannot be negative`);
+  assert(data.hitlagFrames >= 0 && data.hitstunFrames >= 0, `${prefix} timing cannot be negative`);
+}
+
+function validateGrabDamage(data, id, moveName, frame) {
+  const prefix = `${id}: ${moveName} frame ${frame} grab_damage`;
+  integerFields(data, ["damageTenths","hitlagFrames"], prefix);
+  assert(data.damageTenths >= 0 && data.hitlagFrames >= 0, `${prefix} values cannot be negative`);
+}
+
+function validateThrowRelease(data, id, moveName, frame) {
+  const prefix = `${id}: ${moveName} frame ${frame} throw_release`;
+  integerFields(data, ["damageTenths","baseKnockback","growthPer100Percent","directionX","directionY","hitstunFrames"], prefix);
+  assert(data.damageTenths >= 0 && data.baseKnockback >= 0 && data.growthPer100Percent >= 0 && data.hitstunFrames >= 0, `${prefix} damage/knockback/timing cannot be negative`);
+  assert(data.directionX !== 0 || data.directionY !== 0, `${prefix} launch direction cannot be zero vector`);
 }
 
 function validateFighter(f, id) {
@@ -58,12 +73,20 @@ function validateFighter(f, id) {
   assert(object(f.movement), `${id}: movement missing`);
   for (const [k,v] of Object.entries(f.movement)) assert(Number.isInteger(v), `${id}: movement.${k} must be deterministic integer/fixed-point data`);
   assert(object(f.moves), `${id}: moves missing`);
+  const usedGrabActions = new Set();
   for (const [name, move] of Object.entries(f.moves)) {
     assert(object(move) && typeof move.animationRole === "string" && move.animationRole, `${id}: ${name}.animationRole missing`);
     assert(Number.isInteger(move.totalFrames) && move.totalFrames > 0, `${id}: ${name}.totalFrames must be positive integer`);
     assert(Array.isArray(move.timeline), `${id}: ${name}.timeline missing`);
+    if (move.grabAction !== undefined) {
+      assert(GRAB_ACTIONS.has(move.grabAction), `${id}: ${name}.grabAction invalid`);
+      assert(!usedGrabActions.has(move.grabAction), `${id}: duplicate grabAction ${move.grabAction}`);
+      usedGrabActions.add(move.grabAction);
+    }
     let last = -1;
     const activeHitboxes = new Set();
+    let grabDamageCount = 0;
+    let throwReleaseCount = 0;
     for (const event of move.timeline) {
       assert(Number.isInteger(event.frame) && event.frame >= last, `${id}: ${name} timeline frames must be nondecreasing integers`);
       assert(event.frame < move.totalFrames, `${id}: ${name} event frame ${event.frame} exceeds totalFrames ${move.totalFrames}`);
@@ -77,9 +100,22 @@ function validateFighter(f, id) {
         assert(object(event.data) && typeof event.data.id === "string", `${id}: ${name} hitbox_off requires data.id`);
         assert(activeHitboxes.has(event.data.id), `${id}: ${name} hitbox_off references inactive ${event.data.id}`);
         activeHitboxes.delete(event.data.id);
+      } else if (event.type === "grab_damage") {
+        grabDamageCount += 1;
+        validateGrabDamage(event.data, id, name, event.frame);
+      } else if (event.type === "throw_release") {
+        throwReleaseCount += 1;
+        validateThrowRelease(event.data, id, name, event.frame);
       }
     }
     assert(activeHitboxes.size === 0, `${id}: ${name} leaves hitboxes active at move end: ${[...activeHitboxes].join(", ")}`);
+    if (move.grabAction === "pummel") {
+      assert(grabDamageCount === 1 && throwReleaseCount === 0, `${id}: ${name} pummel requires exactly one grab_damage and no throw_release`);
+    } else if (move.grabAction !== undefined) {
+      assert(throwReleaseCount === 1 && grabDamageCount === 0, `${id}: ${name} throw requires exactly one throw_release and no grab_damage`);
+    } else {
+      assert(grabDamageCount === 0 && throwReleaseCount === 0, `${id}: ${name} uses grab timeline events without grabAction`);
+    }
   }
   assert(Array.isArray(f.ownedEntities), `${id}: ownedEntities must be array`);
   assert(object(f.palettes), `${id}: palettes missing`);
