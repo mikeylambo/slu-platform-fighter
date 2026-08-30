@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slu.local/schemas/render.schema.json",
+  "title": "SLU Platform Fighter - Fighter Render Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "fighterId", "kind", "model", "armature", "rigProfile", "scale", "facing", "materials", "animations", "sources"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "fighterId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "kind": {"const": "3d"},
+    "model": {"type": "string", "minLength": 1},
+    "armature": {"type": "string", "minLength": 1},
+    "rigProfile": {"const": "slu-humanoid-v1"},
+    "scale": {"type": "number", "exclusiveMinimum": 0},
+    "facing": {"enum": ["left", "right"]},
+    "materials": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "secondary", "accent", "skin", "hair", "metal", "energy"],
+      "properties": {
+        "primary": {"type": "string"}, "secondary": {"type": "string"}, "accent": {"type": "string"},
+        "skin": {"type": "string"}, "hair": {"type": "string"}, "metal": {"type": "string"}, "energy": {"type": "string"}
+      }
+    },
+    "sockets": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "animations": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/animation"}
+    },
+    "sources": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source"}
+    }
+  },
+  "$defs": {
+    "animation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clip", "grade"],
+      "properties": {
+        "clip": {"type": "string"},
+        "grade": {"enum": ["dedicated", "retargeted", "adapted", "procedural", "author_required"]},
+        "source": {"type": "string"},
+        "loop": {"type": "boolean"},
+        "speed": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "name", "author", "license", "sourceUrl"],
+      "properties": {
+        "id": {"type": "string"}, "role": {"type": "string"}, "name": {"type": "string"}, "author": {"type": "string"},
+        "license": {"type": "string"}, "sourceUrl": {"type": "string"}, "licenseUrl": {"type": "string"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"}
+      }
+    }
+  }
+}
