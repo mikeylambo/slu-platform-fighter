@@ -42,6 +42,7 @@
       "required": ["animationRole", "totalFrames", "timeline"],
       "properties": {
         "animationRole": {"type": "string", "minLength": 1},
+        "grabAction": {"enum": ["pummel", "forward-throw", "back-throw", "up-throw", "down-throw"]},
         "totalFrames": {"type": "integer", "minimum": 1},
         "timeline": {
           "type": "array",
@@ -50,7 +51,7 @@
             "required": ["frame", "type"],
             "properties": {
               "frame": {"type": "integer", "minimum": 0},
-              "type": {"enum": ["hitbox_on", "hitbox_off", "hurtbox", "impulse", "velocity", "cancel_on", "cancel_off", "armor_on", "armor_off", "invuln_on", "invuln_off", "entity_spawn", "entity_command", "event"]},
+              "type": {"enum": ["hitbox_on", "hitbox_off", "grab_damage", "throw_release", "hurtbox", "impulse", "velocity", "cancel_on", "cancel_off", "armor_on", "armor_off", "invuln_on", "invuln_off", "entity_spawn", "entity_command", "event"]},
               "data": {"type": "object"}
             }
           }
