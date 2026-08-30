@@ -1,0 +1,14 @@
+{
+  "name": "slu-platform-fighter",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Deterministic platform-fighter simulation and tooling for the SLU flagship.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "verify": "npm run build && node dist/packages/certification/src/k0.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}
