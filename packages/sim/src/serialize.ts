@@ -1,6 +1,6 @@
-import type { FighterState, LocomotionState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
+import type { FighterState, LocomotionState, OwnedEntityState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
 
-export const WORLD_BINARY_VERSION = 9;
+export const WORLD_BINARY_VERSION = 10;
 
 const locomotionCode: Record<LocomotionState, number> = {
   idle: 0, walk: 1, dash: 2, run: 3, turn: 4, crouch: 5, 'jump-squat': 6, airborne: 7,
@@ -90,16 +90,34 @@ function writeFighter(writer: ByteWriter, fighter: FighterState) {
   writer.u16(fighter.inputHistory.length); for (const input of fighter.inputHistory) writeInput(writer, input);
 }
 
+function writeEntity(writer: ByteWriter, entity: OwnedEntityState) {
+  writer.string(entity.id);
+  writer.string(entity.definitionId);
+  writer.string(entity.ownerId);
+  writer.string(entity.ownerDefinitionId);
+  writer.i64(entity.x); writer.i64(entity.y); writer.i64(entity.vx); writer.i64(entity.vy);
+  writer.i16(entity.facing);
+  writer.u16(entity.ageFrames);
+  writer.u16(entity.lifetimeFrames);
+  writer.u8(entity.hitsRemaining);
+  const targets = [...entity.hitTargets].sort();
+  writer.u16(targets.length);
+  for (const target of targets) writer.string(target);
+}
+
 export function serializeWorldState(state: WorldState): Uint8Array {
   const writer = new ByteWriter();
   writer.u8(0x53); writer.u8(0x4c); writer.u8(0x50); writer.u8(0x46);
   writer.u16(WORLD_BINARY_VERSION); writer.u32(state.frame); writer.u32(state.seed);
   writeOptionalString(writer, state.winnerId);
+  writer.u32(state.nextEntitySerial ?? 1);
   const surfaces = [...state.surfaces].sort((a, b) => a.id.localeCompare(b.id));
   writer.u16(surfaces.length); for (const surface of surfaces) writeSurface(writer, surface);
   const ledges = [...state.ledges].sort((a, b) => a.id.localeCompare(b.id));
   writer.u16(ledges.length); for (const ledge of ledges) writeLedge(writer, ledge);
   const fighters = [...state.fighters].sort((a, b) => a.id.localeCompare(b.id));
   writer.u16(fighters.length); for (const fighter of fighters) writeFighter(writer, fighter);
+  const entities = [...(state.entities ?? [])].sort((a, b) => a.id.localeCompare(b.id));
+  writer.u16(entities.length); for (const entity of entities) writeEntity(writer, entity);
   return writer.finish();
 }
