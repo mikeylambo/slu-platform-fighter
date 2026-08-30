@@ -1,11 +1,11 @@
 import type { FighterState, LocomotionState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
 
-export const WORLD_BINARY_VERSION = 4;
+export const WORLD_BINARY_VERSION = 5;
 
 const locomotionCode: Record<LocomotionState, number> = {
   idle: 0, walk: 1, dash: 2, run: 3, turn: 4, crouch: 5, 'jump-squat': 6, airborne: 7,
   landing: 8, 'ledge-hang': 9, 'air-dodge': 10, 'spot-dodge': 11, roll: 12,
-  'tech-in-place': 13, 'tech-roll': 14, knockdown: 15,
+  'tech-in-place': 13, 'tech-roll': 14, knockdown: 15, grabbed: 16,
 };
 
 class ByteWriter {
@@ -34,7 +34,7 @@ class ByteWriter {
 function writeInput(writer: ByteWriter, input: SimInputFrame) {
   writer.i32(input.frame); writer.i16(input.moveX); writer.i16(input.moveY);
   writer.bool(input.jumpPressed); writer.bool(input.jumpHeld); writer.bool(Boolean(input.attackPressed));
-  writer.bool(input.dodgePressed); writer.bool(input.shieldHeld);
+  writer.bool(Boolean(input.grabPressed)); writer.bool(input.dodgePressed); writer.bool(input.shieldHeld);
 }
 
 function writeSurface(writer: ByteWriter, surface: StageSurface) {
@@ -46,6 +46,11 @@ function writeLedge(writer: ByteWriter, ledge: StageLedge) {
   writer.string(ledge.id); writer.i64(ledge.x); writer.i64(ledge.y); writer.i16(ledge.inward);
 }
 
+function writeOptionalString(writer: ByteWriter, value: string | null) {
+  writer.bool(value !== null);
+  if (value !== null) writer.string(value);
+}
+
 function writeFighter(writer: ByteWriter, fighter: FighterState) {
   writer.string(fighter.id); writer.i64(fighter.x); writer.i64(fighter.y); writer.i64(fighter.vx); writer.i64(fighter.vy);
   writer.bool(fighter.grounded); writer.bool(fighter.groundSurfaceId !== null);
@@ -53,7 +58,7 @@ function writeFighter(writer: ByteWriter, fighter: FighterState) {
   writer.i16(fighter.facing); writer.u8(locomotionCode[fighter.locomotion]); writer.u32(fighter.locomotionFrame);
   writer.u8(fighter.jumpsRemaining); writer.bool(fighter.fastFalling);
   writer.u16(fighter.dropThroughFrames); writer.u16(fighter.jumpBufferFrames);
-  writer.bool(fighter.ledgeId !== null); if (fighter.ledgeId !== null) writer.string(fighter.ledgeId);
+  writeOptionalString(writer, fighter.ledgeId);
   writer.u16(fighter.ledgeRegrabLockoutFrames); writer.u16(fighter.invulnerableFrames);
   writer.u16(fighter.dodgeCooldownFrames); writer.u16(fighter.techBufferFrames);
   writer.u32(fighter.percentTenths); writer.u16(fighter.hitlagFrames); writer.u16(fighter.hitstunFrames);
@@ -67,6 +72,9 @@ function writeFighter(writer: ByteWriter, fighter: FighterState) {
   writer.u16(fighter.shieldHealth);
   writer.u16(fighter.shieldStunFrames);
   writer.u16(fighter.shieldRegenDelayFrames);
+  writeOptionalString(writer, fighter.grabTargetId);
+  writeOptionalString(writer, fighter.grabbedById);
+  writer.u16(fighter.grabFrames);
   if (fighter.inputHistory.length > 0xffff) throw new Error('input history exceeds binary format capacity');
   writer.u16(fighter.inputHistory.length); for (const input of fighter.inputHistory) writeInput(writer, input);
 }
