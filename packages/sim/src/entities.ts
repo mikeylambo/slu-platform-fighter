@@ -32,6 +32,7 @@ export interface EntityBlockEvent {
 }
 
 export type EntityEvent = EntityHitEvent | EntityBlockEvent;
+export type EntityTargetPolicy = (ownerId: string, targetId: string) => boolean;
 
 function circlesOverlap(ax: Fixed, ay: Fixed, ar: Fixed, bx: Fixed, by: Fixed, br: Fixed): boolean {
   const dx = fixed.sub(ax, bx);
@@ -109,6 +110,7 @@ export function stepOwnedEntities(
   fightersInput: readonly FighterState[],
   definitions: ReadonlyMap<string, EntityDefinition>,
   inputs: Readonly<Record<string, SimInputFrame>> = {},
+  canTarget: EntityTargetPolicy = () => true,
 ): { entities: OwnedEntityState[]; fighters: FighterState[]; events: EntityEvent[] } {
   const fighters = [...fightersInput].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => ({ ...fighter }));
   const events: EntityEvent[] = [];
@@ -130,7 +132,7 @@ export function stepOwnedEntities(
     let consumed = false;
     for (let index = 0; index < fighters.length; index += 1) {
       const target = fighters[index];
-      if (!target || target.id === entity.ownerId || target.eliminated || target.respawnFrames > 0 || target.invulnerableFrames > 0) continue;
+      if (!target || target.id === entity.ownerId || !canTarget(entity.ownerId, target.id) || target.eliminated || target.respawnFrames > 0 || target.invulnerableFrames > 0) continue;
       if (entity.hitTargets.includes(target.id)) continue;
       const hurtboxY = fixed.add(target.y, FIGHTER_HURTBOX_OFFSET_Y);
       if (!circlesOverlap(entity.x, entity.y, definition.radius, target.x, hurtboxY, FIGHTER_HURTBOX_RADIUS)) continue;
