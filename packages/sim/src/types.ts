@@ -78,10 +78,34 @@ export interface FighterState {
   respawnFrames: number;
 }
 
+/** Authoritative dynamic state for projectiles, traps, summons and fighter-owned weapons. */
+export interface OwnedEntityState {
+  /** Stable runtime entity id; generated from the monotonic world entity serial. */
+  id: string;
+  /** Fighter-owned entity definition id, e.g. greybox:pulse. */
+  definitionId: string;
+  /** Runtime participant that spawned/owns this actor. */
+  ownerId: string;
+  /** Fighter-pack definition that owns the actor contract. */
+  ownerDefinitionId: string;
+  x: Fixed;
+  y: Fixed;
+  vx: Fixed;
+  vy: Fixed;
+  facing: -1 | 1;
+  ageFrames: number;
+  lifetimeFrames: number;
+  hitsRemaining: number;
+  hitTargets: string[];
+}
+
 export interface WorldState {
   frame: number;
   seed: number;
   fighters: FighterState[];
+  entities: OwnedEntityState[];
+  /** Monotonic serial used to mint deterministic runtime entity ids. */
+  nextEntitySerial: number;
   surfaces: StageSurface[];
   ledges: StageLedge[];
   /** Stable winner participant id once a stock match is resolved; null while unresolved. */
