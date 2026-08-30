@@ -11,6 +11,8 @@ export interface StockMatchRules {
   respawnY: Fixed;
   respawnFrames: number;
   respawnInvulnerableFrames: number;
+  /** False for pure Time mode: KOs respawn indefinitely instead of eliminating at zero stocks. */
+  finiteStocks?: boolean;
 }
 
 export const DEFAULT_STOCK_MATCH_RULES: StockMatchRules = {
@@ -22,6 +24,7 @@ export const DEFAULT_STOCK_MATCH_RULES: StockMatchRules = {
   respawnY: fixed.fromInt(8),
   respawnFrames: 60,
   respawnInvulnerableFrames: 120,
+  finiteStocks: true,
 };
 
 export interface KoEvent {
@@ -98,6 +101,7 @@ export function stepStockLifecycle(
   winnerIdInput: string | null,
   rules: StockMatchRules = DEFAULT_STOCK_MATCH_RULES,
 ): { fighters: FighterState[]; winnerId: string | null; events: LifecycleEvent[] } {
+  const finiteStocks = rules.finiteStocks !== false;
   const sorted = [...fightersInput].sort((a, b) => a.id.localeCompare(b.id));
   const spawnIndex = new Map(sorted.map((fighter, index) => [fighter.id, index] as const));
   const fighters = sorted.map((fighter) => ({ ...fighter }));
@@ -105,7 +109,7 @@ export function stepStockLifecycle(
 
   for (let index = 0; index < fighters.length; index += 1) {
     const fighter = fighters[index];
-    if (!fighter || fighter.eliminated) continue;
+    if (!fighter || (finiteStocks && fighter.eliminated)) continue;
 
     const position = respawnX(spawnIndex.get(fighter.id) ?? index, fighters.length, rules);
     if (fighter.respawnFrames > 0) {
@@ -120,8 +124,8 @@ export function stepStockLifecycle(
     }
 
     if (!outsideBlastZone(fighter, rules)) continue;
-    const stocksAfter = Math.max(0, fighter.stocks - 1);
-    const eliminated = stocksAfter === 0;
+    const stocksAfter = finiteStocks ? Math.max(0, fighter.stocks - 1) : fighter.stocks;
+    const eliminated = finiteStocks && stocksAfter === 0;
     const credit = koCredit(fighter);
     if (eliminated) {
       fighters[index] = {
@@ -148,12 +152,12 @@ export function stepStockLifecycle(
     events.push({ type: 'ko', fighterId: fighter.id, stocksAfter, eliminated, ...credit });
   }
 
-  const eliminatedIds = new Set(fighters.filter((fighter) => fighter.eliminated || fighter.respawnFrames > 0).map((fighter) => fighter.id));
+  const unavailableIds = new Set(fighters.filter((fighter) => fighter.eliminated || fighter.respawnFrames > 0).map((fighter) => fighter.id));
   for (let index = 0; index < fighters.length; index += 1) {
     const fighter = fighters[index];
     if (!fighter) continue;
-    const lostTarget = fighter.grabTargetId !== null && eliminatedIds.has(fighter.grabTargetId);
-    const lostCaptor = fighter.grabbedById !== null && eliminatedIds.has(fighter.grabbedById);
+    const lostTarget = fighter.grabTargetId !== null && unavailableIds.has(fighter.grabTargetId);
+    const lostCaptor = fighter.grabbedById !== null && unavailableIds.has(fighter.grabbedById);
     if (lostTarget || lostCaptor) {
       fighters[index] = {
         ...fighter,
@@ -167,7 +171,7 @@ export function stepStockLifecycle(
   }
 
   let winnerId = winnerIdInput;
-  if (winnerId === null && fighters.length > 1) {
+  if (finiteStocks && winnerId === null && fighters.length > 1) {
     const survivors = fighters.filter((fighter) => !fighter.eliminated);
     if (survivors.length === 1) winnerId = survivors[0]?.id ?? null;
   }
