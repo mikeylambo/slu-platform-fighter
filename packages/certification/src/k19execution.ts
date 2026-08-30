@@ -14,7 +14,7 @@ function neutral(frame: number): SimInputFrame {
 }
 
 const runtime: RosterRuntime = {
-  fighterDefinitionIds: ['alpha', 'beta'], fighterPhysics: new Map(), attacks: new Map(), grabActions: new Map(), moveRuntime: new Map(),
+  fighterDefinitionIds: ['alpha', 'beta'], fighterPhysics: new Map(), attacks: new Map(), grabActions: new Map(), moveRuntime: new Map(), aerialLanding: new Map(),
   entityDefinitions: new Map(), entitySpawnsByMoveId: new Map(),
 };
 const stage: CompiledStageDefinition = {
