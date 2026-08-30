@@ -77,7 +77,7 @@ for (const target of [1, 29, 30, 31, 89, 137, 179, 239, 240]) {
 }
 
 const corrupted = structuredClone(tape);
-corrupted.initial.sha256 = '0'.repeat(64);
+corrupted.initial.hash = '0'.repeat(16);
 let rejectedCorruption = false;
 try { new ReplayPlayer(corrupted, step); } catch { rejectedCorruption = true; }
 assert(rejectedCorruption, 'replay player must reject corrupted checkpoint hashes');
