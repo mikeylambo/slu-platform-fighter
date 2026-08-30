@@ -15,6 +15,7 @@
     "roster:seed": "node scripts/seed-roster.mjs",
     "fighter:build": "node scripts/fighter-packs.mjs build",
     "fighter:check": "node scripts/fighter-packs.mjs check",
+    "fighter:landing:check": "node scripts/landing-packs.mjs",
     "fighter:audit": "node scripts/fighter-assets.mjs audit",
     "fighter:autobind": "node scripts/fighter-assets.mjs autobind",
     "roster:report": "node scripts/roster-readiness.mjs",
@@ -24,7 +25,7 @@
     "stage:check": "node scripts/stage-packs.mjs check",
     "content:doctor": "node scripts/content-doctor.mjs",
     "content:build": "npm run fighter:build && npm run entity:build && npm run stage:build",
-    "content:check": "npm run fighter:check && npm run entity:check && npm run stage:check",
+    "content:check": "npm run fighter:check && npm run fighter:landing:check && npm run entity:check && npm run stage:check",
     "fighter:audit:greybox": "blender --background --python scripts/blender/audit_fighter.py -- fighters/greybox/render.json",
     "certify:k0": "node dist/packages/certification/src/k0.js",
     "certify:k1": "node dist/packages/certification/src/k1.js",
@@ -53,8 +54,9 @@
     "certify:k21netcode": "node dist/packages/certification/src/k21netcode.js",
     "certify:k22animation": "node dist/packages/certification/src/k22animation.js",
     "certify:k23content-fighter": "node dist/packages/certification/src/k23contentFighter.js",
+    "certify:k24aerial-landing": "node dist/packages/certification/src/k24aerialLanding.js",
     "soak:matches": "node dist/packages/certification/src/k10soak.js",
-    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run certify:k12mixed-roster && npm run certify:k13shell && npm run certify:k14match-factory && npm run certify:k15teams && npm run certify:k16training && npm run certify:k17attribution && npm run certify:k18match-rules && npm run certify:k19execution && npm run certify:k20team-results && npm run certify:k21netcode && npm run certify:k22animation && npm run certify:k23content-fighter && npm run lab:movement:build && npm run lab:combat:build"
+    "verify": "npm run content:check && npm run content:build && npm run build && npm run certify:k0 && npm run certify:k1 && npm run certify:k1b && npm run certify:k2 && npm run certify:k2match && npm run certify:k3lifecycle && npm run certify:k3knockback && npm run certify:k4stage && npm run certify:k5actions && npm run certify:k6entities && npm run certify:k7move-runtime && npm run certify:k8rollback && npm run certify:k9replay && npm run certify:k10soak && npm run certify:k11camera && npm run certify:k12mixed-roster && npm run certify:k13shell && npm run certify:k14match-factory && npm run certify:k15teams && npm run certify:k16training && npm run certify:k17attribution && npm run certify:k18match-rules && npm run certify:k19execution && npm run certify:k20team-results && npm run certify:k21netcode && npm run certify:k22animation && npm run certify:k23content-fighter && npm run certify:k24aerial-landing && npm run lab:movement:build && npm run lab:combat:build"
   },
   "dependencies": {
     "three": "^0.185.0"
