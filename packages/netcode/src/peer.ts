@@ -14,7 +14,7 @@ import {
 } from './protocol.js';
 
 export interface OnlinePeerConfig extends HandshakeIdentity {
-  /** Exchange a deterministic state hash every N ready-to-simulate frames. */
+  /** Exchange a deterministic state hash every N confirmed frames. */
   hashIntervalFrames?: number;
   /** Number of recent frame hashes retained for delayed comparison. */
   hashHistoryFrames?: number;
@@ -33,6 +33,9 @@ export interface PeerAdvance<TEvent> extends RollbackAdvance<TEvent> {
 }
 
 function shifted(input: SimInputFrame, frame: number): SimInputFrame { return { ...input, frame }; }
+function neutral(frame: number): SimInputFrame {
+  return { frame, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, specialPressed: false, grabPressed: false, smashX: 0, smashY: 0, dodgePressed: false, shieldHeld: false };
+}
 
 /**
  * Transport-neutral peer around RollbackSession. Callers move outbound packets
@@ -48,6 +51,8 @@ export class OnlineRollbackPeer<TEvent = unknown> {
   private readonly pendingRemoteHashes = new Map<number, NetStateHashPacket[]>();
   private readonly desyncQueue: DesyncRecord[] = [];
   private readonly seenSequences = new Map<string, number>();
+  private readonly exactInputFrames = new Map<string, Set<number>>();
+  private readonly confirmedStateHashes = new Set<number>();
   private connectedPeers = new Set<string>();
 
   constructor(rollback: RollbackSession<TEvent>, config: OnlinePeerConfig) {
@@ -58,6 +63,14 @@ export class OnlineRollbackPeer<TEvent = unknown> {
     this.rollback = rollback;
     this.config = { ...config, hashIntervalFrames, hashHistoryFrames };
     this.helloPacket = createHelloPacket(config);
+    for (const participantId of config.participantIds) this.exactInputFrames.set(participantId, new Set<number>());
+    // Input-delay padding before the first captured frame is deterministic neutral input.
+    for (const participantId of config.participantIds) {
+      for (let frame = 0; frame < config.inputDelayFrames; frame += 1) {
+        this.rollback.submitInput(participantId, neutral(frame));
+        this.exactInputFrames.get(participantId)!.add(frame);
+      }
+    }
   }
 
   get hello(): NetHelloPacket { return structuredClone(this.helloPacket); }
@@ -80,6 +93,7 @@ export class OnlineRollbackPeer<TEvent = unknown> {
     if (captured.frame !== this.rollback.currentFrame) throw new Error(`local capture frame ${captured.frame} must equal current rollback frame ${this.rollback.currentFrame}`);
     const input = shifted(captured, captured.frame + this.config.inputDelayFrames);
     this.rollback.submitInput(participantId, input);
+    this.exactInputFrames.get(participantId)?.add(input.frame);
     const packet: NetInputPacket = {
       type: 'input', protocolVersion: NETCODE_PROTOCOL_VERSION, sessionId: this.config.sessionId, peerId: this.config.peerId,
       sequence: this.sequence++, participantId, input,
@@ -102,6 +116,7 @@ export class OnlineRollbackPeer<TEvent = unknown> {
       if (packet.sequence <= last) return;
       this.seenSequences.set(packet.peerId, packet.sequence);
       this.rollback.submitInput(packet.participantId, packet.input);
+      this.exactInputFrames.get(packet.participantId)?.add(packet.input.frame);
       return;
     }
 
@@ -119,20 +134,31 @@ export class OnlineRollbackPeer<TEvent = unknown> {
     if (packet.type === 'disconnect') this.connectedPeers.delete(packet.peerId);
   }
 
+  private isStateFrameConfirmed(stateFrame: number): boolean {
+    if (stateFrame <= 0) return true;
+    const simulatedInputFrame = stateFrame - 1;
+    for (const participantId of this.config.participantIds) {
+      if (!this.exactInputFrames.get(participantId)?.has(simulatedInputFrame)) return false;
+    }
+    return true;
+  }
+
   advance(): PeerAdvance<TEvent> {
     const advanced = this.rollback.advance();
     const frame = advanced.state.frame;
-    const hash = hashWorldState(advanced.state);
-    this.localHashes.set(frame, hash);
-    const pending = this.pendingRemoteHashes.get(frame) ?? [];
-    for (const packet of pending) this.compareHash(packet, hash);
-    this.pendingRemoteHashes.delete(frame);
-
-    if (frame % this.config.hashIntervalFrames === 0) {
-      this.outboundQueue.push({
-        type: 'state-hash', protocolVersion: NETCODE_PROTOCOL_VERSION, sessionId: this.config.sessionId,
-        peerId: this.config.peerId, frame, hash,
-      });
+    if (this.isStateFrameConfirmed(frame)) {
+      const hash = hashWorldState(advanced.state);
+      this.localHashes.set(frame, hash);
+      this.confirmedStateHashes.add(frame);
+      const pending = this.pendingRemoteHashes.get(frame) ?? [];
+      for (const packet of pending) this.compareHash(packet, hash);
+      this.pendingRemoteHashes.delete(frame);
+      if (frame % this.config.hashIntervalFrames === 0) {
+        this.outboundQueue.push({
+          type: 'state-hash', protocolVersion: NETCODE_PROTOCOL_VERSION, sessionId: this.config.sessionId,
+          peerId: this.config.peerId, frame, hash,
+        });
+      }
     }
     this.pruneHashes(frame);
     const outbound = this.drainOutbound();
@@ -147,6 +173,7 @@ export class OnlineRollbackPeer<TEvent = unknown> {
   drainDesyncs(): DesyncRecord[] { return this.desyncQueue.splice(0); }
 
   private compareHash(packet: NetStateHashPacket, localHash: string): void {
+    if (!this.confirmedStateHashes.has(packet.frame)) return;
     if (packet.hash === localHash) return;
     this.desyncQueue.push({ frame: packet.frame, localHash, remoteHash: packet.hash, remotePeerId: packet.peerId });
   }
@@ -155,5 +182,7 @@ export class OnlineRollbackPeer<TEvent = unknown> {
     const oldest = Math.max(0, currentFrame - this.config.hashHistoryFrames);
     for (const frame of this.localHashes.keys()) if (frame < oldest) this.localHashes.delete(frame);
     for (const frame of this.pendingRemoteHashes.keys()) if (frame < oldest) this.pendingRemoteHashes.delete(frame);
+    for (const frame of this.confirmedStateHashes) if (frame < oldest) this.confirmedStateHashes.delete(frame);
+    for (const frames of this.exactInputFrames.values()) for (const frame of frames) if (frame < oldest) frames.delete(frame);
   }
 }
