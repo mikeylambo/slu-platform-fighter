@@ -12,6 +12,8 @@ function inputForFrame(frame: number): SimInputFrame {
     moveY: 0,
     jumpPressed: frame === 60,
     jumpHeld: jumping,
+    dodgePressed: false,
+    shieldHeld: false,
   };
 }
 
