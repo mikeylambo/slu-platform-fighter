@@ -3,6 +3,7 @@ import { withAerialLandingPolicies } from '../../sim/src/aerialLanding.js';
 import { withDamageAttribution, type DamageAttributionRules } from '../../sim/src/damageAttribution.js';
 import { stepMatchWorld, type MatchInputFrame, type MatchStepResult } from '../../sim/src/match.js';
 import { createMatchRuntimeState, stockLifecycleRulesForMatch, withMatchRules, type MatchRules } from '../../sim/src/matchRules.js';
+import { stageSurfacesAt, withStageMotion } from '../../sim/src/stageRuntime.js';
 import { createTeamInteractionPolicy, validateTeamRules, type TeamRules } from '../../sim/src/teamPolicy.js';
 import type { WorldState } from '../../sim/src/types.js';
 import type { ConstructedMatch } from './matchFactory.js';
@@ -59,10 +60,14 @@ export function createMatchExecution(constructed: ConstructedMatch, options: Mat
   );
 
   const landingAware = withAerialLandingPolicies(rawStep, runtime.aerialLanding, runtime.fighterPhysics);
-  const attributed = withDamageAttribution(landingAware, options.damageAttribution);
+  // Stage geometry must wrap landing prediction so both systems observe the same
+  // frame-derived moving-platform surfaces before movement/collision is resolved.
+  const stageAware = withStageMotion(landingAware, constructed.stage);
+  const attributed = withDamageAttribution(stageAware, options.damageAttribution);
   const directed = withMatchRules(attributed, options.matchRules, teamRules);
   const initialState: WorldState = {
     ...constructed.world,
+    surfaces: stageSurfacesAt(constructed.stage, 0),
     match: createMatchRuntimeState(participantIds, options.matchRules),
     winnerId: null,
   };
