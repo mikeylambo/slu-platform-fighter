@@ -1,7 +1,9 @@
 import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
+import type { EntityDefinition, EntitySpawnDefinition } from '../../content/src/compileEntities.js';
 import type { GrabActionDefinition, GrabActionInput } from '../../content/src/compileGrabActions.js';
 import { resolveStandardAttackId } from './actionResolver.js';
 import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type CombatEvent } from './combat.js';
+import { spawnEntitiesFromAttacks, stepOwnedEntities, type EntityEvent } from './entities.js';
 import { applyDirectionalInfluence, stepHitlagSDI, stepHitstunKnockback } from './knockback.js';
 import { DEFAULT_STOCK_MATCH_RULES, stepStockLifecycle, type LifecycleEvent, type StockMatchRules } from './lifecycle.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
@@ -13,7 +15,7 @@ export interface GrabEvent { type: 'grab'; attackerId: string; targetId: string;
 export interface GrabReleaseEvent { type: 'grab-release'; attackerId: string; targetId: string; }
 export interface PummelEvent { type: 'pummel'; attackerId: string; targetId: string; actionId: string; damageTenths: number; }
 export interface ThrowEvent { type: 'throw'; attackerId: string; targetId: string; actionId: string; damageTenths: number; knockbackX: Fixed; knockbackY: Fixed; hitstunFrames: number; }
-export type MatchEvent = CombatEvent | GrabEvent | GrabReleaseEvent | PummelEvent | ThrowEvent | LifecycleEvent;
+export type MatchEvent = CombatEvent | GrabEvent | GrabReleaseEvent | PummelEvent | ThrowEvent | EntityEvent | LifecycleEvent;
 export interface MatchStepResult { state: WorldState; events: MatchEvent[]; }
 
 const HURTBOX_RADIUS = fixed.fromRatio(3, 4);
@@ -224,6 +226,8 @@ export function stepMatchWorld(
   movementRules: MovementRules = K1_MOVEMENT,
   grabActions: ReadonlyMap<GrabActionInput, GrabActionDefinition> = new Map(),
   stockRules: StockMatchRules = DEFAULT_STOCK_MATCH_RULES,
+  entityDefinitions: ReadonlyMap<string, EntityDefinition> = new Map(),
+  entitySpawnsByMoveId: ReadonlyMap<string, readonly EntitySpawnDefinition[]> = new Map(),
 ): MatchStepResult {
   if (matchInput.frame !== state.frame) throw new Error(`match input frame ${matchInput.frame} does not match world frame ${state.frame}`);
   const canonicalInputs: Record<string, SimInputFrame> = {};
@@ -258,6 +262,13 @@ export function stepMatchWorld(
   });
 
   const grabbed = resolveGrabAttempts(moved, canonicalInputs);
+  const spawned = spawnEntitiesFromAttacks(
+    grabbed.fighters,
+    state.entities ?? [],
+    state.nextEntitySerial ?? 1,
+    entityDefinitions,
+    entitySpawnsByMoveId,
+  );
   const combatEligible = grabbed.fighters.map((fighter) => fighter.grabbedById !== null || fighter.eliminated || fighter.respawnFrames > 0 ? { ...fighter, invulnerableFrames: Math.max(1, fighter.invulnerableFrames) } : fighter);
   const combat = stepCombatFrame(combatEligible.map(combatantFromFighter), attacks);
   const newlyHitTargets = new Set(combat.events.filter((event): event is Extract<CombatEvent, { type: 'hit' }> => event.type === 'hit').map((event) => event.targetId));
@@ -273,10 +284,20 @@ export function stepMatchWorld(
   });
   const maintained = maintainGrabRelationships(combatMerged);
   const grabActionResult = stepGrabActions(maintained.fighters, canonicalInputs, grabActions);
-  const lifecycle = stepStockLifecycle(grabActionResult.fighters, state.winnerId, stockRules);
+  const entityResult = stepOwnedEntities(spawned.entities, grabActionResult.fighters, entityDefinitions, canonicalInputs);
+  const lifecycle = stepStockLifecycle(entityResult.fighters, state.winnerId, stockRules);
 
   return {
-    state: { frame: state.frame + 1, seed: state.seed, fighters: lifecycle.fighters, surfaces: state.surfaces, ledges: state.ledges, winnerId: lifecycle.winnerId },
-    events: [...grabbed.events, ...combat.events, ...maintained.events, ...grabActionResult.events, ...lifecycle.events],
+    state: {
+      frame: state.frame + 1,
+      seed: state.seed,
+      fighters: lifecycle.fighters,
+      entities: entityResult.entities,
+      nextEntitySerial: spawned.nextEntitySerial,
+      surfaces: state.surfaces,
+      ledges: state.ledges,
+      winnerId: lifecycle.winnerId,
+    },
+    events: [...grabbed.events, ...combat.events, ...maintained.events, ...grabActionResult.events, ...entityResult.events, ...lifecycle.events],
   };
 }
