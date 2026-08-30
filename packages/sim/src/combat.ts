@@ -30,6 +30,7 @@ export interface CombatantState {
   percentTenths: number;
   hitlagFrames: number;
   hitstunFrames: number;
+  invulnerableFrames: number;
   attack: CombatAttackState | null;
 }
 
@@ -127,7 +128,7 @@ export function stepCombatFrame(combatantsInput: CombatantState[], attacks: Read
       for (let targetIndex = 0; targetIndex < combatants.length; targetIndex += 1) {
         if (targetIndex === attackerIndex) continue;
         const target = combatants[targetIndex];
-        if (!target || attacker.attack?.hitTargets.includes(target.id)) continue;
+        if (!target || target.invulnerableFrames > 0 || attacker.attack?.hitTargets.includes(target.id)) continue;
         const hurtboxY = fixed.add(target.y, target.hurtboxOffsetY);
         if (!circlesOverlap(hitboxX, hitboxY, hitbox.radius, target.x, hurtboxY, target.hurtboxRadius)) continue;
         const resolved = resolveOneHit(attacker, target, hitbox, attack.id);
