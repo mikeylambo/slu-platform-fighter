@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "profile": "slu-humanoid-v1",
+  "description": "Required semantic animation roles for a standard humanoid platform fighter. Roles may be dedicated, retargeted/adapted, procedural, or author-required depending on fighter certification state.",
+  "roles": [
+    "idle", "idle_alt", "walk", "walk_back", "initial_dash", "run", "run_brake", "turn", "crouch", "crouch_turn",
+    "jump_squat", "short_hop", "full_hop", "double_jump", "fall", "fast_fall", "land", "hard_land",
+    "jab_1", "jab_2", "jab_3", "rapid_jab", "dash_attack",
+    "forward_tilt", "up_tilt", "down_tilt", "forward_smash", "up_smash", "down_smash",
+    "neutral_air", "forward_air", "back_air", "up_air", "down_air",
+    "neutral_special", "side_special", "up_special", "down_special",
+    "shield_raise", "shield_hold", "shield_drop", "parry", "shield_break",
+    "spot_dodge", "roll_forward", "roll_back", "air_dodge",
+    "grab", "grab_hold", "pummel", "grabbed", "grab_release",
+    "forward_throw", "back_throw", "up_throw", "down_throw",
+    "hit_light", "hit_heavy", "hit_high", "hit_low", "tumble", "wall_bounce", "ground_bounce",
+    "downed_face_up", "downed_face_down", "tech_in_place", "tech_forward", "tech_back", "missed_tech",
+    "ledge_hang", "ledge_getup", "ledge_roll", "ledge_jump", "ledge_attack", "ledge_drop",
+    "wall_jump", "wall_cling",
+    "respawn", "entrance", "taunt_1", "taunt_2", "taunt_3", "victory_1", "victory_2", "defeat"
+  ],
+  "grades": ["dedicated", "retargeted", "adapted", "procedural", "author_required"],
+  "publicationRules": {
+    "playable": ["dedicated", "retargeted", "adapted", "procedural", "author_required"],
+    "certified": ["dedicated", "retargeted", "adapted", "procedural"],
+    "release": ["dedicated", "retargeted", "procedural"]
+  }
+}
