@@ -33,7 +33,7 @@ class ByteWriter {
 
 function writeInput(writer: ByteWriter, input: SimInputFrame) {
   writer.i32(input.frame); writer.i16(input.moveX); writer.i16(input.moveY);
-  writer.bool(input.jumpPressed); writer.bool(input.jumpHeld); writer.bool(input.attackPressed);
+  writer.bool(input.jumpPressed); writer.bool(input.jumpHeld); writer.bool(Boolean(input.attackPressed));
   writer.bool(input.dodgePressed); writer.bool(input.shieldHeld);
 }
 
