@@ -1,10 +1,12 @@
 import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { EntityDefinition, EntitySpawnDefinition } from '../../content/src/compileEntities.js';
+import type { FighterPhysicsDefinition } from '../../content/src/compileFighterPhysics.js';
 import { scopedGrabActionKey, type GrabActionDefinition, type GrabActionInput } from '../../content/src/compileGrabActions.js';
 import type { MoveRuntimeDefinition } from '../../content/src/compileMoveRuntime.js';
 import { resolveStandardAttackId } from './actionResolver.js';
 import { beginAttack, stepCombatFrame, type AttackDefinition, type CombatantState, type CombatEvent } from './combat.js';
 import { spawnEntitiesFromAttacks, stepOwnedEntities, type EntityEvent } from './entities.js';
+import { hurtboxForFighter, movementRulesForFighter } from './fighterPhysics.js';
 import { applyDirectionalInfluence, stepHitlagSDI, stepHitstunKnockback } from './knockback.js';
 import { DEFAULT_STOCK_MATCH_RULES, stepStockLifecycle, type LifecycleEvent, type StockMatchRules } from './lifecycle.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
@@ -33,10 +35,11 @@ export function createTwoFighterMatch(seed: number): WorldState {
   return { ...base, fighters: [createFighterState('fighter-a', fixed.fromRatio(-9, 10), 1, 'greybox'), createFighterState('fighter-b', fixed.fromRatio(9, 10), -1, 'greybox')] };
 }
 
-function combatantFromFighter(fighter: FighterState): CombatantState {
+function combatantFromFighter(fighter: FighterState, physics?: FighterPhysicsDefinition): CombatantState {
+  const hurtbox = hurtboxForFighter(physics, HURTBOX_RADIUS, HURTBOX_OFFSET_Y);
   return {
     id: fighter.id, x: fighter.x, y: fighter.y, vx: fighter.vx, vy: fighter.vy, facing: fighter.facing,
-    hurtboxRadius: HURTBOX_RADIUS, hurtboxOffsetY: HURTBOX_OFFSET_Y,
+    hurtboxRadius: hurtbox.radius, hurtboxOffsetY: hurtbox.offsetY,
     percentTenths: fighter.percentTenths, hitlagFrames: fighter.hitlagFrames, hitstunFrames: fighter.hitstunFrames,
     invulnerableFrames: fighter.invulnerableFrames, attack: fighter.attack, shielding: fighter.shielding,
     shieldHealth: fighter.shieldHealth, shieldStunFrames: fighter.shieldStunFrames, shieldRegenDelayFrames: fighter.shieldRegenDelayFrames,
@@ -237,6 +240,7 @@ export function stepMatchWorld(
   entityDefinitions: ReadonlyMap<string, EntityDefinition> = new Map(),
   entitySpawnsByMoveId: ReadonlyMap<string, readonly EntitySpawnDefinition[]> = new Map(),
   moveRuntimeDefinitions: ReadonlyMap<string, MoveRuntimeDefinition> = new Map(),
+  fighterPhysics: ReadonlyMap<string, FighterPhysicsDefinition> = new Map(),
 ): MatchStepResult {
   if (matchInput.frame !== state.frame) throw new Error(`match input frame ${matchInput.frame} does not match world frame ${state.frame}`);
   const canonicalInputs: Record<string, SimInputFrame> = {};
@@ -249,21 +253,23 @@ export function stepMatchWorld(
 
   const moved = [...state.fighters].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => {
     const input = canonicalInputs[fighter.id] ?? neutralInput(state.frame);
+    const physics = fighterPhysics.get(fighter.definitionId);
+    const fighterRules = movementRulesForFighter(movementRules, physics);
     if (fighter.eliminated || fighter.respawnFrames > 0) return fighter;
     if (fighter.grabbedById !== null) return fighter;
-    if (fighter.hitlagFrames > 0) return fighter.hitstunFrames > 0 ? stepHitlagSDI(fighter, input, movementRules) : fighter;
-    if (fighter.hitstunFrames > 0) return stepHitstunKnockback({ ...fighter, shielding: false }, input, state.surfaces, movementRules);
+    if (fighter.hitlagFrames > 0) return fighter.hitstunFrames > 0 ? stepHitlagSDI(fighter, input, fighterRules) : fighter;
+    if (fighter.hitstunFrames > 0) return stepHitstunKnockback({ ...fighter, shielding: false }, input, state.surfaces, fighterRules);
     const movementInput = movementInputForDefense(input, fighter);
     let next = fighter.grabTargetId !== null
       ? { ...fighter, vx: fixed.zero, shielding: false, attack: null }
-      : stepFighterMovement(fighter, movementInput, state.surfaces, state.ledges, movementRules);
+      : stepFighterMovement(fighter, movementInput, state.surfaces, state.ledges, fighterRules);
     const canShield = input.shieldHeld && next.grounded && next.shieldHealth > 0 && next.hitstunFrames === 0 && !input.dodgePressed && !input.grabPressed && next.grabTargetId === null;
     next = { ...next, shielding: canShield };
     if (hasAttackRequest(input) && next.attack === null && next.hitstunFrames === 0 && next.invulnerableFrames === 0 && !next.shielding && next.shieldStunFrames === 0 && next.grabTargetId === null) {
       const semanticAttackId = resolveStandardAttackId(next.definitionId, next, input, availableAttackIds);
       const attackId = semanticAttackId ?? (input.attackPressed ? defaultAttackId : null);
       if (attackId && attacks.has(attackId)) {
-        const started = beginAttack(combatantFromFighter(next), attackId);
+        const started = beginAttack(combatantFromFighter(next, physics), attackId);
         next = { ...next, attack: started.attack };
       }
     }
@@ -280,7 +286,7 @@ export function stepMatchWorld(
     entitySpawnsByMoveId,
   );
   const combatEligible = grabbed.fighters.map((fighter) => fighter.grabbedById !== null || fighter.eliminated || fighter.respawnFrames > 0 ? { ...fighter, invulnerableFrames: Math.max(1, fighter.invulnerableFrames) } : fighter);
-  const combat = stepCombatFrame(combatEligible.map(combatantFromFighter), attacks);
+  const combat = stepCombatFrame(combatEligible.map((fighter) => combatantFromFighter(fighter, fighterPhysics.get(fighter.definitionId))), attacks);
   const newlyHitTargets = new Set(combat.events.filter((event): event is Extract<CombatEvent, { type: 'hit' }> => event.type === 'hit').map((event) => event.targetId));
   const influencedCombatants = combat.combatants.map((entry) => {
     if (!newlyHitTargets.has(entry.id)) return entry;
