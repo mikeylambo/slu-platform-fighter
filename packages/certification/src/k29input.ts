@@ -22,7 +22,9 @@ const frame0 = sampler.emitFrame(0);
 assert(frame0.attackPressed === true, 'button edge between sim ticks must survive until semantic frame emission');
 assert(frame0.shieldHeld === true, 'held input must reflect newest high-rate device sample');
 assert(frame0.moveX > 0 && frame0.moveX <= 1000 && frame0.moveY === 1000, 'axes must quantize deterministically into integer semantic range with inversion');
-assert(frame0.smashX > 0 && frame0.smashY === 0, 'right-stick equivalent must remain independent semantic axes');
+const smashX0 = frame0.smashX ?? 0;
+const smashY0 = frame0.smashY ?? 0;
+assert(smashX0 > 0 && smashY0 === 0, 'right-stick equivalent must remain independent semantic axes');
 const frame1 = sampler.emitFrame(1);
 assert(frame1.attackPressed === false, 'consumed press edge must not repeat without a new physical edge');
 
@@ -31,6 +33,6 @@ sampler.setProfile(remapped);
 sampler.sample({ sequence: 3, buttons: { LB: true }, axes: { LX: 0, LY: 0, RX: 0, RY: 0 } });
 const frame2 = sampler.emitFrame(2);
 assert(frame2.jumpPressed && frame2.jumpHeld, 'runtime profile remapping must drive semantic input without simulation changes');
-assert(Number.isInteger(frame0.moveX) && Number.isInteger(frame0.moveY) && Number.isInteger(frame0.smashX ?? 0), 'simulation-facing axes must always be integers');
+assert(Number.isInteger(frame0.moveX) && Number.isInteger(frame0.moveY) && Number.isInteger(smashX0), 'simulation-facing axes must always be integers');
 
 console.log('K29 INPUT PASS — high-rate device samples accumulate button edges, quantize analogue axes, expose diagnostics and support runtime semantic remapping before the 60 Hz sim boundary.');
