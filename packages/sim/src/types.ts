@@ -110,6 +110,8 @@ export interface MatchRuntimeState {
   framesRemaining: number | null;
   /** Participant score table used by timed/statistical match policies. */
   scores: Record<string, number>;
+  /** Winning team id for team matches; participant winnerId remains separate. */
+  winningTeamId: string | null;
   /** True when regulation ended tied and the active policy requests a tiebreak round. */
   suddenDeath: boolean;
   /** True after the match director has resolved regulation or stock victory. */
@@ -128,7 +130,7 @@ export interface WorldState {
   ledges: StageLedge[];
   /** Match director state. Optional only while legacy constructors migrate. */
   match?: MatchRuntimeState;
-  /** Stable winner participant id once a match is resolved; null while unresolved/tied. */
+  /** Stable winner participant id once a non-team match is resolved; null while unresolved/tied/team-owned. */
   winnerId: string | null;
 }
 
