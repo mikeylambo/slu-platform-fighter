@@ -3,6 +3,7 @@ import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement
 import type { FighterState, SimInputFrame, StageLedge, StageSurface, WorldSnapshot, WorldState } from './types.js';
 
 const GROUND_Y = fixed.zero;
+export const DEFAULT_SHIELD_HEALTH = 600;
 
 function createTrainingSurfaces(): StageSurface[] {
   return [
@@ -44,6 +45,10 @@ export function createFighterState(id: string, x = fixed.fromInt(-10), facing: -
     hitlagFrames: 0,
     hitstunFrames: 0,
     attack: null,
+    shielding: false,
+    shieldHealth: DEFAULT_SHIELD_HEALTH,
+    shieldStunFrames: 0,
+    shieldRegenDelayFrames: 0,
   };
 }
 
