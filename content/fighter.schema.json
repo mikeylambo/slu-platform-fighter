@@ -43,6 +43,7 @@
       "properties": {
         "animationRole": {"type": "string", "minLength": 1},
         "grabAction": {"enum": ["pummel", "forward-throw", "back-throw", "up-throw", "down-throw"]},
+        "landing": {"$ref": "#/$defs/aerialLanding"},
         "totalFrames": {"type": "integer", "minimum": 1},
         "timeline": {
           "type": "array",
@@ -56,6 +57,25 @@
             }
           }
         }
+      }
+    },
+    "aerialLanding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["landingLagFrames", "autoCancelWindows"],
+      "properties": {
+        "landingLagFrames": {"type": "integer", "minimum": 0, "maximum": 65535},
+        "autoCancelWindows": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/frameWindow"}
+        }
+      }
+    },
+    "frameWindow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["startFrame", "endFrame"],
+      "properties": {
+        "startFrame": {"type": "integer", "minimum": 0},
+        "endFrame": {"type": "integer", "minimum": 0}
       }
     },
     "palette": {
