@@ -93,18 +93,6 @@ function writeFighter(writer: ByteWriter, fighter: FighterState) {
   writer.bool(fighter.grounded);
   writer.bool(fighter.groundSurfaceId !== null);
   if (fighter.groundSurfaceId !== null) writer.string(fighter.groundSurfaceId);
-  writer.i8?.(0);
-}
-
-function writeFighterStable(writer: ByteWriter, fighter: FighterState) {
-  writer.string(fighter.id);
-  writer.i64(fighter.x);
-  writer.i64(fighter.y);
-  writer.i64(fighter.vx);
-  writer.i64(fighter.vy);
-  writer.bool(fighter.grounded);
-  writer.bool(fighter.groundSurfaceId !== null);
-  if (fighter.groundSurfaceId !== null) writer.string(fighter.groundSurfaceId);
   writer.i16(fighter.facing);
   writer.u8(locomotionCode[fighter.locomotion]);
   writer.u32(fighter.locomotionFrame);
@@ -135,7 +123,7 @@ export function serializeWorldState(state: WorldState): Uint8Array {
 
   const fighters = [...state.fighters].sort((a, b) => a.id.localeCompare(b.id));
   writer.u16(fighters.length);
-  for (const fighter of fighters) writeFighterStable(writer, fighter);
+  for (const fighter of fighters) writeFighter(writer, fighter);
 
   return writer.finish();
 }
