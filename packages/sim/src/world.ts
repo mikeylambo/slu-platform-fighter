@@ -38,7 +38,7 @@ export function createFighterState(id: string, x = fixed.fromInt(-10), facing: -
 export function createStockMatchRuntime(participantIds: readonly string[]): MatchRuntimeState {
   const scores: Record<string, number> = {};
   for (const id of [...participantIds].sort()) scores[id] = 0;
-  return { mode: 'stock', framesRemaining: null, scores, suddenDeath: false, ended: false };
+  return { mode: 'stock', framesRemaining: null, scores, winningTeamId: null, suddenDeath: false, ended: false };
 }
 
 export function createWorld(seed: number): WorldState {
