@@ -50,7 +50,8 @@ export class OnlineRollbackPeer<TEvent = unknown> {
   private readonly localHashes = new Map<number, string>();
   private readonly pendingRemoteHashes = new Map<number, NetStateHashPacket[]>();
   private readonly desyncQueue: DesyncRecord[] = [];
-  private readonly seenSequences = new Map<string, number>();
+  /** Exact packet sequences already consumed, per remote peer. Arrival order is irrelevant. */
+  private readonly seenSequences = new Map<string, Set<number>>();
   private readonly exactInputFrames = new Map<string, Set<number>>();
   private readonly confirmedStateHashes = new Set<number>();
   private connectedPeers = new Set<string>();
@@ -112,9 +113,10 @@ export class OnlineRollbackPeer<TEvent = unknown> {
     if (packet.type === 'input') {
       if (!this.config.participantIds.includes(packet.participantId)) throw new Error(`remote input references unknown participant ${packet.participantId}`);
       if (this.config.localParticipantIds.includes(packet.participantId)) throw new Error(`remote peer attempted to submit locally owned participant ${packet.participantId}`);
-      const last = this.seenSequences.get(packet.peerId) ?? -1;
-      if (packet.sequence <= last) return;
-      this.seenSequences.set(packet.peerId, packet.sequence);
+      let seen = this.seenSequences.get(packet.peerId);
+      if (!seen) { seen = new Set<number>(); this.seenSequences.set(packet.peerId, seen); }
+      if (seen.has(packet.sequence)) return;
+      seen.add(packet.sequence);
       this.rollback.submitInput(packet.participantId, packet.input);
       this.exactInputFrames.get(packet.participantId)?.add(packet.input.frame);
       return;
@@ -184,5 +186,12 @@ export class OnlineRollbackPeer<TEvent = unknown> {
     for (const frame of this.pendingRemoteHashes.keys()) if (frame < oldest) this.pendingRemoteHashes.delete(frame);
     for (const frame of this.confirmedStateHashes) if (frame < oldest) this.confirmedStateHashes.delete(frame);
     for (const frames of this.exactInputFrames.values()) for (const frame of frames) if (frame < oldest) frames.delete(frame);
+    // Bound packet-sequence memory while retaining enough history to suppress realistic retransmits.
+    const sequenceWindow = Math.max(64, this.config.hashHistoryFrames * 2);
+    for (const sequences of this.seenSequences.values()) {
+      if (sequences.size <= sequenceWindow) continue;
+      const sorted = [...sequences].sort((a, b) => a - b);
+      for (const sequence of sorted.slice(0, sorted.length - sequenceWindow)) sequences.delete(sequence);
+    }
   }
 }
