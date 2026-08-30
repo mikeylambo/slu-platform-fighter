@@ -67,7 +67,7 @@ export function stepWorld(state: WorldState, input: SimInputFrame, movementRules
     nextEntitySerial: state.nextEntitySerial ?? 1,
     surfaces: state.surfaces,
     ledges: state.ledges,
-    match: state.match,
+    ...(state.match ? { match: state.match } : {}),
     winnerId: state.winnerId,
   };
 }
