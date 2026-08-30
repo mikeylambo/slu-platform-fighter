@@ -1,0 +1,80 @@
+{
+  "$schema": "../../content/fighter.schema.json",
+  "schemaVersion": 1,
+  "status": "draft",
+  "id": "cert-bruiser",
+  "identity": {
+    "displayName": "Cert Bruiser",
+    "archetype": "Certification Heavy",
+    "playstyle": "Non-roster certification fighter proving slow/heavy content can share the universal runtime without engine edits."
+  },
+  "rigProfile": "slu-humanoid-v1",
+  "attributes": {"weight": 135000, "hurtboxWidth": 1050000, "hurtboxHeight": 2050000},
+  "movement": {
+    "walkSpeed": 280000,
+    "initialDashSpeed": 610000,
+    "runSpeed": 540000,
+    "gravity": 72000,
+    "fallSpeed": 1250000,
+    "fastFallSpeed": 1770000,
+    "shortHopVelocity": 650000,
+    "fullHopVelocity": 890000,
+    "doubleJumpVelocity": 760000,
+    "airAcceleration": 19000,
+    "airSpeed": 480000,
+    "traction": 61000,
+    "jumpSquatFrames": 5
+  },
+  "moves": {
+    "jab": {"animationRole": "jab_1", "totalFrames": 24, "timeline": [
+      {"frame": 6, "type": "hitbox_on", "data": {"id": "heavy-jab", "offsetX": 1350000, "offsetY": 1550000, "radius": 900000, "damageTenths": 65, "baseKnockback": 260000, "growthPer100Percent": 310000, "directionX": 1000, "directionY": 360, "hitlagFrames": 6, "hitstunFrames": 16}},
+      {"frame": 10, "type": "hitbox_off", "data": {"id": "heavy-jab"}}
+    ]},
+    "dash-attack": {"animationRole": "dash_attack", "totalFrames": 38, "timeline": []},
+    "forward-tilt": {"animationRole": "forward_tilt", "totalFrames": 31, "timeline": []},
+    "up-tilt": {"animationRole": "up_tilt", "totalFrames": 32, "timeline": []},
+    "down-tilt": {"animationRole": "down_tilt", "totalFrames": 29, "timeline": []},
+    "forward-smash": {"animationRole": "forward_smash", "totalFrames": 58, "timeline": [
+      {"frame": 18, "type": "impulse", "data": {"x": 180000, "y": 0}},
+      {"frame": 20, "type": "hitbox_on", "data": {"id": "heavy-fsmash", "offsetX": 1800000, "offsetY": 1500000, "radius": 1150000, "damageTenths": 190, "baseKnockback": 470000, "growthPer100Percent": 610000, "directionX": 1000, "directionY": 280, "hitlagFrames": 11, "hitstunFrames": 34}},
+      {"frame": 25, "type": "hitbox_off", "data": {"id": "heavy-fsmash"}}
+    ]},
+    "up-smash": {"animationRole": "up_smash", "totalFrames": 60, "timeline": []},
+    "down-smash": {"animationRole": "down_smash", "totalFrames": 57, "timeline": []},
+    "neutral-air": {"animationRole": "neutral_air", "totalFrames": 44, "timeline": []},
+    "forward-air": {"animationRole": "forward_air", "totalFrames": 49, "timeline": []},
+    "back-air": {"animationRole": "back_air", "totalFrames": 42, "timeline": []},
+    "up-air": {"animationRole": "up_air", "totalFrames": 41, "timeline": []},
+    "down-air": {"animationRole": "down_air", "totalFrames": 52, "timeline": []},
+    "neutral-special": {"animationRole": "neutral_special", "totalFrames": 48, "timeline": []},
+    "side-special": {"animationRole": "side_special", "totalFrames": 55, "timeline": [
+      {"frame": 8, "type": "velocity", "data": {"x": 980000, "y": 0}},
+      {"frame": 8, "type": "invuln_on"},
+      {"frame": 13, "type": "invuln_off"}
+    ]},
+    "up-special": {"animationRole": "up_special", "totalFrames": 53, "timeline": [
+      {"frame": 7, "type": "velocity", "data": {"x": 120000, "y": 1350000}}
+    ]},
+    "down-special": {"animationRole": "down_special", "totalFrames": 50, "timeline": []},
+    "pummel": {"animationRole": "pummel", "grabAction": "pummel", "totalFrames": 15, "timeline": [
+      {"frame": 7, "type": "grab_damage", "data": {"damageTenths": 24, "hitlagFrames": 3}}
+    ]},
+    "forward-throw": {"animationRole": "forward_throw", "grabAction": "forward-throw", "totalFrames": 35, "timeline": [
+      {"frame": 20, "type": "throw_release", "data": {"damageTenths": 80, "baseKnockback": 350000, "growthPer100Percent": 450000, "directionX": 1000, "directionY": 260, "hitstunFrames": 24}}
+    ]},
+    "back-throw": {"animationRole": "back_throw", "grabAction": "back-throw", "totalFrames": 38, "timeline": [
+      {"frame": 22, "type": "throw_release", "data": {"damageTenths": 85, "baseKnockback": 375000, "growthPer100Percent": 475000, "directionX": -1000, "directionY": 300, "hitstunFrames": 25}}
+    ]},
+    "up-throw": {"animationRole": "up_throw", "grabAction": "up-throw", "totalFrames": 36, "timeline": [
+      {"frame": 20, "type": "throw_release", "data": {"damageTenths": 72, "baseKnockback": 330000, "growthPer100Percent": 430000, "directionX": 80, "directionY": 1000, "hitstunFrames": 24}}
+    ]},
+    "down-throw": {"animationRole": "down_throw", "grabAction": "down-throw", "totalFrames": 39, "timeline": [
+      {"frame": 23, "type": "throw_release", "data": {"damageTenths": 70, "baseKnockback": 250000, "growthPer100Percent": 330000, "directionX": 400, "directionY": 600, "hitstunFrames": 27}}
+    ]}
+  },
+  "ownedEntities": [],
+  "palettes": {
+    "00": {"primary": "#5A6673", "secondary": "#D5D9DE", "accent": "#FF9A3D", "skin": "#B7A594", "hair": "#25282C", "metal": "#8C959F", "energy": "#FFB866"}
+  },
+  "provenance": {"code": "Original SLU certification fighter definition", "assets": []}
+}
