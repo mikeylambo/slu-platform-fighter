@@ -9,7 +9,14 @@ export type LocomotionState =
   | 'crouch'
   | 'jump-squat'
   | 'airborne'
-  | 'landing';
+  | 'landing'
+  | 'ledge-hang'
+  | 'air-dodge'
+  | 'spot-dodge'
+  | 'roll'
+  | 'tech-in-place'
+  | 'tech-roll'
+  | 'knockdown';
 
 export interface SimInputFrame {
   frame: number;
@@ -19,6 +26,8 @@ export interface SimInputFrame {
   moveY: number;
   jumpPressed: boolean;
   jumpHeld: boolean;
+  dodgePressed: boolean;
+  shieldHeld: boolean;
 }
 
 export interface StageSurface {
@@ -27,6 +36,14 @@ export interface StageSurface {
   y: Fixed;
   xMin: Fixed;
   xMax: Fixed;
+}
+
+export interface StageLedge {
+  id: string;
+  x: Fixed;
+  y: Fixed;
+  /** Direction toward the stage interior when hanging from this ledge. */
+  inward: -1 | 1;
 }
 
 export interface FighterState {
@@ -45,6 +62,11 @@ export interface FighterState {
   dropThroughFrames: number;
   jumpBufferFrames: number;
   inputHistory: SimInputFrame[];
+  ledgeId: string | null;
+  ledgeRegrabLockoutFrames: number;
+  invulnerableFrames: number;
+  dodgeCooldownFrames: number;
+  techBufferFrames: number;
 }
 
 export interface WorldState {
@@ -52,6 +74,7 @@ export interface WorldState {
   seed: number;
   fighters: FighterState[];
   surfaces: StageSurface[];
+  ledges: StageLedge[];
 }
 
 export interface WorldSnapshot {
