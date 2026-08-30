@@ -1,4 +1,5 @@
 import type { StockMatchRules } from '../../sim/src/lifecycle.js';
+import { withAerialLandingPolicies } from '../../sim/src/aerialLanding.js';
 import { withDamageAttribution, type DamageAttributionRules } from '../../sim/src/damageAttribution.js';
 import { stepMatchWorld, type MatchInputFrame, type MatchStepResult } from '../../sim/src/match.js';
 import { createMatchRuntimeState, stockLifecycleRulesForMatch, withMatchRules, type MatchRules } from '../../sim/src/matchRules.js';
@@ -57,7 +58,8 @@ export function createMatchExecution(constructed: ConstructedMatch, options: Mat
     interactionPolicy,
   );
 
-  const attributed = withDamageAttribution(rawStep, options.damageAttribution);
+  const landingAware = withAerialLandingPolicies(rawStep, runtime.aerialLanding, runtime.fighterPhysics);
+  const attributed = withDamageAttribution(landingAware, options.damageAttribution);
   const directed = withMatchRules(attributed, options.matchRules, teamRules);
   const initialState: WorldState = {
     ...constructed.world,
