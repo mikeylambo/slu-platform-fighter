@@ -1,6 +1,6 @@
 import { fixed } from '../../deterministic-math/src/fixed.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
-import type { FighterState, SimInputFrame, StageLedge, StageSurface, WorldSnapshot, WorldState } from './types.js';
+import type { FighterState, MatchRuntimeState, SimInputFrame, StageLedge, StageSurface, WorldSnapshot, WorldState } from './types.js';
 
 const GROUND_Y = fixed.zero;
 export const DEFAULT_SHIELD_HEALTH = 600;
@@ -35,6 +35,12 @@ export function createFighterState(id: string, x = fixed.fromInt(-10), facing: -
   };
 }
 
+export function createStockMatchRuntime(participantIds: readonly string[]): MatchRuntimeState {
+  const scores: Record<string, number> = {};
+  for (const id of [...participantIds].sort()) scores[id] = 0;
+  return { mode: 'stock', framesRemaining: null, scores, suddenDeath: false, ended: false };
+}
+
 export function createWorld(seed: number): WorldState {
   return {
     frame: 0,
@@ -44,6 +50,7 @@ export function createWorld(seed: number): WorldState {
     nextEntitySerial: 1,
     surfaces: createTrainingSurfaces(),
     ledges: createTrainingLedges(),
+    match: createStockMatchRuntime(['fighter-a']),
     winnerId: null,
   };
 }
@@ -60,6 +67,7 @@ export function stepWorld(state: WorldState, input: SimInputFrame, movementRules
     nextEntitySerial: state.nextEntitySerial ?? 1,
     surfaces: state.surfaces,
     ledges: state.ledges,
+    match: state.match,
     winnerId: state.winnerId,
   };
 }
