@@ -7,16 +7,15 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`K1 certification failure: ${message}`);
 }
 
-function input(
-  world: WorldState,
-  overrides: Partial<Omit<SimInputFrame, 'frame'>> = {},
-): SimInputFrame {
+function input(world: WorldState, overrides: Partial<Omit<SimInputFrame, 'frame'>> = {}): SimInputFrame {
   return {
     frame: world.frame,
     moveX: 0,
     moveY: 0,
     jumpPressed: false,
     jumpHeld: false,
+    dodgePressed: false,
+    shieldHeld: false,
     ...overrides,
   };
 }
@@ -27,35 +26,26 @@ function fighter(world: WorldState) {
   return value;
 }
 
-// Dash transitions into run and preserves a bounded input history.
 let world = createWorld(1001);
-for (let i = 0; i < 40; i += 1) {
-  world = stepWorld(world, input(world, { moveX: 1000 }));
-}
+for (let i = 0; i < 40; i += 1) world = stepWorld(world, input(world, { moveX: 1000 }));
 assert(fighter(world).locomotion === 'run', 'sustained full stick must transition dash -> run');
 assert(fighter(world).inputHistory.length === K1_MOVEMENT.inputHistoryFrames, 'input history must remain bounded');
 
-// Reversing a run enters an explicit turnaround state and flips facing.
 world = stepWorld(world, input(world, { moveX: -1000 }));
 assert(fighter(world).locomotion === 'turn', 'run reversal must enter turn state');
 assert(fighter(world).facing === -1, 'run reversal must update facing deterministically');
 
-// Full hop: jump press enters jumpsquat, then launches after the configured frames.
 world = createWorld(1002);
 world = stepWorld(world, input(world, { jumpPressed: true, jumpHeld: true }));
 assert(fighter(world).locomotion === 'jump-squat', 'ground jump must enter jumpsquat');
-for (let i = 0; i < K1_MOVEMENT.jumpSquatFrames; i += 1) {
-  world = stepWorld(world, input(world, { jumpHeld: true }));
-}
+for (let i = 0; i < K1_MOVEMENT.jumpSquatFrames; i += 1) world = stepWorld(world, input(world, { jumpHeld: true }));
 assert(!fighter(world).grounded && fighter(world).locomotion === 'airborne', 'jumpsquat must terminate in airborne state');
 assert(fighter(world).vy > fixed.zero, 'full hop must launch upward');
 
-// Double jump consumes exactly one aerial jump.
 world = stepWorld(world, input(world, { jumpPressed: true, jumpHeld: true }));
 assert(fighter(world).jumpsRemaining === 0, 'double jump must consume aerial jump resource');
 assert(fighter(world).vy > fixed.zero, 'double jump must restore upward velocity');
 
-// Fastfall requires a downward flick while already descending.
 world = createWorld(1003);
 const falling = fighter(world);
 falling.x = fixed.zero;
@@ -64,12 +54,11 @@ falling.vy = fixed.fromRatio(-1, 10);
 falling.grounded = false;
 falling.groundSurfaceId = null;
 falling.locomotion = 'airborne';
-falling.inputHistory = [{ frame: -1, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false }];
+falling.inputHistory = [{ frame: -1, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, dodgePressed: false, shieldHeld: false }];
 world = stepWorld(world, input(world, { moveY: -1000 }));
 assert(fighter(world).fastFalling, 'descending down-flick must activate fastfall');
 assert(fighter(world).vy === fixed.mul(fixed.fromInt(-1), K1_MOVEMENT.fastFallSpeed), 'fastfall must use configured terminal speed');
 
-// Descending fighters land on a one-way platform from above.
 world = createWorld(1004);
 const platformLanding = fighter(world);
 platformLanding.x = fixed.zero;
@@ -83,13 +72,11 @@ assert(fighter(world).grounded, 'fighter must land on one-way platform from abov
 assert(fighter(world).groundSurfaceId === 'platform-center', 'landing must identify the contacted platform');
 assert(fighter(world).y === fixed.fromInt(4), 'one-way landing must snap to platform height');
 
-// Holding down on a one-way platform creates an explicit drop-through window.
 world = stepWorld(world, input(world, { moveY: -1000 }));
 assert(!fighter(world).grounded, 'down input on one-way platform must drop through');
 assert(fighter(world).dropThroughFrames > 0, 'platform drop must create one-way ignore window');
 assert(fighter(world).y < fixed.fromInt(4), 'platform drop must move fighter below the contacted plane');
 
-// Buffered jump survives a landing when no aerial jumps remain, then becomes jumpsquat.
 world = createWorld(1005);
 const buffered = fighter(world);
 buffered.x = fixed.fromInt(8);
@@ -105,4 +92,4 @@ assert(fighter(world).jumpBufferFrames > 0, 'jump press before landing must surv
 world = stepWorld(world, input(world, { jumpHeld: true }));
 assert(fighter(world).locomotion === 'jump-squat', 'buffered landing jump must enter jumpsquat on next frame');
 
-console.log('K1 PASS — dash/run/turn, jumpsquat, full hop, double jump, air state, fastfall, one-way landing/drop, and jump buffering certified.');
+console.log('K1 PASS — dash/run/turn, jumpsquat, hops, double jump, air state, fastfall, one-way platforms, and jump buffering certified.');
