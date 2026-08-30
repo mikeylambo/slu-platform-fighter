@@ -1,0 +1,30 @@
+{
+  "$schema": "../../content/stage.schema.json",
+  "schemaVersion": 1,
+  "status": "draft",
+  "id": "greybox",
+  "identity": {"displayName": "Greybox", "description": "Deterministic certification stage for movement, combat, lifecycle, stage motion, camera and tooling."},
+  "surfaces": [
+    {"id": "ground", "kind": "solid", "y": 0, "xMin": -12000000, "xMax": 12000000},
+    {"id": "platform-center", "kind": "one-way", "y": 4000000, "xMin": -4000000, "xMax": 4000000}
+  ],
+  "ledges": [
+    {"id": "ground-left", "x": -12000000, "y": 0, "inward": 1},
+    {"id": "ground-right", "x": 12000000, "y": 0, "inward": -1},
+    {"id": "platform-center-left", "x": -4000000, "y": 4000000, "inward": 1},
+    {"id": "platform-center-right", "x": 4000000, "y": 4000000, "inward": -1}
+  ],
+  "spawns": [
+    {"id": "p1", "x": -1800000, "y": 0, "facing": 1},
+    {"id": "p2", "x": 1800000, "y": 0, "facing": -1},
+    {"id": "p3", "x": -5000000, "y": 0, "facing": 1},
+    {"id": "p4", "x": 5000000, "y": 0, "facing": -1}
+  ],
+  "blastZone": {"left": -25000000, "right": 25000000, "bottom": -15000000, "top": 20000000},
+  "camera": {"bounds": {"left": -18000000, "right": 18000000, "bottom": -6000000, "top": 14000000}, "padding": 1800000, "minZoom": 600000, "maxZoom": 1800000},
+  "movingPlatforms": [
+    {"id": "platform-shuttle", "kind": "one-way", "width": 3000000, "path": [{"x": -7000000, "y": 7000000}, {"x": 7000000, "y": 7000000}], "periodFrames": 240, "phaseFrames": 0}
+  ],
+  "hazards": [],
+  "provenance": {"code": "Original SLU certification stage", "assets": []}
+}
