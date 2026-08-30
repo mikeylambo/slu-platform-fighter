@@ -46,13 +46,15 @@ export function applyDirectionalInfluence(
   const stickMagnitude = Math.max(Math.abs(rawInput.moveX), Math.abs(rawInput.moveY));
   if (stickMagnitude === 0 || (vx === fixed.zero && vy === fixed.zero)) return { vx, vy };
 
-  const launchMagnitude = Math.max(fixed.abs(vx), fixed.abs(vy), 1);
+  const absX = fixed.abs(vx);
+  const absY = fixed.abs(vy);
+  const launchMagnitude: Fixed = absX >= absY ? (absX > fixed.zero ? absX : fixed.one) : (absY > fixed.zero ? absY : fixed.one);
   const perpendicularX = fixed.fromRatio(-vy, launchMagnitude);
   const perpendicularY = fixed.fromRatio(vx, launchMagnitude);
   const normalizedStickX = fixed.fromRatio(rawInput.moveX, Math.max(stickMagnitude, 1));
   const normalizedStickY = fixed.fromRatio(rawInput.moveY, Math.max(stickMagnitude, 1));
   const perpendicularIntent = fixed.add(fixed.mul(normalizedStickX, perpendicularX), fixed.mul(normalizedStickY, perpendicularY));
-  const boundedIntent = Math.max(-fixed.one, Math.min(fixed.one, perpendicularIntent)) as Fixed;
+  const boundedIntent: Fixed = perpendicularIntent > fixed.one ? fixed.one : perpendicularIntent < -fixed.one ? (-fixed.one as Fixed) : perpendicularIntent;
   const strength = fixed.mul(fixed.fromRatio(rules.diStrengthPerThousand, 1000), boundedIntent);
 
   return {
