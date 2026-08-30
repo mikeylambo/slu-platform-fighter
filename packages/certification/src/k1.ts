@@ -14,6 +14,7 @@ function input(world: WorldState, overrides: Partial<Omit<SimInputFrame, 'frame'
     moveY: 0,
     jumpPressed: false,
     jumpHeld: false,
+    attackPressed: false,
     dodgePressed: false,
     shieldHeld: false,
     ...overrides,
@@ -30,7 +31,6 @@ let world = createWorld(1001);
 for (let i = 0; i < 40; i += 1) world = stepWorld(world, input(world, { moveX: 1000 }));
 assert(fighter(world).locomotion === 'run', 'sustained full stick must transition dash -> run');
 assert(fighter(world).inputHistory.length === K1_MOVEMENT.inputHistoryFrames, 'input history must remain bounded');
-
 world = stepWorld(world, input(world, { moveX: -1000 }));
 assert(fighter(world).locomotion === 'turn', 'run reversal must enter turn state');
 assert(fighter(world).facing === -1, 'run reversal must update facing deterministically');
@@ -41,7 +41,6 @@ assert(fighter(world).locomotion === 'jump-squat', 'ground jump must enter jumps
 for (let i = 0; i < K1_MOVEMENT.jumpSquatFrames; i += 1) world = stepWorld(world, input(world, { jumpHeld: true }));
 assert(!fighter(world).grounded && fighter(world).locomotion === 'airborne', 'jumpsquat must terminate in airborne state');
 assert(fighter(world).vy > fixed.zero, 'full hop must launch upward');
-
 world = stepWorld(world, input(world, { jumpPressed: true, jumpHeld: true }));
 assert(fighter(world).jumpsRemaining === 0, 'double jump must consume aerial jump resource');
 assert(fighter(world).vy > fixed.zero, 'double jump must restore upward velocity');
@@ -54,7 +53,7 @@ falling.vy = fixed.fromRatio(-1, 10);
 falling.grounded = false;
 falling.groundSurfaceId = null;
 falling.locomotion = 'airborne';
-falling.inputHistory = [{ frame: -1, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, dodgePressed: false, shieldHeld: false }];
+falling.inputHistory = [{ frame: -1, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, dodgePressed: false, shieldHeld: false }];
 world = stepWorld(world, input(world, { moveY: -1000 }));
 assert(fighter(world).fastFalling, 'descending down-flick must activate fastfall');
 assert(fighter(world).vy === fixed.mul(fixed.fromInt(-1), K1_MOVEMENT.fastFallSpeed), 'fastfall must use configured terminal speed');
@@ -71,7 +70,6 @@ world = stepWorld(world, input(world));
 assert(fighter(world).grounded, 'fighter must land on one-way platform from above');
 assert(fighter(world).groundSurfaceId === 'platform-center', 'landing must identify the contacted platform');
 assert(fighter(world).y === fixed.fromInt(4), 'one-way landing must snap to platform height');
-
 world = stepWorld(world, input(world, { moveY: -1000 }));
 assert(!fighter(world).grounded, 'down input on one-way platform must drop through');
 assert(fighter(world).dropThroughFrames > 0, 'platform drop must create one-way ignore window');
