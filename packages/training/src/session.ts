@@ -35,7 +35,7 @@ function resetCombatState(fighter: FighterState): FighterState {
   return {
     ...fighter,
     vx: 0 as FighterState['vx'], vy: 0 as FighterState['vy'],
-    percentTenths: 0, hitlagFrames: 0, hitstunFrames: 0, attack: null,
+    percentTenths: 0, hitlagFrames: 0, hitstunFrames: 0, attack: null, landingLagFrames: 0,
     shielding: false, shieldHealth: DEFAULT_SHIELD_HEALTH, shieldStunFrames: 0, shieldRegenDelayFrames: 0,
     grabTargetId: null, grabbedById: null, grabFrames: 0, grabAction: null,
     stocks: DEFAULT_STOCKS, eliminated: false, respawnFrames: 0,
