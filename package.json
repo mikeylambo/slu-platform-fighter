@@ -6,7 +6,12 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "verify": "npm run build && node dist/packages/certification/src/k0.js"
+    "fighter:new": "node scripts/fighter-packs.mjs new",
+    "fighter:build": "node scripts/fighter-packs.mjs build",
+    "fighter:check": "node scripts/fighter-packs.mjs check",
+    "content:build": "npm run fighter:build",
+    "content:check": "npm run fighter:check",
+    "verify": "npm run content:check && npm run content:build && npm run build && node dist/packages/certification/src/k0.js"
   },
   "devDependencies": {
     "typescript": "^5.9.2"
