@@ -1,0 +1,26 @@
+{
+  "$schema": "../../content/entity.schema.json",
+  "schemaVersion": 1,
+  "fighterId": "greybox",
+  "entities": {
+    "pulse": {
+      "kind": "projectile",
+      "lifetimeFrames": 120,
+      "radius": 550000,
+      "spawnOffsetX": 1300000,
+      "spawnOffsetY": 1500000,
+      "velocityX": 360000,
+      "velocityY": 0,
+      "gravity": 0,
+      "damageTenths": 65,
+      "baseKnockback": 220000,
+      "growthPer100Percent": 320000,
+      "directionX": 1000,
+      "directionY": 260,
+      "hitlagFrames": 5,
+      "hitstunFrames": 16,
+      "destroyOnHit": true,
+      "maxHits": 1
+    }
+  }
+}
