@@ -26,6 +26,7 @@ export interface SimInputFrame {
   moveY: number;
   jumpPressed: boolean;
   jumpHeld: boolean;
+  attackPressed: boolean;
   dodgePressed: boolean;
   shieldHeld: boolean;
 }
@@ -44,6 +45,12 @@ export interface StageLedge {
   y: Fixed;
   /** Direction toward the stage interior when hanging from this ledge. */
   inward: -1 | 1;
+}
+
+export interface FighterAttackState {
+  attackId: string;
+  frame: number;
+  hitTargets: string[];
 }
 
 export interface FighterState {
@@ -67,6 +74,11 @@ export interface FighterState {
   invulnerableFrames: number;
   dodgeCooldownFrames: number;
   techBufferFrames: number;
+  /** Damage percent stored in tenths: 35 = 3.5%. */
+  percentTenths: number;
+  hitlagFrames: number;
+  hitstunFrames: number;
+  attack: FighterAttackState | null;
 }
 
 export interface WorldState {
