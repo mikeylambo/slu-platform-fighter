@@ -1,4 +1,5 @@
 import { compileEntityDefinitionRegistry, compileEntitySpawns, type EntityDefinition, type EntitySpawnDefinition } from './compileEntities.js';
+import { compileFighterPhysicsRegistry, type FighterPhysicsDefinition } from './compileFighterPhysics.js';
 import { compileGrabActionRegistry, type GrabActionDefinition } from './compileGrabActions.js';
 import { compileFighterMoveRuntime, type MoveRuntimeDefinition } from './compileMoveRuntime.js';
 import { compileFighterAttacks } from './compileMoves.js';
@@ -6,7 +7,12 @@ import type { AttackDefinition } from '../../sim/src/combat.js';
 
 interface TimelineEvent { frame: number; type: string; data?: Record<string, unknown>; }
 interface PackMove { animationRole: string; grabAction?: 'pummel' | 'forward-throw' | 'back-throw' | 'up-throw' | 'down-throw'; totalFrames: number; timeline: readonly TimelineEvent[]; }
-export interface RuntimeFighterPack { id: string; moves: Readonly<Record<string, PackMove>>; }
+export interface RuntimeFighterPack {
+  id: string;
+  attributes: { weight: number; hurtboxWidth: number; hurtboxHeight: number };
+  movement: Readonly<Record<string, number>>;
+  moves: Readonly<Record<string, PackMove>>;
+}
 export interface RuntimeEntityPack {
   fighterId: string;
   entities: Readonly<Record<string, {
@@ -20,6 +26,7 @@ export interface RuntimeEntityPack {
 
 export interface RosterRuntime {
   fighterDefinitionIds: readonly string[];
+  fighterPhysics: ReadonlyMap<string, FighterPhysicsDefinition>;
   attacks: ReadonlyMap<string, AttackDefinition>;
   /** Scoped key: `${fighterDefinitionId}:${semanticGrabInput}`. */
   grabActions: ReadonlyMap<string, GrabActionDefinition>;
@@ -35,10 +42,7 @@ function mergeUnique<T>(target: Map<string, T>, source: ReadonlyMap<string, T>, 
   }
 }
 
-/**
- * Compiles every content-owned runtime table a mixed roster needs. Adding a
- * conventional fighter should change only source packs, never match wiring.
- */
+/** Compiles every content-owned runtime table a mixed roster needs. */
 export function compileRosterRuntime(fighterPacksInput: readonly RuntimeFighterPack[], entityPacksInput: readonly RuntimeEntityPack[] = []): RosterRuntime {
   const fighterPacks = [...fighterPacksInput].sort((a, b) => a.id.localeCompare(b.id));
   const fighterIds = fighterPacks.map((pack) => pack.id);
@@ -53,12 +57,12 @@ export function compileRosterRuntime(fighterPacksInput: readonly RuntimeFighterP
   for (const pack of fighterPacks) {
     mergeUnique(attacks, compileFighterAttacks(pack), 'attack');
     mergeUnique(moveRuntime, compileFighterMoveRuntime(pack), 'move runtime');
-    const localSpawns = compileEntitySpawns(pack, entityDefinitions);
-    mergeUnique(spawns, localSpawns, 'entity spawn move');
+    mergeUnique(spawns, compileEntitySpawns(pack, entityDefinitions), 'entity spawn move');
   }
 
   return {
     fighterDefinitionIds: fighterIds,
+    fighterPhysics: compileFighterPhysicsRegistry(fighterPacks),
     attacks,
     grabActions: compileGrabActionRegistry(fighterPacks),
     moveRuntime,
