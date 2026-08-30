@@ -22,6 +22,8 @@ export interface ThrowEvent { type: 'throw'; attackerId: string; targetId: strin
 export type MatchEvent = CombatEvent | GrabEvent | GrabReleaseEvent | PummelEvent | ThrowEvent | EntityEvent | LifecycleEvent;
 export interface MatchStepResult { state: WorldState; events: MatchEvent[]; }
 export type GrabActionLookup = ReadonlyMap<GrabActionInput, GrabActionDefinition> | ReadonlyMap<string, GrabActionDefinition>;
+export interface MatchInteractionPolicy { canTarget(attackerId: string, targetId: string): boolean; }
+export const ALLOW_ALL_INTERACTIONS: MatchInteractionPolicy = { canTarget: () => true };
 
 const HURTBOX_RADIUS = fixed.fromRatio(3, 4);
 const HURTBOX_OFFSET_Y = fixed.fromRatio(3, 2);
@@ -83,7 +85,11 @@ function eligibleGrabTarget(attacker: FighterState, target: FighterState): boole
   return abs(dx) <= GRAB_RANGE && abs(fixed.sub(target.y, attacker.y)) <= GRAB_VERTICAL_RANGE;
 }
 
-function resolveGrabAttempts(fightersInput: FighterState[], inputs: Readonly<Record<string, SimInputFrame>>): { fighters: FighterState[]; events: GrabEvent[] } {
+function resolveGrabAttempts(
+  fightersInput: FighterState[],
+  inputs: Readonly<Record<string, SimInputFrame>>,
+  interactionPolicy: MatchInteractionPolicy,
+): { fighters: FighterState[]; events: GrabEvent[] } {
   const fighters = fightersInput.map((fighter) => ({ ...fighter }));
   const events: GrabEvent[] = [];
   for (const attacker of [...fighters].sort((a, b) => a.id.localeCompare(b.id))) {
@@ -91,7 +97,7 @@ function resolveGrabAttempts(fightersInput: FighterState[], inputs: Readonly<Rec
     if (!input?.grabPressed || attacker.grabTargetId !== null || attacker.grabbedById !== null) continue;
     if (attacker.eliminated || attacker.respawnFrames > 0) continue;
     if (attacker.hitstunFrames > 0 || attacker.hitlagFrames > 0 || attacker.invulnerableFrames > 0 || attacker.attack !== null) continue;
-    const candidates = fighters.filter((target) => eligibleGrabTarget(attacker, target)).sort((a, b) => {
+    const candidates = fighters.filter((target) => interactionPolicy.canTarget(attacker.id, target.id) && eligibleGrabTarget(attacker, target)).sort((a, b) => {
       const da = abs(fixed.sub(a.x, attacker.x)); const db = abs(fixed.sub(b.x, attacker.x));
       return da === db ? a.id.localeCompare(b.id) : da - db;
     });
@@ -241,6 +247,7 @@ export function stepMatchWorld(
   entitySpawnsByMoveId: ReadonlyMap<string, readonly EntitySpawnDefinition[]> = new Map(),
   moveRuntimeDefinitions: ReadonlyMap<string, MoveRuntimeDefinition> = new Map(),
   fighterPhysics: ReadonlyMap<string, FighterPhysicsDefinition> = new Map(),
+  interactionPolicy: MatchInteractionPolicy = ALLOW_ALL_INTERACTIONS,
 ): MatchStepResult {
   if (matchInput.frame !== state.frame) throw new Error(`match input frame ${matchInput.frame} does not match world frame ${state.frame}`);
   const canonicalInputs: Record<string, SimInputFrame> = {};
@@ -277,7 +284,7 @@ export function stepMatchWorld(
   });
 
   const runtimeApplied = applyMoveRuntimeFrames(moved, moveRuntimeDefinitions);
-  const grabbed = resolveGrabAttempts(runtimeApplied, canonicalInputs);
+  const grabbed = resolveGrabAttempts(runtimeApplied, canonicalInputs, interactionPolicy);
   const spawned = spawnEntitiesFromAttacks(
     grabbed.fighters,
     state.entities ?? [],
@@ -286,7 +293,8 @@ export function stepMatchWorld(
     entitySpawnsByMoveId,
   );
   const combatEligible = grabbed.fighters.map((fighter) => fighter.grabbedById !== null || fighter.eliminated || fighter.respawnFrames > 0 ? { ...fighter, invulnerableFrames: Math.max(1, fighter.invulnerableFrames) } : fighter);
-  const combat = stepCombatFrame(combatEligible.map((fighter) => combatantFromFighter(fighter, fighterPhysics.get(fighter.definitionId))), attacks);
+  const canTarget = (attackerId: string, targetId: string) => interactionPolicy.canTarget(attackerId, targetId);
+  const combat = stepCombatFrame(combatEligible.map((fighter) => combatantFromFighter(fighter, fighterPhysics.get(fighter.definitionId))), attacks, undefined, canTarget);
   const newlyHitTargets = new Set(combat.events.filter((event): event is Extract<CombatEvent, { type: 'hit' }> => event.type === 'hit').map((event) => event.targetId));
   const influencedCombatants = combat.combatants.map((entry) => {
     if (!newlyHitTargets.has(entry.id)) return entry;
@@ -300,7 +308,7 @@ export function stepMatchWorld(
   });
   const maintained = maintainGrabRelationships(combatMerged);
   const grabActionResult = stepGrabActions(maintained.fighters, canonicalInputs, grabActions);
-  const entityResult = stepOwnedEntities(spawned.entities, grabActionResult.fighters, entityDefinitions, canonicalInputs);
+  const entityResult = stepOwnedEntities(spawned.entities, grabActionResult.fighters, entityDefinitions, canonicalInputs, canTarget);
   const lifecycle = stepStockLifecycle(entityResult.fighters, state.winnerId, stockRules);
 
   return {
