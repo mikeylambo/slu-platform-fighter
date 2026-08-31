@@ -1,4 +1,4 @@
-import type { Fixed } from '../../deterministic-math/src/fixed.js';
+import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { EntityDefinition } from '../../content/src/compileEntities.js';
 import type { MatchInputFrame, MatchStepResult } from './match.js';
 import type { OwnedEntityState, WorldState } from './types.js';
@@ -42,6 +42,7 @@ export function spawnStageActors(
     const active = entities.filter((entity) => entity.ownerId === ownerId && entity.definitionId === definition.id).length;
     if (active >= rule.maxActive) continue;
 
+    const facing = fixed.fromInt(rule.facing);
     const entity: OwnedEntityState = {
       id: `e${serial}`,
       definitionId: definition.id,
@@ -49,7 +50,7 @@ export function spawnStageActors(
       ownerDefinitionId: ownerId,
       x: rule.x,
       y: rule.y,
-      vx: definition.velocityX * rule.facing as Fixed,
+      vx: fixed.mul(definition.velocityX, facing),
       vy: definition.velocityY,
       facing: rule.facing,
       ageFrames: 0,
