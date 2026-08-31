@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "riven-real",
+  "purpose": "Non-canon physical asset certification pilot for the platform-fighter content/rig/animation pipeline.",
+  "source": {
+    "repository": "mikeylambo/witch-hunter-x",
+    "path": "public/assets/riven-rigged.glb",
+    "url": "https://raw.githubusercontent.com/mikeylambo/witch-hunter-x/main/public/assets/riven-rigged.glb",
+    "githubBlobSha": "c46772f47a2a5a3f39e8c182623701761214d3d3",
+    "declaredSizeBytes": 4519372,
+    "provenance": "Original SLU character asset owned by the project author; used here only as a cross-project physical pipeline proof."
+  },
+  "rigProfile": "mixamo-humanoid-v1",
+  "expected": {
+    "minimumMeshes": 1,
+    "minimumSkins": 1,
+    "minimumAnimations": 1,
+    "requiredBones": [
+      "mixamorig:Hips",
+      "mixamorig:Spine",
+      "mixamorig:Spine2",
+      "mixamorig:Head",
+      "mixamorig:LeftHand",
+      "mixamorig:RightHand",
+      "mixamorig:LeftFoot",
+      "mixamorig:RightFoot"
+    ]
+  },
+  "animationStatus": "rig-proof-existing-source-clip-not-roster-complete"
+}
