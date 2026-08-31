@@ -3,7 +3,8 @@ import type { MatchEvent } from '../../sim/src/match.js';
 
 export type PresentationCueKind =
   | 'hit' | 'block' | 'shield-break' | 'clank' | 'grab' | 'grab-release' | 'grab-escape' | 'pummel' | 'throw'
-  | 'entity-hit' | 'entity-block' | 'entity-shield-break' | 'entity-reflect' | 'entity-absorb' | 'ko' | 'respawn';
+  | 'entity-hit' | 'entity-block' | 'entity-shield-break' | 'entity-reflect' | 'entity-absorb'
+  | 'item-hit' | 'item-block' | 'item-shield-break' | 'ko' | 'respawn';
 
 export interface PresentationCue {
   kind: PresentationCueKind;
@@ -29,6 +30,8 @@ export function routeMatchEvent(event: MatchEvent): PresentationCue[] {
     case 'entity-block': return [{ kind: event.broken ? 'entity-shield-break' : 'entity-block', sourceId: event.ownerId, targetId: event.targetId, contentId: event.definitionId, intensity: Math.max(1, event.shieldDamage) }];
     case 'entity-reflect': return [{ kind: 'entity-reflect', sourceId: event.newOwnerId, targetId: event.previousOwnerId, contentId: event.definitionId, intensity: 2 }];
     case 'entity-absorb': return [{ kind: 'entity-absorb', sourceId: event.absorberId, targetId: event.previousOwnerId, contentId: event.definitionId, intensity: 2 }];
+    case 'item-hit': return [{ kind: 'item-hit', sourceId: event.sourceId, targetId: event.targetId, contentId: event.definitionId, intensity: Math.max(1, event.damageTenths + event.hitlagFrames * 10), knockbackX: event.knockbackX, knockbackY: event.knockbackY }];
+    case 'item-block': return [{ kind: event.broken ? 'item-shield-break' : 'item-block', sourceId: event.sourceId, targetId: event.targetId, contentId: event.definitionId, intensity: Math.max(1, event.shieldDamage) }];
     case 'ko': return [{ kind: 'ko', sourceId: event.creditedAttackerId, targetId: event.fighterId, contentId: null, intensity: event.eliminated ? 2 : 1 }];
     case 'respawn': return [{ kind: 'respawn', sourceId: event.fighterId, targetId: event.fighterId, contentId: null, intensity: 1 }];
   }
