@@ -2,6 +2,7 @@ import type { StockMatchRules } from '../../sim/src/lifecycle.js';
 import { withAerialLandingPolicies } from '../../sim/src/aerialLanding.js';
 import { withAuthoredCombatPolicies } from '../../sim/src/authoredCombatPolicies.js';
 import { withDamageAttribution, type DamageAttributionRules } from '../../sim/src/damageAttribution.js';
+import { withEntityCommands } from '../../sim/src/entityCommandRuntime.js';
 import { withGrabEscape, type GrabEscapePolicy } from '../../sim/src/grabEscape.js';
 import { withAuthoritativeItems, type ItemRuntimePolicy } from '../../sim/src/itemRuntime.js';
 import { stepMatchWorld, type MatchInputFrame, type MatchStepResult } from '../../sim/src/match.js';
@@ -52,6 +53,7 @@ export function createMatchExecution(constructed: ConstructedMatch, options: Mat
   let composed = withAuthoredCombatPolicies(rawStep, runtime.moveRuntime);
   composed = withMoveFollowUps(composed, runtime.moveFollowUps);
   composed = withSmashCharge(composed, runtime.smashCharges);
+  composed = withEntityCommands(composed, runtime.entityCommandsByMoveId ?? new Map());
 
   // Optional universal rules are activated only by explicit match/ruleset policy.
   if (options.grabEscapePolicy) composed = withGrabEscape(composed, options.grabEscapePolicy);
