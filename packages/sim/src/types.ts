@@ -21,6 +21,8 @@ export interface FighterState {
   locomotion: LocomotionState; locomotionFrame: number; jumpsRemaining: number; fastFalling: boolean; dropThroughFrames: number; jumpBufferFrames: number;
   inputHistory: SimInputFrame[]; ledgeId: string | null; ledgeRegrabLockoutFrames: number; invulnerableFrames: number; dodgeCooldownFrames: number; techBufferFrames: number; landingLagFrames: number;
   percentTenths: number; hitlagFrames: number; hitstunFrames: number; attack: FighterAttackState | null; smashCharge?: FighterSmashChargeState | null; shielding: boolean; shieldHealth: number; shieldStunFrames: number; shieldRegenDelayFrames: number;
+  /** Bounded authoritative history of resolved attack IDs, oldest to newest, used by optional stale-move rules. */
+  recentAttackIds?: string[];
   grabTargetId: string | null; grabbedById: string | null; grabFrames: number; grabAction: FighterGrabActionState | null;
   lastHitById: string | null; lastHitFrame: number; stocks: number; eliminated: boolean; respawnFrames: number;
 }
