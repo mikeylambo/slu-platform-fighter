@@ -1,6 +1,7 @@
 import type { StockMatchRules } from '../../sim/src/lifecycle.js';
 import { withAerialLandingPolicies } from '../../sim/src/aerialLanding.js';
 import { withAuthoredCombatPolicies } from '../../sim/src/authoredCombatPolicies.js';
+import { withCombatModifiers, type CombatModifierPolicy } from '../../sim/src/combatModifiers.js';
 import { withDamageAttribution, type DamageAttributionRules } from '../../sim/src/damageAttribution.js';
 import { withEntityCommands } from '../../sim/src/entityCommandRuntime.js';
 import { withGrabEscape, type GrabEscapePolicy } from '../../sim/src/grabEscape.js';
@@ -31,6 +32,7 @@ export interface MatchExecutionOptions {
   universalLocomotionRules?: UniversalLocomotionRules;
   parryPolicy?: ParryPolicy;
   weightScalingPolicy?: WeightScalingPolicy;
+  combatModifiers?: CombatModifierPolicy;
   grabEscapePolicy?: GrabEscapePolicy;
   itemRuntime?: ItemRuntimePolicy;
   hazardEffects?: HazardEffectPolicy;
@@ -49,16 +51,15 @@ export function createMatchExecution(constructed: ConstructedMatch, options: Mat
   const runtime = constructed.runtime;
   const rawStep = (state: WorldState, input: MatchInputFrame): MatchStepResult => stepMatchWorld(state,input,runtime.attacks,'__no-global-default-attack__',undefined,runtime.grabActions,stockRules,runtime.entityDefinitions,runtime.entitySpawnsByMoveId,runtime.moveRuntime,runtime.fighterPhysics,interactionPolicy);
 
-  // Content-owned fighter expression is always composed. Empty registries are no-ops.
   let composed = withAuthoredCombatPolicies(rawStep, runtime.moveRuntime);
   composed = withMoveFollowUps(composed, runtime.moveFollowUps);
   composed = withSmashCharge(composed, runtime.smashCharges);
   composed = withEntityCommands(composed, runtime.entityCommandsByMoveId ?? new Map());
 
-  // Optional universal rules are activated only by explicit match/ruleset policy.
   if (options.grabEscapePolicy) composed = withGrabEscape(composed, options.grabEscapePolicy);
   if (options.parryPolicy) composed = withParry(composed, options.parryPolicy);
   if (options.weightScalingPolicy) composed = withWeightScaling(composed, runtime.fighterPhysics, options.weightScalingPolicy);
+  if (options.combatModifiers) composed = withCombatModifiers(composed, options.combatModifiers);
   if (options.itemRuntime) composed = withAuthoritativeItems(composed, options.itemRuntime);
   if (options.stageActorRules?.length) composed = withStageActors(composed, constructed.stage.id, options.stageActorRules, runtime.entityDefinitions);
   if (options.hazardEffects) composed = withStageHazards(composed, constructed.stage, options.hazardEffects);
