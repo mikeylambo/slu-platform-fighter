@@ -1,0 +1,23 @@
+name: real-asset-pilot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'content/asset-pilots/**'
+      - 'content/rig-profiles/**'
+      - 'scripts/real-asset-pilot.mjs'
+      - '.github/workflows/real-asset-pilot.yml'
+
+jobs:
+  riven-real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify physical Riven GLB
+        run: node scripts/real-asset-pilot.mjs riven-real
