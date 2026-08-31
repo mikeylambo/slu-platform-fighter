@@ -141,7 +141,8 @@ function stepGrabActions(fightersInput: FighterState[], inputs: Readonly<Record<
     if (definition.kind === 'throw' && actionFrame === definition.releaseFrame) {
       const postPercent = captive.percentTenths + definition.damageTenths; const magnitude = fixed.add(definition.baseKnockback, fixed.mul(definition.growthPer100Percent, fixed.fromRatio(postPercent, 1000))); const direction = normalizedThrowDirection(definition, captor.facing); const baseKnockbackX = fixed.mul(direction.x, magnitude); const baseKnockbackY = fixed.mul(direction.y, magnitude); const influenced = applyDirectionalInfluence(baseKnockbackX, baseKnockbackY, inputs[captive.id] ?? neutralInput(0));
       captive = { ...captive, percentTenths: postPercent, vx: influenced.vx, vy: influenced.vy, hitstunFrames: Math.max(captive.hitstunFrames, definition.hitstunFrames), grabbedById: null, grabFrames: 0, locomotion: 'airborne', locomotionFrame: 0, grounded: false, groundSurfaceId: null };
-      captor = { ...captor, grabTargetId: null, grabFrames: 0 }; events.push({ type: 'throw', attackerId: captor.id, targetId: captive.id, actionId: definition.id, damageTenths: definition.damageTenths, knockbackX: influenced.vx, knockbackY: influenced.vy, hitstunFrames: definition.hitstunFrames });
+      captor = { ...captor, grabTargetId: null, grabFrames: 0, grabAction: null }; fighters[captorIndex] = captor; fighters[captiveIndex] = captive;
+      events.push({ type: 'throw', attackerId: captor.id, targetId: captive.id, actionId: definition.id, damageTenths: definition.damageTenths, knockbackX: influenced.vx, knockbackY: influenced.vy, hitstunFrames: definition.hitstunFrames }); continue;
     }
     const nextFrame = actionFrame + 1; captor = { ...captor, grabAction: nextFrame >= definition.totalFrames ? null : { actionId: definition.id, frame: nextFrame } }; fighters[captorIndex] = captor; fighters[captiveIndex] = captive;
   }
@@ -164,27 +165,22 @@ export function stepMatchWorld(
 ): MatchStepResult {
   if (matchInput.frame !== state.frame) throw new Error(`match input frame ${matchInput.frame} does not match world frame ${state.frame}`);
   const canonicalInputs: Record<string, SimInputFrame> = {};
-  const fighters = state.fighters.map((fighter) => {
-    const input = matchInput.byFighterId[fighter.id] ?? neutralInput(state.frame); canonicalInputs[fighter.id] = input;
-    if (fighter.eliminated || fighter.respawnFrames > 0) return fighter;
-    if (fighter.hitlagFrames > 0) return stepHitlagSDI(fighter, input);
-    if (fighter.hitstunFrames > 0) return stepHitstunKnockback(fighter, input);
-    const moveRuntime = deriveMoveRuntime(fighter, moveRuntimeDefinitions);
-    const canStartAttack = fighter.grabbedById === null && fighter.grabTargetId === null && fighter.landingLagFrames === 0 && fighter.shieldStunFrames === 0 && (fighter.attack === null || canCancelCurrentMove(fighter, moveRuntimeDefinitions));
-    let next = fighter;
-    if (canStartAttack && hasAttackRequest(input)) {
-      const attackId = resolveStandardAttackId(fighter.definitionId, fighter, input, new Set(attacks.keys())) ?? (defaultAttackId !== '__no-global-default-attack__' ? defaultAttackId : null);
-      if (attackId) next = mergeCombat(fighter, beginAttack(combatantFromFighter(fighter, fighterPhysics.get(fighter.definitionId), moveRuntimeDefinitions), attackId));
-    }
-    const movementInput = movementInputForDefense(input, next);
-    next = stepFighterMovement(next, movementInput, state.surfaces, state.ledges, movementRulesForFighter(fighterPhysics.get(next.definitionId), movementRules));
-    if (next.attack && moveRuntime.cancelActive && hasAttackRequest(input)) {
-      const attackId = resolveStandardAttackId(next.definitionId, next, input, new Set(attacks.keys()));
-      if (attackId && attackId !== next.attack.attackId) next = { ...next, attack: { attackId, frame: 0, hitTargets: [] } };
+  for (const fighter of state.fighters) { const input = matchInput.byFighterId[fighter.id] ?? neutralInput(state.frame); if (input.frame !== state.frame) throw new Error(`${fighter.id} input frame ${input.frame} does not match world frame ${state.frame}`); canonicalInputs[fighter.id] = input; }
+  const availableAttackIds = new Set(attacks.keys());
+  const moved = [...state.fighters].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => {
+    const input = canonicalInputs[fighter.id] ?? neutralInput(state.frame); const physics = fighterPhysics.get(fighter.definitionId); const fighterRules = movementRulesForFighter(movementRules, physics);
+    if (fighter.eliminated || fighter.respawnFrames > 0) return fighter; if (fighter.grabbedById !== null) return fighter; if (fighter.hitlagFrames > 0) return fighter.hitstunFrames > 0 ? stepHitlagSDI(fighter, input, fighterRules) : fighter; if (fighter.hitstunFrames > 0) return stepHitstunKnockback({ ...fighter, shielding: false }, input, state.surfaces, fighterRules);
+    const cancelCurrent = canCancelCurrentMove(fighter, input, moveRuntimeDefinitions);
+    const movementSource = cancelCurrent ? { ...fighter, attack: null } : fighter;
+    const movementInput = movementInputForDefense(input, movementSource); let next = movementSource.grabTargetId !== null ? { ...movementSource, vx: fixed.zero, shielding: false, attack: null } : stepFighterMovement(movementSource, movementInput, state.surfaces, state.ledges, fighterRules);
+    const canShield = input.shieldHeld && next.grounded && next.shieldHealth > 0 && next.hitstunFrames === 0 && !input.dodgePressed && !input.grabPressed && next.grabTargetId === null; next = { ...next, shielding: canShield };
+    if (hasAttackRequest(input) && next.attack === null && next.hitstunFrames === 0 && next.invulnerableFrames === 0 && !next.shielding && next.shieldStunFrames === 0 && next.grabTargetId === null) {
+      const semanticAttackId = resolveStandardAttackId(next.definitionId, next, input, availableAttackIds); const attackId = semanticAttackId ?? (input.attackPressed ? defaultAttackId : null);
+      if (attackId && attacks.has(attackId)) { const started = beginAttack(combatantFromFighter(next, physics, moveRuntimeDefinitions), attackId); next = { ...next, attack: started.attack }; }
     }
     return next;
   });
-  const runtimeApplied = applyMoveRuntimeFrames(fighters, moveRuntimeDefinitions);
+  const runtimeApplied = applyMoveRuntimeFrames(moved, moveRuntimeDefinitions);
   const grabbed = resolveGrabAttempts(runtimeApplied, canonicalInputs, interactionPolicy);
   const spawned = spawnEntitiesFromAttacks(grabbed.fighters, state.entities ?? [], state.nextEntitySerial ?? 1, entityDefinitions, entitySpawnsByMoveId);
   const combatEligible = grabbed.fighters.map((fighter) => fighter.grabbedById !== null || fighter.eliminated || fighter.respawnFrames > 0 ? { ...fighter, invulnerableFrames: Math.max(1, fighter.invulnerableFrames) } : fighter);
@@ -196,9 +192,23 @@ export function stepMatchWorld(
     const influenced = applyDirectionalInfluence(entry.vx, entry.vy, canonicalInputs[entry.id] ?? neutralInput(state.frame));
     return { ...entry, vx: influenced.vx, vy: influenced.vy };
   });
+  const combatById = new Map(influencedCombatants.map((entry) => [entry.id, entry] as const));
   const combatMerged = grabbed.fighters.map((fighter) => {
-    const combatant = influencedCombatants.find((entry) => entry.id === fighter.id);
-    return combatant ? mergeCombat(fighter, combatant) : fighter;
+    const resolved = combatById.get(fighter.id); if (!resolved) throw new Error(`combat resolution lost fighter ${fighter.id}`);
+    if (!newlyHitTargets.has(fighter.id)) return mergeCombat(fighter, resolved);
+    const derived = deriveMoveRuntime(fighter, moveRuntimeDefinitions);
+    if (!derived.armor) return mergeCombat(fighter, resolved);
+    const launchMagnitude = fixed.add(fixed.abs(resolved.vx), fixed.abs(resolved.vy));
+    const absorbs = derived.armor.launchThreshold === null || launchMagnitude <= derived.armor.launchThreshold;
+    if (!absorbs) return mergeCombat(fighter, resolved);
+    return mergeCombat(fighter, {
+      ...resolved,
+      percentTenths: derived.armor.retainDamage ? resolved.percentTenths : fighter.percentTenths,
+      vx: fighter.vx,
+      vy: fighter.vy,
+      hitstunFrames: fighter.hitstunFrames,
+      attack: fighter.attack,
+    });
   });
   const maintained = maintainGrabRelationships(combatMerged);
   const grabActionResult = stepGrabActions(maintained.fighters, canonicalInputs, grabActions);
@@ -211,13 +221,13 @@ export function stepMatchWorld(
       fighters: lifecycle.fighters,
       entities: entityResult.entities,
       nextEntitySerial: spawned.nextEntitySerial,
-      items: state.items ?? [],
-      nextItemSerial: state.nextItemSerial ?? 1,
+      ...(state.items ? { items: state.items } : {}),
+      ...(state.nextItemSerial !== undefined ? { nextItemSerial: state.nextItemSerial } : {}),
       surfaces: state.surfaces,
       ledges: state.ledges,
       ...(state.match ? { match: state.match } : {}),
       winnerId: lifecycle.winnerId,
     },
-    events: [...combat.events, ...grabbed.events, ...maintained.events, ...grabActionResult.events, ...entityResult.events, ...lifecycle.events],
+    events: [...grabbed.events, ...combat.events, ...maintained.events, ...grabActionResult.events, ...entityResult.events, ...lifecycle.events],
   };
 }
