@@ -59,10 +59,12 @@ export function createMatchExecution(constructed: ConstructedMatch, options: Mat
   if (options.grabEscapePolicy) composed = withGrabEscape(composed, options.grabEscapePolicy);
   if (options.parryPolicy) composed = withParry(composed, options.parryPolicy);
   if (options.weightScalingPolicy) composed = withWeightScaling(composed, runtime.fighterPhysics, options.weightScalingPolicy);
-  if (options.combatModifiers) composed = withCombatModifiers(composed, options.combatModifiers);
   if (options.itemRuntime) composed = withAuthoritativeItems(composed, options.itemRuntime);
   if (options.stageActorRules?.length) composed = withStageActors(composed, constructed.stage.id, options.stageActorRules, runtime.entityDefinitions);
   if (options.hazardEffects) composed = withStageHazards(composed, constructed.stage, options.hazardEffects);
+  // Modifier rules are intentionally outermost among semantic combat/event policies so
+  // fighter-attributed melee, throws, entities and items share one ruleset calculation.
+  if (options.combatModifiers) composed = withCombatModifiers(composed, options.combatModifiers);
 
   const locomotionAware = withUniversalLocomotion(composed, constructed.stage.walls, runtime.attacks, {
     wallJumpEnabled: options.wallJumpEnabled ?? true,
