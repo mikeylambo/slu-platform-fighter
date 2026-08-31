@@ -1,58 +1,17 @@
 import type { FighterState, ItemState, LocomotionState, MatchRuntimeState, OwnedEntityState, SimInputFrame, StageLedge, StageSurface, WorldState } from './types.js';
 
-export const WORLD_BINARY_VERSION = 15;
-
-const locomotionCode: Record<LocomotionState, number> = {
-  idle: 0, walk: 1, dash: 2, run: 3, turn: 4, crouch: 5, 'jump-squat': 6, airborne: 7,
-  landing: 8, 'ledge-hang': 9, 'air-dodge': 10, 'spot-dodge': 11, roll: 12,
-  'tech-in-place': 13, 'tech-roll': 14, knockdown: 15, grabbed: 16, respawn: 17,
-};
-
-class ByteWriter {
-  private readonly bytes: number[] = [];
-  private readonly encoder = new TextEncoder();
-  u8(value: number) { this.bytes.push(value & 0xff); }
-  u16(value: number) { const v = value & 0xffff; this.u8(v); this.u8(v >>> 8); }
-  i16(value: number) { this.u16(value & 0xffff); }
-  u32(value: number) { const v = value >>> 0; this.u8(v); this.u8(v >>> 8); this.u8(v >>> 16); this.u8(v >>> 24); }
-  i32(value: number) { this.u32(value >>> 0); }
-  i64(value: number) {
-    if (!Number.isSafeInteger(value)) throw new Error(`binary state requires safe integer, got ${value}`);
-    const v = BigInt.asUintN(64, BigInt(value));
-    for (let shift = 0n; shift < 64n; shift += 8n) this.u8(Number((v >> shift) & 0xffn));
-  }
-  bool(value: boolean) { this.u8(value ? 1 : 0); }
-  string(value: string) { const encoded = this.encoder.encode(value); if (encoded.length > 0xffff) throw new Error('binary state string exceeds 65535 bytes'); this.u16(encoded.length); for (const byte of encoded) this.u8(byte); }
-  finish(): Uint8Array { return Uint8Array.from(this.bytes); }
+export const WORLD_BINARY_VERSION = 16;
+const locomotionCode: Record<LocomotionState, number> = { idle:0,walk:1,dash:2,run:3,turn:4,crouch:5,'jump-squat':6,airborne:7,landing:8,'ledge-hang':9,'air-dodge':10,'spot-dodge':11,roll:12,'tech-in-place':13,'tech-roll':14,knockdown:15,grabbed:16,respawn:17 };
+class ByteWriter { private readonly bytes:number[]=[]; private readonly encoder=new TextEncoder(); u8(v:number){this.bytes.push(v&255)} u16(v:number){const x=v&65535;this.u8(x);this.u8(x>>>8)} i16(v:number){this.u16(v&65535)} u32(v:number){const x=v>>>0;this.u8(x);this.u8(x>>>8);this.u8(x>>>16);this.u8(x>>>24)} i32(v:number){this.u32(v>>>0)} i64(v:number){if(!Number.isSafeInteger(v))throw new Error(`binary state requires safe integer, got ${v}`);const x=BigInt.asUintN(64,BigInt(v));for(let s=0n;s<64n;s+=8n)this.u8(Number((x>>s)&255n))} bool(v:boolean){this.u8(v?1:0)} string(v:string){const e=this.encoder.encode(v);if(e.length>65535)throw new Error('binary state string exceeds 65535 bytes');this.u16(e.length);for(const b of e)this.u8(b)} finish(){return Uint8Array.from(this.bytes)} }
+function writeInput(w:ByteWriter,i:SimInputFrame){w.i32(i.frame);w.i16(i.moveX);w.i16(i.moveY);w.bool(i.jumpPressed);w.bool(i.jumpHeld);w.bool(Boolean(i.attackPressed));w.bool(Boolean(i.specialPressed));w.bool(Boolean(i.grabPressed));w.i16(i.smashX??0);w.i16(i.smashY??0);w.bool(i.dodgePressed);w.bool(i.shieldHeld)}
+function writeSurface(w:ByteWriter,s:StageSurface){w.string(s.id);w.u8(s.kind==='solid'?0:1);w.i64(s.y);w.i64(s.xMin);w.i64(s.xMax)} function writeLedge(w:ByteWriter,l:StageLedge){w.string(l.id);w.i64(l.x);w.i64(l.y);w.i16(l.inward)} function writeOptionalString(w:ByteWriter,v:string|null){w.bool(v!==null);if(v!==null)w.string(v)}
+function writeFighter(w:ByteWriter,f:FighterState){
+  w.string(f.id);w.string(f.definitionId);w.i64(f.x);w.i64(f.y);w.i64(f.vx);w.i64(f.vy);w.bool(f.grounded);w.bool(f.groundSurfaceId!==null);if(f.groundSurfaceId!==null)w.string(f.groundSurfaceId);w.i16(f.facing);w.u8(locomotionCode[f.locomotion]);w.u32(f.locomotionFrame);w.u8(f.jumpsRemaining);w.bool(f.fastFalling);w.u16(f.dropThroughFrames);w.u16(f.jumpBufferFrames);writeOptionalString(w,f.ledgeId);w.u16(f.ledgeRegrabLockoutFrames);w.u16(f.invulnerableFrames);w.u16(f.dodgeCooldownFrames);w.u16(f.techBufferFrames);w.u16(f.landingLagFrames);w.u32(f.percentTenths);w.u16(f.hitlagFrames);w.u16(f.hitstunFrames);
+  w.bool(f.attack!==null);if(f.attack){w.string(f.attack.attackId);w.u16(f.attack.frame);w.u16(f.attack.chargeFrames??0);const t=[...f.attack.hitTargets].sort();w.u16(t.length);for(const id of t)w.string(id)}
+  const charge=f.smashCharge??null;w.bool(charge!==null);if(charge){w.string(charge.attackId);w.u16(charge.frames);w.u8(charge.axis==='x'?0:1);w.i16(charge.direction)}
+  w.bool(f.shielding);w.u16(f.shieldHealth);w.u16(f.shieldStunFrames);w.u16(f.shieldRegenDelayFrames);writeOptionalString(w,f.grabTargetId);writeOptionalString(w,f.grabbedById);w.u16(f.grabFrames);w.bool(f.grabAction!==null);if(f.grabAction){w.string(f.grabAction.actionId);w.u16(f.grabAction.frame)}writeOptionalString(w,f.lastHitById);w.i32(f.lastHitFrame);w.u8(f.stocks);w.bool(f.eliminated);w.u16(f.respawnFrames);if(f.inputHistory.length>65535)throw new Error('input history exceeds binary format capacity');w.u16(f.inputHistory.length);for(const i of f.inputHistory)writeInput(w,i)
 }
-
-function writeInput(writer: ByteWriter, input: SimInputFrame) { writer.i32(input.frame); writer.i16(input.moveX); writer.i16(input.moveY); writer.bool(input.jumpPressed); writer.bool(input.jumpHeld); writer.bool(Boolean(input.attackPressed)); writer.bool(Boolean(input.specialPressed)); writer.bool(Boolean(input.grabPressed)); writer.i16(input.smashX ?? 0); writer.i16(input.smashY ?? 0); writer.bool(input.dodgePressed); writer.bool(input.shieldHeld); }
-function writeSurface(writer: ByteWriter, surface: StageSurface) { writer.string(surface.id); writer.u8(surface.kind === 'solid' ? 0 : 1); writer.i64(surface.y); writer.i64(surface.xMin); writer.i64(surface.xMax); }
-function writeLedge(writer: ByteWriter, ledge: StageLedge) { writer.string(ledge.id); writer.i64(ledge.x); writer.i64(ledge.y); writer.i16(ledge.inward); }
-function writeOptionalString(writer: ByteWriter, value: string | null) { writer.bool(value !== null); if (value !== null) writer.string(value); }
-function writeFighter(writer: ByteWriter, fighter: FighterState) {
-  writer.string(fighter.id); writer.string(fighter.definitionId); writer.i64(fighter.x); writer.i64(fighter.y); writer.i64(fighter.vx); writer.i64(fighter.vy);
-  writer.bool(fighter.grounded); writer.bool(fighter.groundSurfaceId !== null); if (fighter.groundSurfaceId !== null) writer.string(fighter.groundSurfaceId);
-  writer.i16(fighter.facing); writer.u8(locomotionCode[fighter.locomotion]); writer.u32(fighter.locomotionFrame); writer.u8(fighter.jumpsRemaining); writer.bool(fighter.fastFalling);
-  writer.u16(fighter.dropThroughFrames); writer.u16(fighter.jumpBufferFrames); writeOptionalString(writer, fighter.ledgeId); writer.u16(fighter.ledgeRegrabLockoutFrames); writer.u16(fighter.invulnerableFrames); writer.u16(fighter.dodgeCooldownFrames); writer.u16(fighter.techBufferFrames); writer.u16(fighter.landingLagFrames);
-  writer.u32(fighter.percentTenths); writer.u16(fighter.hitlagFrames); writer.u16(fighter.hitstunFrames); writer.bool(fighter.attack !== null);
-  if (fighter.attack !== null) { writer.string(fighter.attack.attackId); writer.u16(fighter.attack.frame); const hitTargets = [...fighter.attack.hitTargets].sort(); writer.u16(hitTargets.length); for (const target of hitTargets) writer.string(target); }
-  writer.bool(fighter.shielding); writer.u16(fighter.shieldHealth); writer.u16(fighter.shieldStunFrames); writer.u16(fighter.shieldRegenDelayFrames); writeOptionalString(writer, fighter.grabTargetId); writeOptionalString(writer, fighter.grabbedById); writer.u16(fighter.grabFrames); writer.bool(fighter.grabAction !== null);
-  if (fighter.grabAction !== null) { writer.string(fighter.grabAction.actionId); writer.u16(fighter.grabAction.frame); }
-  writeOptionalString(writer, fighter.lastHitById); writer.i32(fighter.lastHitFrame); writer.u8(fighter.stocks); writer.bool(fighter.eliminated); writer.u16(fighter.respawnFrames);
-  if (fighter.inputHistory.length > 0xffff) throw new Error('input history exceeds binary format capacity'); writer.u16(fighter.inputHistory.length); for (const input of fighter.inputHistory) writeInput(writer, input);
-}
-function writeEntity(writer: ByteWriter, entity: OwnedEntityState) { writer.string(entity.id); writer.string(entity.definitionId); writer.string(entity.ownerId); writer.string(entity.ownerDefinitionId); writer.i64(entity.x); writer.i64(entity.y); writer.i64(entity.vx); writer.i64(entity.vy); writer.i16(entity.facing); writer.u16(entity.ageFrames); writer.u16(entity.lifetimeFrames); writer.u8(entity.hitsRemaining); const targets=[...entity.hitTargets].sort(); writer.u16(targets.length); for(const target of targets) writer.string(target); }
-function writeItem(writer: ByteWriter, item: ItemState) { writer.string(item.id); writer.string(item.definitionId); writer.i64(item.x); writer.i64(item.y); writer.i64(item.vx); writer.i64(item.vy); writeOptionalString(writer,item.holderId); writer.u16(item.usesRemaining); writer.u32(item.ageFrames); }
-function writeMatch(writer: ByteWriter, match: MatchRuntimeState | undefined) { writer.bool(match !== undefined); if (!match) return; writer.u8(match.mode === 'stock' ? 0 : match.mode === 'time' ? 1 : 2); writer.bool(match.framesRemaining !== null); if (match.framesRemaining !== null) writer.u32(match.framesRemaining); const scores=Object.entries(match.scores).sort(([a],[b])=>a.localeCompare(b)); writer.u16(scores.length); for(const [participantId,score] of scores){writer.string(participantId);writer.i32(score);} writeOptionalString(writer,match.winningTeamId); writer.bool(match.suddenDeath); writer.bool(match.ended); }
-
-export function serializeWorldState(state: WorldState): Uint8Array {
-  const writer = new ByteWriter(); writer.u8(0x53); writer.u8(0x4c); writer.u8(0x50); writer.u8(0x46); writer.u16(WORLD_BINARY_VERSION); writer.u32(state.frame); writer.u32(state.seed); writeOptionalString(writer,state.winnerId); writeMatch(writer,state.match);
-  writer.u32(state.nextEntitySerial ?? 1); writer.u32(state.nextItemSerial ?? 1);
-  const surfaces=[...state.surfaces].sort((a,b)=>a.id.localeCompare(b.id)); writer.u16(surfaces.length); for(const surface of surfaces)writeSurface(writer,surface);
-  const ledges=[...state.ledges].sort((a,b)=>a.id.localeCompare(b.id)); writer.u16(ledges.length); for(const ledge of ledges)writeLedge(writer,ledge);
-  const fighters=[...state.fighters].sort((a,b)=>a.id.localeCompare(b.id)); writer.u16(fighters.length); for(const fighter of fighters)writeFighter(writer,fighter);
-  const entities=[...(state.entities??[])].sort((a,b)=>a.id.localeCompare(b.id)); writer.u16(entities.length); for(const entity of entities)writeEntity(writer,entity);
-  const items=[...(state.items??[])].sort((a,b)=>a.id.localeCompare(b.id)); writer.u16(items.length); for(const item of items)writeItem(writer,item);
-  return writer.finish();
-}
+function writeEntity(w:ByteWriter,e:OwnedEntityState){w.string(e.id);w.string(e.definitionId);w.string(e.ownerId);w.string(e.ownerDefinitionId);w.i64(e.x);w.i64(e.y);w.i64(e.vx);w.i64(e.vy);w.i16(e.facing);w.u16(e.ageFrames);w.u16(e.lifetimeFrames);w.u8(e.hitsRemaining);const t=[...e.hitTargets].sort();w.u16(t.length);for(const id of t)w.string(id)}
+function writeItem(w:ByteWriter,i:ItemState){w.string(i.id);w.string(i.definitionId);w.i64(i.x);w.i64(i.y);w.i64(i.vx);w.i64(i.vy);writeOptionalString(w,i.holderId);w.u16(i.usesRemaining);w.u32(i.ageFrames)}
+function writeMatch(w:ByteWriter,m:MatchRuntimeState|undefined){w.bool(m!==undefined);if(!m)return;w.u8(m.mode==='stock'?0:m.mode==='time'?1:2);w.bool(m.framesRemaining!==null);if(m.framesRemaining!==null)w.u32(m.framesRemaining);const scores=Object.entries(m.scores).sort(([a],[b])=>a.localeCompare(b));w.u16(scores.length);for(const[id,score]of scores){w.string(id);w.i32(score)}writeOptionalString(w,m.winningTeamId);w.bool(m.suddenDeath);w.bool(m.ended)}
+export function serializeWorldState(state:WorldState):Uint8Array{const w=new ByteWriter();w.u8(0x53);w.u8(0x4c);w.u8(0x50);w.u8(0x46);w.u16(WORLD_BINARY_VERSION);w.u32(state.frame);w.u32(state.seed);writeOptionalString(w,state.winnerId);writeMatch(w,state.match);w.u32(state.nextEntitySerial??1);w.u32(state.nextItemSerial??1);const surfaces=[...state.surfaces].sort((a,b)=>a.id.localeCompare(b.id));w.u16(surfaces.length);for(const s of surfaces)writeSurface(w,s);const ledges=[...state.ledges].sort((a,b)=>a.id.localeCompare(b.id));w.u16(ledges.length);for(const l of ledges)writeLedge(w,l);const fighters=[...state.fighters].sort((a,b)=>a.id.localeCompare(b.id));w.u16(fighters.length);for(const f of fighters)writeFighter(w,f);const entities=[...(state.entities??[])].sort((a,b)=>a.id.localeCompare(b.id));w.u16(entities.length);for(const e of entities)writeEntity(w,e);const items=[...(state.items??[])].sort((a,b)=>a.id.localeCompare(b.id));w.u16(items.length);for(const i of items)writeItem(w,i);return w.finish()}
