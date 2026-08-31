@@ -3,6 +3,16 @@ import type { ItemState } from './types.js';
 export type { ItemState } from './types.js';
 
 export type ItemUseMode = 'swing' | 'throw' | 'consume' | 'activate';
+export interface ItemCombatDefinition {
+  radius: Fixed;
+  damageTenths: number;
+  baseKnockback: Fixed;
+  growthPer100Percent: Fixed;
+  directionX: number;
+  directionY: number;
+  hitlagFrames: number;
+  hitstunFrames: number;
+}
 export interface ItemDefinition {
   id: string;
   holdSocket: string;
@@ -11,6 +21,7 @@ export interface ItemDefinition {
   maxUses: number;
   throwable: boolean;
   lifetimeFrames: number | null;
+  combat?: ItemCombatDefinition;
 }
 export interface ItemSpawnEntry { itemDefinitionId: string; weight: number; }
 export interface ItemSpawnTable { id: string; entries: readonly ItemSpawnEntry[]; intervalFrames: number; maxActive: number; }
@@ -21,6 +32,11 @@ export function validateItemDefinition(definition: ItemDefinition): void {
   if (!Number.isInteger(definition.pickupRadius) || definition.pickupRadius < 0) throw new Error(`${definition.id} pickupRadius must be nonnegative fixed integer`);
   if (!Number.isInteger(definition.maxUses) || definition.maxUses < 1) throw new Error(`${definition.id} maxUses must be positive integer`);
   if (definition.lifetimeFrames !== null && (!Number.isInteger(definition.lifetimeFrames) || definition.lifetimeFrames < 1)) throw new Error(`${definition.id} lifetimeFrames must be positive integer or null`);
+  if(definition.combat){
+    const combat=definition.combat;
+    for(const [key,value] of Object.entries(combat)) if(!Number.isInteger(value)) throw new Error(`${definition.id} combat.${key} must be deterministic integer/fixed-point data`);
+    if(combat.radius<1||combat.damageTenths<0||combat.baseKnockback<0||combat.growthPer100Percent<0||combat.hitlagFrames<0||combat.hitstunFrames<0) throw new Error(`${definition.id} combat values must be nonnegative and radius positive`);
+  }
 }
 export function validateItemSpawnTable(table: ItemSpawnTable, definitions: ReadonlyMap<string, ItemDefinition>): void {
   if (!table.id || !Number.isInteger(table.intervalFrames) || table.intervalFrames < 1 || !Number.isInteger(table.maxActive) || table.maxActive < 0) throw new Error('invalid item spawn table');
