@@ -3,7 +3,7 @@
   "asOf": "2026-08-30",
   "definition": "docs/production-completion-gate.md",
   "status": "roster-production-ready-universal-rules-in-progress",
-  "certifiedBaseline": "K0-K35 (latest cumulative head subject to CI on newest commits)",
+  "certifiedBaseline": "K0-K36 cumulative verify green at 7b501e33eb7691631409efd2904a774882449705",
   "gates": {
     "rosterProductionReady": {
       "state": "ready-pending-first-real-asset-proof",
@@ -17,10 +17,10 @@
   },
   "areas": {
     "deterministicKernel": {"state": "complete", "evidence": ["K0", "K8", "K9", "binary snapshots", "state hashes"]},
-    "fighterLocomotion": {"state": "partial", "evidence": ["K1", "K1b", "K3 knockback", "K24"], "remaining": ["neutral ledge getup/roll/attack routing", "wall collision -> jump/cling execution", "explicit hard-landing policy"]},
-    "combatInteraction": {"state": "near-complete", "evidence": ["K2", "K2 Match", "K5", "K7", "K24", "K35"], "completedSincePrior": ["authored hurtbox mutation", "armor/super-armor timeline semantics", "authored cancel windows"], "remaining": ["jab-chain/rapid-jab sequencing", "smash charge", "weight/scaling ruleset application", "clank/trade priority", "parry/perfect-shield execution", "grab escape/mash policy", "optional stale/comeback runtime modifiers"]},
+    "fighterLocomotion": {"state": "complete-foundation", "evidence": ["K1", "K1b", "K3 knockback", "K24", "K36"], "completedSincePrior": ["neutral ledge getup/roll/authored ledge attack", "wall collision/jump/cling execution", "universal hard-landing recovery"]},
+    "combatInteraction": {"state": "near-complete", "evidence": ["K2", "K2 Match", "K5", "K7", "K24", "K35", "7b501e33 match composition"], "completedSincePrior": ["authored hurtbox mutation in canonical combat projection", "armor/super-armor timeline semantics and match response", "pre-movement authored cancel windows"], "remaining": ["jab-chain/rapid-jab sequencing", "smash charge", "weight/scaling ruleset application", "clank/trade priority", "parry/perfect-shield execution", "grab escape/mash policy", "optional stale/comeback runtime modifiers"]},
     "matchLifecycle": {"state": "complete-foundation", "evidence": ["K3 lifecycle", "K17", "K18", "K20", "K28"]},
-    "stageRuntime": {"state": "near-complete", "evidence": ["K4", "K11", "K27", "Stage Lab", "stage:seed", "stage:handoff"], "remaining": ["compose authored hazard effects into canonical match", "generic stage-owned triggers/entities"]},
+    "stageRuntime": {"state": "near-complete", "evidence": ["K4", "K11", "K27", "K36 walls", "Stage Lab", "stage:seed", "stage:handoff"], "remaining": ["compose authored hazard effects into canonical match", "generic stage-owned triggers/entities"]},
     "entitiesAndItems": {"state": "partial", "evidence": ["K6", "K33 generic item contract"], "remaining": ["entity command/despawn breadth", "reflection/absorption", "item state in canonical WorldState/rollback", "item spawn/use collision integration"]},
     "presentationAnimation": {"state": "complete-foundation", "evidence": ["K11", "K22", "K26", "K33 presentation policies", "generic GLB fighter view", "85-role contract", "root-motion enforcement"]},
     "contentPipeline": {"state": "ready-pending-real-asset", "evidence": ["K12", "K23", "custom rig profiles", "bulk Blender audit", "fighter:handoff", "stage:seed", "stage:handoff"], "remaining": ["first actual roster model/rig/animation certification"]},
@@ -31,8 +31,8 @@
   },
   "policyStatus": {
     "hazardEffects": "Generic authored effect policy exists; canonical match composition remains.",
-    "armorAndCancels": "Explicit payload semantics compile and execute in production match composition.",
-    "hurtboxMutation": "Per-instance authored keyframes are projected into combat collision without extra rollback state.",
+    "armorAndCancels": "Explicit payload semantics compile and execute in production match composition; cumulative verify green.",
+    "hurtboxMutation": "Per-instance authored keyframes project into canonical combat collision without extra rollback state; cumulative verify green.",
     "parry": "Policy contract exists; actual shield-contact execution remains universal engine work.",
     "items": "Generic definition/state/spawn/use contracts exist; authoritative match/rollback integration remains."
   }
