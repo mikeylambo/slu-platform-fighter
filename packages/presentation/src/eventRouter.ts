@@ -2,7 +2,7 @@ import type { Fixed } from '../../deterministic-math/src/fixed.js';
 import type { MatchEvent } from '../../sim/src/match.js';
 
 export type PresentationCueKind =
-  | 'hit' | 'block' | 'shield-break' | 'grab' | 'grab-release' | 'grab-escape' | 'pummel' | 'throw'
+  | 'hit' | 'block' | 'shield-break' | 'clank' | 'grab' | 'grab-release' | 'grab-escape' | 'pummel' | 'throw'
   | 'entity-hit' | 'entity-block' | 'entity-shield-break' | 'ko' | 'respawn';
 
 export interface PresentationCue {
@@ -19,6 +19,7 @@ export function routeMatchEvent(event: MatchEvent): PresentationCue[] {
   switch (event.type) {
     case 'hit': return [{ kind: 'hit', sourceId: event.attackerId, targetId: event.targetId, contentId: event.attackId, intensity: Math.max(1, event.damageTenths + event.hitlagFrames * 10), knockbackX: event.knockbackX, knockbackY: event.knockbackY }];
     case 'block': return [{ kind: event.broken ? 'shield-break' : 'block', sourceId: event.attackerId, targetId: event.targetId, contentId: event.attackId, intensity: Math.max(1, event.shieldDamage) }];
+    case 'clank': return [{ kind: 'clank', sourceId: event.fighterAId, targetId: event.fighterBId, contentId: `${event.attackAId}|${event.attackBId}`, intensity: event.winnerId === null ? 2 : 3 }];
     case 'grab': return [{ kind: 'grab', sourceId: event.attackerId, targetId: event.targetId, contentId: null, intensity: 1 }];
     case 'grab-release': return [{ kind: 'grab-release', sourceId: event.attackerId, targetId: event.targetId, contentId: null, intensity: 1 }];
     case 'grab-escape': return [{ kind: 'grab-escape', sourceId: event.captorId, targetId: event.captiveId, contentId: null, intensity: 1 }];
