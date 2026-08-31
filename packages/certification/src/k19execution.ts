@@ -7,7 +7,7 @@ import type { ConstructedMatch } from '../../shell/src/matchFactory.js';
 import type { SimInputFrame } from '../../sim/src/types.js';
 function assert(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(`K19 execution certification failure: ${message}`); }
 function neutral(frame: number): SimInputFrame { return { frame, moveX: 0, moveY: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, specialPressed: false, grabPressed: false, smashX: 0, smashY: 0, dodgePressed: false, shieldHeld: false }; }
-const runtime: RosterRuntime = { fighterDefinitionIds: ['alpha', 'beta'], fighterPhysics: new Map(), attacks: new Map(), grabActions: new Map(), moveRuntime: new Map(), aerialLanding: new Map(), entityDefinitions: new Map(), entitySpawnsByMoveId: new Map() };
+const runtime: RosterRuntime = { fighterDefinitionIds: ['alpha', 'beta'], fighterPhysics: new Map(), attacks: new Map(), grabActions: new Map(), moveRuntime: new Map(), moveFollowUps: new Map(), aerialLanding: new Map(), entityDefinitions: new Map(), entitySpawnsByMoveId: new Map() };
 const stage: CompiledStageDefinition = {
   id: 'execution-stage', displayName: 'Execution Stage', surfaces: [{ id: 'ground', kind: 'solid', y: fixed.zero, xMin: fixed.fromInt(-10), xMax: fixed.fromInt(10) }], walls: [], ledges: [],
   spawns: [{ id: 'p1', x: fixed.fromInt(-2), y: fixed.zero, facing: 1 }, { id: 'p2', x: fixed.fromInt(2), y: fixed.zero, facing: -1 }],
