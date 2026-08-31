@@ -2,13 +2,13 @@
   "schemaVersion": 2,
   "asOf": "2026-08-30",
   "definition": "docs/production-completion-gate.md",
-  "status": "foundation-complete-pending-real-asset-proof",
-  "certifiedBaseline": "K0-K51 cumulative verify green with Combat Lab replay/remap UI at 23a262a2440b3c632824b6a36acb9f865bbd088d",
+  "status": "foundation-complete-character-production-active",
+  "certifiedBaseline": "K0-K51 cumulative verify green; real Riven GLB physical/import/custom-rig/browser-build pilot green through c6db318ee808cf62c6a529c795d693cab18bb1d0",
   "gates": {
     "rosterProductionReady": {
-      "state": "ready-pending-first-real-asset-proof",
-      "meaning": "A conventional fighter can enter the shared seed -> rig -> animate -> author -> tune -> certify pipeline without declaring fighter-specific engine work.",
-      "remaining": ["Run one actual roster character GLB/rig/clip set through fighter:autobind, fighter:audit, fighter:handoff and a playable match as final physical integration proof."]
+      "state": "ready-real-rig-proof-passed-animation-production-next",
+      "meaning": "A conventional fighter can enter the shared seed -> model import -> rig validation -> animate/retarget -> author -> tune -> certify pipeline without fighter-specific engine work. A genuine SLU rigged GLB has passed the physical/import/browser-build path.",
+      "remaining": ["Take the first actual platform-fighter roster character through animation-role completion and playable/certified promotion. This is character production, not a missing engine subsystem."]
     },
     "universalRulesComplete": {
       "state": "complete",
@@ -23,12 +23,26 @@
     "matchLifecycle": {"state": "complete-foundation", "evidence": ["K3 lifecycle", "K17", "K18", "K20", "K28"]},
     "stageRuntime": {"state": "complete-foundation", "evidence": ["K4", "K11", "K27", "K36 walls", "K37 hazards", "K38 stage-owned actors", "Stage Lab", "stage:seed", "stage:handoff"]},
     "entitiesAndItems": {"state": "complete-foundation", "evidence": ["K6 fighter-owned entities", "K38 stage-owned actors", "K39 authoritative item world/binary runtime", "K46 entity reflect/absorb contact hooks", "K47 compiled entity command/despawn/set-velocity/reverse execution", "K49 generic item swing/travelling combat and shield interaction"]},
-    "presentationAnimation": {"state": "complete-foundation", "evidence": ["K11", "K22", "K26", "semantic clank/reflect/absorb/item cues", "K33 presentation policies", "generic GLB fighter view", "85-role contract", "root-motion enforcement"]},
-    "contentPipeline": {"state": "ready-pending-real-asset", "evidence": ["K12", "K23", "custom rig profiles", "bulk Blender audit", "fighter:handoff", "stage:seed", "stage:handoff"], "remaining": ["first actual roster model/rig/animation certification"]},
+    "presentationAnimation": {"state": "complete-foundation-animation-content-active", "evidence": ["K11", "K22", "K26", "semantic clank/reflect/absorb/item cues", "K33 presentation policies", "generic GLB fighter view", "85-role contract", "root-motion enforcement", "Asset Pilot Lab production build"], "nextProductionInput": "authored/retargeted roster animations"},
+    "contentPipeline": {"state": "real-rig-proof-passed", "evidence": ["K12", "K23", "custom rig profiles", "mixamo-humanoid-v1", "bulk Blender audit", "fighter:handoff", "stage:seed", "stage:handoff", "real-asset-pilot Riven GLB structural validation", "ephemeral fighter model import + fighter:check + rig:check", "Asset Pilot Lab build", "character-production-loop.md"], "remainingProductionWork": ["first actual roster character animation-role completion", "first actual roster fighter promotion through playable/certified"]},
     "trainingLabs": {"state": "complete-foundation", "evidence": ["K16", "K25", "K29", "K34", "K51 deterministic LabReplaySession", "K51 LabInputProfileEditor", "Combat Lab record/stop/play/seek/frame-step controls", "Combat Lab live semantic button/axis remap panel", "Movement Lab", "Combat Lab"]},
     "cpuAutomation": {"state": "complete-foundation", "evidence": ["K10", "K34", "scenario bot catalog", "K48 true unordered mixed-roster matchup soak with deterministic replay sampling", "roster:soak mixed-roster CLI"]},
     "replayRollbackOnline": {"state": "complete-foundation", "evidence": ["K8", "K9", "K21", "K30", "K51 lab-facing replay controller", "Combat Lab replay UI"], "deferredPlatformIntegration": ["production lobby/matchmaking/relay/moderation service selection"]},
     "playerShell": {"state": "complete-foundation", "evidence": ["K13", "K14", "K19", "K28", "K31", "K32", "Shell Lab", "versioned profile/accessibility/unlocks/stats"], "deferredPlatformIntegration": ["production online service UI and store/platform account surfaces"]}
+  },
+  "physicalAssetProof": {
+    "pilot": "riven-real (non-canon certification pilot)",
+    "source": "mikeylambo/witch-hunter-x public/assets/riven-rigged.glb",
+    "sha256": "3bb70f428f06a61c1257ab27d554568d12c9a39262abac1b291c5287ccecde3f",
+    "bytes": 4519372,
+    "glbVersion": 2,
+    "nodes": 165,
+    "meshes": 1,
+    "skins": 1,
+    "animations": ["mixamo.com"],
+    "rig": "Mixamo core bones verified",
+    "animationWorklist": "0/85 safely auto-bindable; 85/85 correctly remain authored/retargeted work",
+    "workflow": "real-asset-pilot green: remote physical verification, animation worklist, ephemeral model import/custom-rig validation, and production Asset Pilot Lab build"
   },
   "policyStatus": {
     "hazardEffects": "Parameterized authored damage/launch/KO effects execute through canonical stage composition (K37).",
