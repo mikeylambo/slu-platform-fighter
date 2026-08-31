@@ -61,6 +61,16 @@ export interface EntitySpawnDefinition {
   offsetY: Fixed;
 }
 
+export type EntityCommandKind = 'despawn' | 'set_velocity' | 'reverse_velocity';
+export interface EntityCommandDefinition {
+  moveId: string;
+  frame: number;
+  entityDefinitionId: string;
+  command: EntityCommandKind;
+  velocityX?: Fixed;
+  velocityY?: Fixed;
+}
+
 function integer(data: Record<string, unknown>, key: string, fallback = 0): number {
   const value = data[key];
   if (value === undefined) return fallback;
@@ -68,9 +78,22 @@ function integer(data: Record<string, unknown>, key: string, fallback = 0): numb
   return value as number;
 }
 
+function optionalInteger(data: Record<string, unknown>, key: string): number | undefined {
+  const value = data[key];
+  if (value === undefined) return undefined;
+  if (!Number.isInteger(value)) throw new Error(`entity timeline ${key} must be integer`);
+  return value as number;
+}
+
 function string(data: Record<string, unknown>, key: string): string {
   const value = data[key];
   if (typeof value !== 'string' || value.length === 0) throw new Error(`entity timeline ${key} must be non-empty string`);
+  return value;
+}
+
+function commandKind(data: Record<string, unknown>): EntityCommandKind {
+  const value = string(data, 'command');
+  if (value !== 'despawn' && value !== 'set_velocity' && value !== 'reverse_velocity') throw new Error(`unsupported entity command ${value}`);
   return value;
 }
 
@@ -125,6 +148,35 @@ export function compileEntitySpawns(pack: FighterPackLike, definitions: Readonly
       });
     }
     if (spawns.length > 0) result.set(moveId, spawns.sort((a,b) => a.frame - b.frame || a.entityDefinitionId.localeCompare(b.entityDefinitionId)));
+  }
+  return result;
+}
+
+export function compileEntityCommands(pack: FighterPackLike, definitions: ReadonlyMap<string, EntityDefinition>): Map<string, EntityCommandDefinition[]> {
+  const result = new Map<string, EntityCommandDefinition[]>();
+  for (const [moveName, move] of Object.entries(pack.moves).sort(([a],[b]) => a.localeCompare(b))) {
+    const moveId = `${pack.id}:${moveName}`;
+    const commands: EntityCommandDefinition[] = [];
+    for (const event of move.timeline) {
+      if (event.type !== 'entity_command') continue;
+      if (!event.data) throw new Error(`${moveId} entity_command requires data`);
+      const localId = string(event.data, 'entityId');
+      const entityDefinitionId = `${pack.id}:${localId}`;
+      if (!definitions.has(entityDefinitionId)) throw new Error(`${moveId} command references missing owned entity ${localId}`);
+      const command = commandKind(event.data);
+      const velocityX = optionalInteger(event.data, 'velocityX');
+      const velocityY = optionalInteger(event.data, 'velocityY');
+      if (command === 'set_velocity' && velocityX === undefined && velocityY === undefined) throw new Error(`${moveId} set_velocity requires velocityX and/or velocityY`);
+      commands.push({
+        moveId,
+        frame: event.frame,
+        entityDefinitionId,
+        command,
+        ...(velocityX !== undefined ? { velocityX: velocityX as Fixed } : {}),
+        ...(velocityY !== undefined ? { velocityY: velocityY as Fixed } : {}),
+      });
+    }
+    if (commands.length > 0) result.set(moveId, commands.sort((a,b) => a.frame - b.frame || a.entityDefinitionId.localeCompare(b.entityDefinitionId) || a.command.localeCompare(b.command)));
   }
   return result;
 }
