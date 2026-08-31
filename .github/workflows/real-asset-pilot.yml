@@ -8,6 +8,8 @@ on:
       - 'content/asset-pilots/**'
       - 'content/rig-profiles/**'
       - 'scripts/real-asset-pilot.mjs'
+      - 'scripts/animation-worklist.mjs'
+      - 'apps/asset-pilot-lab/**'
       - '.github/workflows/real-asset-pilot.yml'
 
 jobs:
@@ -19,5 +21,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install browser pilot dependencies
+        run: npm install
       - name: Verify physical Riven GLB
         run: node scripts/real-asset-pilot.mjs riven-real
+      - name: Generate animation worklist
+        run: node scripts/animation-worklist.mjs riven-real
+      - name: Build real asset pilot lab
+        run: npx vite build apps/asset-pilot-lab --outDir ../../dist-asset-pilot-lab --emptyOutDir
