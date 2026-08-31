@@ -65,7 +65,7 @@ function validateFighter(f, id) {
   assert(f.schemaVersion === 1, `${id}: schemaVersion must be 1`);
   assert(["draft","playable","certified","release"].includes(f.status), `${id}: invalid status`);
   assert(f.id === id && ID.test(f.id), `${id}: fighter id must match folder`);
-  assert(f.rigProfile === "slu-humanoid-v1", `${id}: unsupported rigProfile`);
+  assert(typeof f.rigProfile === "string" && ID.test(f.rigProfile), `${id}: invalid rigProfile`);
   assert(object(f.identity) && f.identity.displayName, `${id}: identity.displayName missing`);
   assert(object(f.attributes), `${id}: attributes missing`);
   for (const k of ["weight","hurtboxWidth","hurtboxHeight"]) assert(Number.isInteger(f.attributes[k]) && f.attributes[k] > 0, `${id}: invalid attributes.${k}`);
