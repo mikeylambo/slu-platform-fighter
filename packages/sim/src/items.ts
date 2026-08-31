@@ -26,6 +26,9 @@ export interface ItemDefinition {
 export interface ItemSpawnEntry { itemDefinitionId: string; weight: number; }
 export interface ItemSpawnTable { id: string; entries: readonly ItemSpawnEntry[]; intervalFrames: number; maxActive: number; }
 export interface ItemRules { enabled: boolean; spawnTableId: string | null; }
+export interface ItemHitEvent { type:'item-hit';itemId:string;definitionId:string;sourceId:string|null;targetId:string;damageTenths:number;knockbackX:Fixed;knockbackY:Fixed;hitlagFrames:number;hitstunFrames:number; }
+export interface ItemBlockEvent { type:'item-block';itemId:string;definitionId:string;sourceId:string|null;targetId:string;shieldDamage:number;shieldHealthAfter:number;broken:boolean; }
+export type ItemCombatEvent = ItemHitEvent | ItemBlockEvent;
 
 export function validateItemDefinition(definition: ItemDefinition): void {
   if (!definition.id || !definition.holdSocket) throw new Error('item requires id and holdSocket');
