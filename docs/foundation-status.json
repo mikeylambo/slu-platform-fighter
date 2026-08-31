@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "asOf": "2026-08-30",
   "definition": "docs/production-completion-gate.md",
-  "status": "roster-production-ready-universal-rules-in-progress",
-  "certifiedBaseline": "K0-K49 cumulative verify green at 7db00c474f912f07692dcf1b07d67f60f9397ee9",
+  "status": "roster-production-ready-universal-rules-complete",
+  "certifiedBaseline": "K0-K50 cumulative verify green at 1cdde1bba3f6ea757a3d3024ad64c12b7f8d3f16",
   "gates": {
     "rosterProductionReady": {
       "state": "ready-pending-first-real-asset-proof",
@@ -11,18 +11,18 @@
       "remaining": ["Run one actual roster character GLB/rig/clip set through fighter:autobind, fighter:audit, fighter:handoff and a playable match as final physical integration proof."]
     },
     "universalRulesComplete": {
-      "state": "in-progress",
-      "meaning": "Every optional/shared rule in docs/production-completion-gate.md is executable and certified independent of any one fighter.",
-      "remaining": ["Optional stale/rage/comeback ruleset modifiers"]
+      "state": "complete",
+      "meaning": "Every shared/optional rule tracked by docs/production-completion-gate.md is executable and certified independent of any one fighter.",
+      "evidence": ["K50 stale/rage/comeback ruleset modifiers", "binary v17 recent-move rollback history"]
     }
   },
   "areas": {
-    "deterministicKernel": {"state": "complete", "evidence": ["K0", "K8", "K9", "binary v16 snapshots", "state hashes"]},
+    "deterministicKernel": {"state": "complete", "evidence": ["K0", "K8", "K9", "binary v17 snapshots", "state hashes"]},
     "fighterLocomotion": {"state": "complete-foundation", "evidence": ["K1", "K1b", "K3 knockback", "K24", "K36"]},
-    "combatInteraction": {"state": "complete-foundation-core", "evidence": ["K2", "K2 Match", "K5", "K7", "K24", "K35", "K40 parry", "K41 weight", "K42 grab escape", "K43 move follow-ups", "K44 smash charge", "K45 simultaneous trades/clanks"], "remainingOptional": ["stale-move/rage/comeback runtime modifiers"]},
+    "combatInteraction": {"state": "complete-foundation", "evidence": ["K2", "K2 Match", "K5", "K7", "K24", "K35", "K40 parry", "K41 weight", "K42 grab escape", "K43 move follow-ups", "K44 smash charge", "K45 simultaneous trades/clanks", "K50 stale/rage/comeback modifiers"]},
     "matchLifecycle": {"state": "complete-foundation", "evidence": ["K3 lifecycle", "K17", "K18", "K20", "K28"]},
     "stageRuntime": {"state": "complete-foundation", "evidence": ["K4", "K11", "K27", "K36 walls", "K37 hazards", "K38 stage-owned actors", "Stage Lab", "stage:seed", "stage:handoff"]},
-    "entitiesAndItems": {"state": "complete-foundation", "evidence": ["K6 fighter-owned entities", "K38 stage-owned actors", "K39 authoritative item world/binary runtime", "K46 entity reflect/absorb contact hooks", "K47 compiled entity command/despawn/set-velocity/reverse execution", "K49 generic item swing/travelling combat and shield interaction"], "completedSincePrior": ["generic held-item swing damage/launch/hitlag/hitstun", "item shield block/break semantics", "moving free/thrown item collision and single-contact despawn", "semantic item hit/block presentation events"]},
+    "entitiesAndItems": {"state": "complete-foundation", "evidence": ["K6 fighter-owned entities", "K38 stage-owned actors", "K39 authoritative item world/binary runtime", "K46 entity reflect/absorb contact hooks", "K47 compiled entity command/despawn/set-velocity/reverse execution", "K49 generic item swing/travelling combat and shield interaction"]},
     "presentationAnimation": {"state": "complete-foundation", "evidence": ["K11", "K22", "K26", "semantic clank/reflect/absorb/item cues", "K33 presentation policies", "generic GLB fighter view", "85-role contract", "root-motion enforcement"]},
     "contentPipeline": {"state": "ready-pending-real-asset", "evidence": ["K12", "K23", "custom rig profiles", "bulk Blender audit", "fighter:handoff", "stage:seed", "stage:handoff"], "remaining": ["first actual roster model/rig/animation certification"]},
     "trainingLabs": {"state": "near-complete", "evidence": ["K16", "K25", "K29", "K34", "Movement Lab", "Combat Lab"], "remaining": ["direct replay playback controls inside lab UI", "visual input-remap editor polish"]},
@@ -38,11 +38,12 @@
     "parry": "Parameterized perfect-shield timing/cost/freeze/advantage executes from existing input history (K40).",
     "weightScaling": "Fighter-authored weight feeds configurable launch/hitstun scaling across melee/throw/entity launch events (K41).",
     "moveFollowUps": "Generic content follow-up windows drive jab chains, rapid/self-looping sequences and other move-to-move transitions (K43).",
-    "smashCharge": "Fighter-pack charge policy compiles into roster runtime; serialized charge releases into ordinary authored smashes with deterministic scaling (K44/binary v16).",
+    "smashCharge": "Fighter-pack charge policy compiles into roster runtime; serialized charge releases into ordinary authored smashes with deterministic scaling (K44/binary v17).",
     "clanksAndTrades": "Frame-start offensive snapshots remove iteration-order bias; hitbox canClank/clankPriority resolves mutual/priority clanks while non-clanking or ruleset-selected equal priority can trade (K45).",
     "entityInteractions": "Deterministic contact policy supports normal hit, reflection ownership transfer and absorption (K46).",
     "entityCommands": "Fighter timeline entity_command compiles and automatically executes despawn/set_velocity/reverse_velocity in production matches (K47).",
-    "items": "Authoritative item spawn/pickup/use/throw state participates in binary v16 rollback hashes (K39); generic swing/travelling damage, launch and shield interaction execute through item combat definitions (K49).",
-    "mixedRosterSoak": "Every unordered roster matchup is instantiated with real definition IDs/runtime tables; sampled seeds replay to identical canonical hashes (K48)."
+    "items": "Authoritative item spawn/pickup/use/throw state participates in binary v17 rollback hashes (K39); generic swing/travelling damage, launch and shield interaction execute through item combat definitions (K49).",
+    "mixedRosterSoak": "Every unordered roster matchup is instantiated with real definition IDs/runtime tables; sampled seeds replay to identical canonical hashes (K48).",
+    "combatModifiers": "Ruleset-owned stale history, rage scaling and stock-deficit comeback scaling execute over fighter-attributed semantic combat events; stale history is bounded and serialized in binary v17 (K50)."
   }
 }
