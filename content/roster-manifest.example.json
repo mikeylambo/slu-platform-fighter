@@ -15,20 +15,5 @@
     "rigProfile": "mixamo-humanoid-v1",
     "armature": "Armature",
     "guideSummary": "Mixamo profile example. Known semantic sockets are seeded automatically."
-  },
-  {
-    "id": "example-custom-body",
-    "displayName": "Example Custom Body",
-    "archetype": "TBD",
-    "playstyle": "TBD",
-    "rigProfile": "your-custom-profile",
-    "armature": "YourArmatureName",
-    "sockets": {
-      "hand_r": "YourRightHandBone",
-      "hand_l": "YourLeftHandBone",
-      "head": "YourHeadBone",
-      "root": "YourRootBone"
-    },
-    "guideSummary": "Create content/rig-profiles/your-custom-profile.json before using a custom body entry."
   }
 ]
