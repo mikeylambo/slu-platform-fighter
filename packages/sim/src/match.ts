@@ -10,7 +10,7 @@ import { hurtboxForFighter, movementRulesForFighter } from './fighterPhysics.js'
 import { applyDirectionalInfluence, stepHitlagSDI, stepHitstunKnockback } from './knockback.js';
 import { DEFAULT_STOCK_MATCH_RULES, stepStockLifecycle, type LifecycleEvent, type StockMatchRules } from './lifecycle.js';
 import { K1_MOVEMENT, stepFighterMovement, type MovementRules } from './movement.js';
-import { applyMoveRuntimeFrames, deriveMoveRuntime } from './moveRuntime.js';
+import { applyMoveRuntimeFrames, canCancelCurrentMove, deriveMoveRuntime } from './moveRuntime.js';
 import { createFighterState, createWorld } from './world.js';
 import type { FighterState, SimInputFrame, WorldState } from './types.js';
 
@@ -165,7 +165,11 @@ export function stepMatchWorld(
   const canonicalInputs: Record<string, SimInputFrame> = {};
   for (const fighter of state.fighters) { const input = matchInput.byFighterId[fighter.id] ?? neutralInput(state.frame); if (input.frame !== state.frame) throw new Error(`${fighter.id} input frame ${input.frame} does not match world frame ${state.frame}`); canonicalInputs[fighter.id] = input; }
   const availableAttackIds = new Set(attacks.keys());
-  const moved = [...state.fighters].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => {
+  const cancelPrepared = state.fighters.map((fighter) => {
+    const input = canonicalInputs[fighter.id] ?? neutralInput(state.frame);
+    return canCancelCurrentMove(fighter, input, moveRuntimeDefinitions) ? { ...fighter, attack: null } : fighter;
+  });
+  const moved = [...cancelPrepared].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => {
     const input = canonicalInputs[fighter.id] ?? neutralInput(state.frame); const physics = fighterPhysics.get(fighter.definitionId); const fighterRules = movementRulesForFighter(movementRules, physics);
     if (fighter.eliminated || fighter.respawnFrames > 0) return fighter; if (fighter.grabbedById !== null) return fighter; if (fighter.hitlagFrames > 0) return fighter.hitstunFrames > 0 ? stepHitlagSDI(fighter, input, fighterRules) : fighter; if (fighter.hitstunFrames > 0) return stepHitstunKnockback({ ...fighter, shielding: false }, input, state.surfaces, fighterRules);
     const movementInput = movementInputForDefense(input, fighter); let next = fighter.grabTargetId !== null ? { ...fighter, vx: fixed.zero, shielding: false, attack: null } : stepFighterMovement(fighter, movementInput, state.surfaces, state.ledges, fighterRules);
@@ -182,8 +186,32 @@ export function stepMatchWorld(
   const combatEligible = grabbed.fighters.map((fighter) => fighter.grabbedById !== null || fighter.eliminated || fighter.respawnFrames > 0 ? { ...fighter, invulnerableFrames: Math.max(1, fighter.invulnerableFrames) } : fighter);
   const canTarget = (attackerId: string, targetId: string) => interactionPolicy.canTarget(attackerId, targetId);
   const combat = stepCombatFrame(combatEligible.map((fighter) => combatantFromFighter(fighter, fighterPhysics.get(fighter.definitionId), moveRuntimeDefinitions)), attacks, undefined, canTarget);
+  const hitsByTarget = new Map<string, Extract<CombatEvent, { type: 'hit' }>>();
+  for (const event of combat.events) if (event.type === 'hit') hitsByTarget.set(event.targetId, event);
+  const armoredCombatants = combat.combatants.map((entry) => {
+    const hit = hitsByTarget.get(entry.id); if (!hit) return entry;
+    const before = grabbed.fighters.find((fighter) => fighter.id === entry.id); if (!before) return entry;
+    const armor = deriveMoveRuntime(before, moveRuntimeDefinitions).armor; if (!armor) return entry;
+    const launchMagnitude = Math.max(Math.abs(hit.knockbackX), Math.abs(hit.knockbackY)) as Fixed;
+    if (armor.launchThreshold !== null && launchMagnitude > armor.launchThreshold) return entry;
+    return {
+      ...entry,
+      percentTenths: armor.retainDamage ? entry.percentTenths : before.percentTenths,
+      vx: before.vx,
+      vy: before.vy,
+      hitstunFrames: before.hitstunFrames,
+      attack: before.attack,
+    };
+  });
   const newlyHitTargets = new Set(combat.events.filter((event): event is Extract<CombatEvent, { type: 'hit' }> => event.type === 'hit').map((event) => event.targetId));
-  const influencedCombatants = combat.combatants.map((entry) => { if (!newlyHitTargets.has(entry.id)) return entry; const influenced = applyDirectionalInfluence(entry.vx, entry.vy, canonicalInputs[entry.id] ?? neutralInput(state.frame)); return { ...entry, vx: influenced.vx, vy: influenced.vy }; });
+  const influencedCombatants = armoredCombatants.map((entry) => {
+    if (!newlyHitTargets.has(entry.id)) return entry;
+    const before = grabbed.fighters.find((fighter) => fighter.id === entry.id); const armor = before ? deriveMoveRuntime(before, moveRuntimeDefinitions).armor : null;
+    const hit = hitsByTarget.get(entry.id); const launchMagnitude = hit ? Math.max(Math.abs(hit.knockbackX), Math.abs(hit.knockbackY)) as Fixed : null;
+    const armorHeld = armor && launchMagnitude !== null && (armor.launchThreshold === null || launchMagnitude <= armor.launchThreshold);
+    if (armorHeld) return entry;
+    const influenced = applyDirectionalInfluence(entry.vx, entry.vy, canonicalInputs[entry.id] ?? neutralInput(state.frame)); return { ...entry, vx: influenced.vx, vy: influenced.vy };
+  });
   const combatById = new Map(influencedCombatants.map((entry) => [entry.id, entry] as const));
   const combatMerged = grabbed.fighters.map((fighter) => { const resolved = combatById.get(fighter.id); if (!resolved) throw new Error(`combat resolution lost fighter ${fighter.id}`); return mergeCombat(fighter, resolved); });
   const maintained = maintainGrabRelationships(combatMerged);
