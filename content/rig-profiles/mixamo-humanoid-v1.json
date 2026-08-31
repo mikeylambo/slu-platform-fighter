@@ -1,0 +1,27 @@
+{
+  "$schema": "../rig-profile.schema.json",
+  "schemaVersion": 1,
+  "id": "mixamo-humanoid-v1",
+  "rootBone": "mixamorig:Hips",
+  "requiredBones": [
+    "mixamorig:Hips",
+    "mixamorig:Spine",
+    "mixamorig:Spine2",
+    "mixamorig:Neck",
+    "mixamorig:Head",
+    "mixamorig:LeftArm",
+    "mixamorig:LeftForeArm",
+    "mixamorig:LeftHand",
+    "mixamorig:RightArm",
+    "mixamorig:RightForeArm",
+    "mixamorig:RightHand",
+    "mixamorig:LeftUpLeg",
+    "mixamorig:LeftLeg",
+    "mixamorig:LeftFoot",
+    "mixamorig:RightUpLeg",
+    "mixamorig:RightLeg",
+    "mixamorig:RightFoot"
+  ],
+  "requiredSockets": ["hand_r", "hand_l", "head", "root"],
+  "notes": "Certification/import profile for Mixamo-style humanoid rigs. Roster assets may be retargeted to slu-humanoid-v1 later; gameplay and animation semantics remain unchanged."
+}
