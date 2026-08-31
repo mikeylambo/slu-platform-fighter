@@ -30,9 +30,26 @@ export interface EntityBlockEvent {
   shieldHealthAfter: number;
   broken: boolean;
 }
+export interface EntityReflectEvent {
+  type: 'entity-reflect';
+  entityId: string;
+  definitionId: string;
+  previousOwnerId: string;
+  newOwnerId: string;
+}
+export interface EntityAbsorbEvent {
+  type: 'entity-absorb';
+  entityId: string;
+  definitionId: string;
+  previousOwnerId: string;
+  absorberId: string;
+}
 
-export type EntityEvent = EntityHitEvent | EntityBlockEvent;
+export type EntityEvent = EntityHitEvent | EntityBlockEvent | EntityReflectEvent | EntityAbsorbEvent;
 export type EntityTargetPolicy = (ownerId: string, targetId: string) => boolean;
+export type EntityContactDecision = 'hit' | 'reflect' | 'absorb';
+export type EntityContactPolicy = (entity: Readonly<OwnedEntityState>, target: Readonly<FighterState>, definition: Readonly<EntityDefinition>) => EntityContactDecision;
+export const NORMAL_ENTITY_CONTACT: EntityContactPolicy = () => 'hit';
 
 function circlesOverlap(ax: Fixed, ay: Fixed, ar: Fixed, bx: Fixed, by: Fixed, br: Fixed): boolean {
   const dx = fixed.sub(ax, bx);
@@ -111,6 +128,7 @@ export function stepOwnedEntities(
   definitions: ReadonlyMap<string, EntityDefinition>,
   inputs: Readonly<Record<string, SimInputFrame>> = {},
   canTarget: EntityTargetPolicy = () => true,
+  contactPolicy: EntityContactPolicy = NORMAL_ENTITY_CONTACT,
 ): { entities: OwnedEntityState[]; fighters: FighterState[]; events: EntityEvent[] } {
   const fighters = [...fightersInput].sort((a, b) => a.id.localeCompare(b.id)).map((fighter) => ({ ...fighter }));
   const events: EntityEvent[] = [];
@@ -130,12 +148,35 @@ export function stepOwnedEntities(
     if (entity.ageFrames >= entity.lifetimeFrames || entity.hitsRemaining <= 0) continue;
 
     let consumed = false;
+    let reflected = false;
     for (let index = 0; index < fighters.length; index += 1) {
       const target = fighters[index];
       if (!target || target.id === entity.ownerId || !canTarget(entity.ownerId, target.id) || target.eliminated || target.respawnFrames > 0 || target.invulnerableFrames > 0) continue;
       if (entity.hitTargets.includes(target.id)) continue;
       const hurtboxY = fixed.add(target.y, FIGHTER_HURTBOX_OFFSET_Y);
       if (!circlesOverlap(entity.x, entity.y, definition.radius, target.x, hurtboxY, FIGHTER_HURTBOX_RADIUS)) continue;
+
+      const decision = contactPolicy(entity, target, definition);
+      if (decision === 'reflect') {
+        const previousOwnerId = entity.ownerId;
+        const reflectedFacing: -1 | 1 = entity.facing === 1 ? -1 : 1;
+        entity = {
+          ...entity,
+          ownerId: target.id,
+          ownerDefinitionId: target.definitionId,
+          facing: reflectedFacing,
+          vx: fixed.sub(fixed.zero, entity.vx),
+          hitTargets: [],
+        };
+        events.push({ type: 'entity-reflect', entityId: entity.id, definitionId: entity.definitionId, previousOwnerId, newOwnerId: target.id });
+        reflected = true;
+        break;
+      }
+      if (decision === 'absorb') {
+        events.push({ type: 'entity-absorb', entityId: entity.id, definitionId: entity.definitionId, previousOwnerId: entity.ownerId, absorberId: target.id });
+        consumed = true;
+        break;
+      }
 
       entity = { ...entity, hitTargets: [...entity.hitTargets, target.id].sort(), hitsRemaining: entity.hitsRemaining - 1 };
       if (target.shielding && target.shieldHealth > 0) {
@@ -186,7 +227,7 @@ export function stepOwnedEntities(
       if (definition.destroyOnHit || entity.hitsRemaining <= 0) { consumed = true; break; }
     }
 
-    if (!consumed && entity.hitsRemaining > 0) survivors.push(entity);
+    if ((!consumed || reflected) && entity.hitsRemaining > 0) survivors.push(entity);
   }
 
   return { entities: survivors, fighters, events };
