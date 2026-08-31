@@ -24,7 +24,7 @@ export function createFighterState(id: string, x = fixed.fromInt(-10), facing: -
     grounded: true, groundSurfaceId: 'ground', facing, locomotion: 'idle', locomotionFrame: 0, jumpsRemaining: 1, fastFalling: false,
     dropThroughFrames: 0, jumpBufferFrames: 0, inputHistory: [], ledgeId: null, ledgeRegrabLockoutFrames: 0, invulnerableFrames: 0, dodgeCooldownFrames: 0, techBufferFrames: 0, landingLagFrames: 0,
     percentTenths: 0, hitlagFrames: 0, hitstunFrames: 0, attack: null, shielding: false, shieldHealth: DEFAULT_SHIELD_HEALTH, shieldStunFrames: 0, shieldRegenDelayFrames: 0,
-    grabTargetId: null, grabbedById: null, grabFrames: 0, grabAction: null, lastHitById: null, lastHitFrame: -1, stocks: DEFAULT_STOCKS, eliminated: false, respawnFrames: 0,
+    recentAttackIds: [], grabTargetId: null, grabbedById: null, grabFrames: 0, grabAction: null, lastHitById: null, lastHitFrame: -1, stocks: DEFAULT_STOCKS, eliminated: false, respawnFrames: 0,
   };
 }
 export function createStockMatchRuntime(participantIds: readonly string[]): MatchRuntimeState {
