@@ -3,7 +3,7 @@
   "asOf": "2026-08-30",
   "definition": "docs/production-completion-gate.md",
   "status": "roster-production-ready-universal-rules-complete",
-  "certifiedBaseline": "K0-K50 cumulative verify green at 1cdde1bba3f6ea757a3d3024ad64c12b7f8d3f16",
+  "certifiedBaseline": "K0-K51 cumulative verify green at ba04ef9cd8af1338e9b47915c7c4b790b1fde6a3",
   "gates": {
     "rosterProductionReady": {
       "state": "ready-pending-first-real-asset-proof",
@@ -25,9 +25,9 @@
     "entitiesAndItems": {"state": "complete-foundation", "evidence": ["K6 fighter-owned entities", "K38 stage-owned actors", "K39 authoritative item world/binary runtime", "K46 entity reflect/absorb contact hooks", "K47 compiled entity command/despawn/set-velocity/reverse execution", "K49 generic item swing/travelling combat and shield interaction"]},
     "presentationAnimation": {"state": "complete-foundation", "evidence": ["K11", "K22", "K26", "semantic clank/reflect/absorb/item cues", "K33 presentation policies", "generic GLB fighter view", "85-role contract", "root-motion enforcement"]},
     "contentPipeline": {"state": "ready-pending-real-asset", "evidence": ["K12", "K23", "custom rig profiles", "bulk Blender audit", "fighter:handoff", "stage:seed", "stage:handoff"], "remaining": ["first actual roster model/rig/animation certification"]},
-    "trainingLabs": {"state": "near-complete", "evidence": ["K16", "K25", "K29", "K34", "Movement Lab", "Combat Lab"], "remaining": ["direct replay playback controls inside lab UI", "visual input-remap editor polish"]},
+    "trainingLabs": {"state": "ui-integration-only", "evidence": ["K16", "K25", "K29", "K34", "K51 deterministic LabReplaySession", "K51 LabInputProfileEditor", "Movement Lab", "Combat Lab"], "remaining": ["Expose K51 replay playback controls in lab UI", "Expose K51 semantic input-remap editor in lab UI"]},
     "cpuAutomation": {"state": "complete-foundation", "evidence": ["K10", "K34", "scenario bot catalog", "K48 true unordered mixed-roster matchup soak with deterministic replay sampling", "roster:soak mixed-roster CLI"]},
-    "replayRollbackOnline": {"state": "complete-foundation", "evidence": ["K8", "K9", "K21", "K30"], "deferredPlatformIntegration": ["production lobby/matchmaking/relay/moderation service selection"]},
+    "replayRollbackOnline": {"state": "complete-foundation", "evidence": ["K8", "K9", "K21", "K30", "K51 lab-facing replay controller"], "deferredPlatformIntegration": ["production lobby/matchmaking/relay/moderation service selection"]},
     "playerShell": {"state": "complete-foundation", "evidence": ["K13", "K14", "K19", "K28", "K31", "K32", "Shell Lab", "versioned profile/accessibility/unlocks/stats"], "deferredPlatformIntegration": ["production online service UI and store/platform account surfaces"]}
   },
   "policyStatus": {
@@ -44,6 +44,7 @@
     "entityCommands": "Fighter timeline entity_command compiles and automatically executes despawn/set_velocity/reverse_velocity in production matches (K47).",
     "items": "Authoritative item spawn/pickup/use/throw state participates in binary v17 rollback hashes (K39); generic swing/travelling damage, launch and shield interaction execute through item combat definitions (K49).",
     "mixedRosterSoak": "Every unordered roster matchup is instantiated with real definition IDs/runtime tables; sampled seeds replay to identical canonical hashes (K48).",
-    "combatModifiers": "Ruleset-owned stale history, rage scaling and stock-deficit comeback scaling execute over fighter-attributed semantic combat events; stale history is bounded and serialized in binary v17 (K50)."
+    "combatModifiers": "Ruleset-owned stale history, rage scaling and stock-deficit comeback scaling execute over fighter-attributed semantic combat events; stale history is bounded and serialized in binary v17 (K50).",
+    "labTools": "Shared LabReplaySession wraps certified replay record/load/seek/step/play-to-end behavior; LabInputProfileEditor wraps certified semantic button/axis remapping and sampler compatibility (K51)."
   }
 }
