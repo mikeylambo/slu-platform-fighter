@@ -7,8 +7,9 @@ import type { SimInputFrame } from '../../packages/sim/src/types.js';
 const ASSET_URL = 'https://raw.githubusercontent.com/mikeylambo/witch-hunter-x/main/public/assets/riven-rigged.glb';
 const SIM_HZ = 60;
 const STEP_MS = 1000 / SIM_HZ;
-const hud = document.querySelector<HTMLDivElement>('#hud');
-if (!hud) throw new Error('asset pilot HUD missing');
+const hudElement = document.querySelector<HTMLDivElement>('#hud');
+if (!hudElement) throw new Error('asset pilot HUD missing');
+const hud: HTMLDivElement = hudElement;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
