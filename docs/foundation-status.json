@@ -3,7 +3,7 @@
   "asOf": "2026-08-30",
   "definition": "docs/production-completion-gate.md",
   "status": "roster-production-ready-universal-rules-in-progress",
-  "certifiedBaseline": "K0-K41 cumulative verify green at 9cb59565e33e3c065565396f0758ea5313412cd9",
+  "certifiedBaseline": "K0-K47 cumulative verify green at 63a7a03d4265904bd4db96f7dd156b81423a9c1c",
   "gates": {
     "rosterProductionReady": {
       "state": "ready-pending-first-real-asset-proof",
@@ -12,17 +12,18 @@
     },
     "universalRulesComplete": {
       "state": "in-progress",
-      "meaning": "Every optional/shared rule in docs/production-completion-gate.md is executable and certified independent of any one fighter."
+      "meaning": "Every optional/shared rule in docs/production-completion-gate.md is executable and certified independent of any one fighter.",
+      "remaining": ["Optional stale/rage/comeback ruleset modifiers", "Richer generic item combat collision/effect policies"]
     }
   },
   "areas": {
-    "deterministicKernel": {"state": "complete", "evidence": ["K0", "K8", "K9", "binary v15 snapshots", "state hashes"]},
+    "deterministicKernel": {"state": "complete", "evidence": ["K0", "K8", "K9", "binary v16 snapshots", "state hashes"]},
     "fighterLocomotion": {"state": "complete-foundation", "evidence": ["K1", "K1b", "K3 knockback", "K24", "K36"]},
-    "combatInteraction": {"state": "near-complete", "evidence": ["K2", "K2 Match", "K5", "K7", "K24", "K35", "K40", "K41"], "completedSincePrior": ["authored hurtbox mutation", "armor/super-armor", "pre-movement cancel windows", "perfect-shield/parry execution", "fighter-authored weight applied through configurable universal launch scaling"], "remaining": ["jab-chain/rapid-jab sequencing", "smash charge", "clank/trade priority", "grab escape/mash policy", "optional stale/comeback runtime modifiers"]},
+    "combatInteraction": {"state": "complete-foundation-core", "evidence": ["K2", "K2 Match", "K5", "K7", "K24", "K35", "K40 parry", "K41 weight", "K42 grab escape", "K43 move follow-ups", "K44 smash charge", "K45 simultaneous trades/clanks"], "completedSincePrior": ["content-authored jab/rapid move follow-up sequencing", "serialized smash charge and authored charge scaling", "frame-start simultaneous offense snapshots", "authored canClank/clankPriority with mutual/priority clanks and true trades", "deterministic grab mash escape"], "remainingOptional": ["stale-move/rage/comeback runtime modifiers"]},
     "matchLifecycle": {"state": "complete-foundation", "evidence": ["K3 lifecycle", "K17", "K18", "K20", "K28"]},
     "stageRuntime": {"state": "complete-foundation", "evidence": ["K4", "K11", "K27", "K36 walls", "K37 hazards", "K38 stage-owned actors", "Stage Lab", "stage:seed", "stage:handoff"]},
-    "entitiesAndItems": {"state": "near-complete", "evidence": ["K6 fighter-owned entities", "K38 stage-owned actors", "K39 authoritative item world/binary runtime"], "remaining": ["entity command/despawn breadth", "reflection/absorption", "item swing/throw collision effects beyond authoritative state/use"]},
-    "presentationAnimation": {"state": "complete-foundation", "evidence": ["K11", "K22", "K26", "K33 presentation policies", "generic GLB fighter view", "85-role contract", "root-motion enforcement"]},
+    "entitiesAndItems": {"state": "near-complete", "evidence": ["K6 fighter-owned entities", "K38 stage-owned actors", "K39 authoritative item world/binary runtime", "K46 entity reflect/absorb contact hooks", "K47 compiled entity command/despawn/set-velocity/reverse execution"], "completedSincePrior": ["reflection transfers serialized ownership and travel", "absorption consumes authoritative entity with semantic event", "fighter timeline entity_command compiles into production runtime", "despawn/set_velocity/reverse_velocity commands execute on owned instances"], "remaining": ["richer generic item swing/throw collision effects beyond authoritative spawn/pickup/use/throw state"]},
+    "presentationAnimation": {"state": "complete-foundation", "evidence": ["K11", "K22", "K26", "semantic clank/reflect/absorb cues", "K33 presentation policies", "generic GLB fighter view", "85-role contract", "root-motion enforcement"]},
     "contentPipeline": {"state": "ready-pending-real-asset", "evidence": ["K12", "K23", "custom rig profiles", "bulk Blender audit", "fighter:handoff", "stage:seed", "stage:handoff"], "remaining": ["first actual roster model/rig/animation certification"]},
     "trainingLabs": {"state": "near-complete", "evidence": ["K16", "K25", "K29", "K34", "Movement Lab", "Combat Lab"], "remaining": ["direct replay playback controls inside lab UI", "visual input-remap editor polish"]},
     "cpuAutomation": {"state": "near-complete", "evidence": ["K10", "K34", "scenario bot catalog", "roster soak orchestration"], "remaining": ["true per-matchup mixed-roster soak CLI rather than equivalent-volume universal soak"]},
@@ -36,6 +37,11 @@
     "hurtboxMutation": "Per-instance authored keyframes project into canonical combat collision without extra rollback state.",
     "parry": "Parameterized perfect-shield timing/cost/freeze/advantage executes from existing input history (K40).",
     "weightScaling": "Fighter-authored weight feeds configurable launch/hitstun scaling across melee/throw/entity launch events (K41).",
-    "items": "Authoritative item spawn/pickup/use/throw state participates in binary v15 rollback hashes (K39); combat collision effects remain."
+    "moveFollowUps": "Generic content follow-up windows drive jab chains, rapid/self-looping sequences and other move-to-move transitions (K43).",
+    "smashCharge": "Fighter-pack charge policy compiles into roster runtime; serialized charge releases into ordinary authored smashes with deterministic scaling (K44/binary v16).",
+    "clanksAndTrades": "Frame-start offensive snapshots remove iteration-order bias; hitbox canClank/clankPriority resolves mutual/priority clanks while non-clanking or ruleset-selected equal priority can trade (K45).",
+    "entityInteractions": "Deterministic contact policy supports normal hit, reflection ownership transfer and absorption (K46).",
+    "entityCommands": "Fighter timeline entity_command compiles and automatically executes despawn/set_velocity/reverse_velocity in production matches (K47).",
+    "items": "Authoritative item spawn/pickup/use/throw state participates in binary v16 rollback hashes (K39); richer generic item combat collision effects remain."
   }
 }
