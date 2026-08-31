@@ -5,7 +5,7 @@ import { constructMatchFromDescriptor } from '../../shell/src/matchFactory.js';
 import type { StartMatchDescriptor } from '../../shell/src/session.js';
 
 function assert(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(`K14 match factory certification failure: ${message}`); }
-const runtime: RosterRuntime = { fighterDefinitionIds: ['grappler', 'greybox', 'rushdown', 'zoner'], fighterPhysics: new Map(), attacks: new Map(), grabActions: new Map(), moveRuntime: new Map(), aerialLanding: new Map(), entityDefinitions: new Map(), entitySpawnsByMoveId: new Map() };
+const runtime: RosterRuntime = { fighterDefinitionIds: ['grappler', 'greybox', 'rushdown', 'zoner'], fighterPhysics: new Map(), attacks: new Map(), grabActions: new Map(), moveRuntime: new Map(), moveFollowUps: new Map(), aerialLanding: new Map(), entityDefinitions: new Map(), entitySpawnsByMoveId: new Map() };
 const stage: CompiledStageDefinition = {
   id: 'cert-stage', displayName: 'Cert Stage', surfaces: [{ id: 'ground', kind: 'solid', y: fixed.zero, xMin: fixed.fromInt(-12), xMax: fixed.fromInt(12) }], walls: [],
   ledges: [{ id: 'left', x: fixed.fromInt(-12), y: fixed.zero, inward: 1 }, { id: 'right', x: fixed.fromInt(12), y: fixed.zero, inward: -1 }],
