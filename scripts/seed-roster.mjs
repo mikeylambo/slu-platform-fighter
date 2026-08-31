@@ -12,7 +12,11 @@ const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 function fail(message) { throw new Error(message); }
 async function json(path) { return JSON.parse(await readFile(path, 'utf8')); }
 async function exists(path) { try { await access(path); return true; } catch { return false; } }
-function titleCase(id) { return id.split('-').map((part) => part ? part[0].toUpperCase() + part.slice(1) : part).join(' '); }
+
+const SOCKET_DEFAULTS = {
+  'slu-humanoid-v1': { hand_r: 'Hand.R', hand_l: 'Hand.L', head: 'Head', root: 'Root' },
+  'mixamo-humanoid-v1': { hand_r: 'mixamorig:RightHand', hand_l: 'mixamorig:LeftHand', head: 'mixamorig:Head', root: 'mixamorig:Hips' },
+};
 
 const args = process.argv.slice(2); const dryRun = args.includes('--dry-run'); const force = args.includes('--force'); const manifestArg = args.find((arg) => !arg.startsWith('--'));
 if (!manifestArg) fail('Usage: npm run roster:seed -- <manifest.json> [--dry-run] [--force]');
@@ -26,6 +30,7 @@ for (const [index, entry] of manifest.entries()) {
   if (typeof entry.displayName !== 'string' || !entry.displayName.trim()) fail(`manifest entry ${index} requires displayName`);
   const rigProfile = entry.rigProfile ?? 'slu-humanoid-v1';
   if (typeof rigProfile !== 'string' || !ID.test(rigProfile) || !availableRigProfiles.has(rigProfile)) fail(`manifest entry ${index} references unknown rig profile ${String(rigProfile)}`);
+  if (entry.sockets !== undefined && (!entry.sockets || typeof entry.sockets !== 'object' || Array.isArray(entry.sockets))) fail(`manifest entry ${index} sockets must be an object when supplied`);
 }
 
 const baselineTemplate = await json(greyboxPath); const contract = await json(contractPath); let created = 0, skipped = 0;
@@ -36,8 +41,9 @@ for (const entry of manifest) {
   fighter.identity = { displayName, archetype: typeof entry.archetype === 'string' && entry.archetype.trim() ? entry.archetype.trim() : 'TBD', playstyle: typeof entry.playstyle === 'string' && entry.playstyle.trim() ? entry.playstyle.trim() : 'TBD', guideSummary: typeof entry.guideSummary === 'string' && entry.guideSummary.trim() ? entry.guideSummary.trim() : 'Seeded from the certified Greybox gameplay envelope; replace values with character-authored design data.' };
   fighter.ownedEntities = []; fighter.provenance = { code: 'Original SLU fighter definition seeded from roster manifest', assets: [] };
   for (const move of Object.values(fighter.moves)) move.timeline = move.timeline.filter((event) => event.type !== 'entity_spawn' && event.type !== 'entity_command');
-  const render = { '$schema': '../../content/render.schema.json', schemaVersion: 1, fighterId: id, kind: '3d', model: 'assets/model.glb', armature: 'Armature', rigProfile, scale: 1, facing: 'right', materials: { primary: 'Primary', secondary: 'Secondary', accent: 'Accent', skin: 'Skin', hair: 'Hair', metal: 'Metal', energy: 'Energy' }, sockets: { hand_r: 'Hand.R', hand_l: 'Hand.L', head: 'Head', root: 'Root' }, animations: Object.fromEntries(contract.roles.map((role) => [role, { clip: '', grade: 'author_required' }])), sources: [] };
-  console.log(`${dryRun ? 'WOULD SEED' : alreadyExists ? 'RESEED' : 'SEED'} ${id} — ${displayName} | rig ${rigProfile} | ${Object.keys(fighter.moves).length} moves | ${contract.roles.length} animation roles`);
+  const sockets = entry.sockets ?? SOCKET_DEFAULTS[rigProfile] ?? {};
+  const render = { '$schema': '../../content/render.schema.json', schemaVersion: 1, fighterId: id, kind: '3d', model: 'assets/model.glb', armature: typeof entry.armature === 'string' && entry.armature ? entry.armature : 'Armature', rigProfile, scale: 1, facing: 'right', materials: { primary: 'Primary', secondary: 'Secondary', accent: 'Accent', skin: 'Skin', hair: 'Hair', metal: 'Metal', energy: 'Energy' }, sockets, animations: Object.fromEntries(contract.roles.map((role) => [role, { clip: '', grade: 'author_required' }])), sources: [] };
+  console.log(`${dryRun ? 'WOULD SEED' : alreadyExists ? 'RESEED' : 'SEED'} ${id} — ${displayName} | rig ${rigProfile} | ${Object.keys(fighter.moves).length} moves | ${contract.roles.length} animation roles | sockets ${Object.keys(sockets).length}`);
   if (!dryRun) { await mkdir(target, { recursive: true }); await writeFile(join(target, 'fighter.json'), JSON.stringify(fighter, null, 2) + '\n'); await writeFile(join(target, 'render.json'), JSON.stringify(render, null, 2) + '\n'); }
   created += 1;
 }
