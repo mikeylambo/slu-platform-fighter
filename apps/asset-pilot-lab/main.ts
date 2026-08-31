@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { fixed } from '../../packages/deterministic-math/src/fixed.js';
-import { createInitialWorld, stepWorld } from '../../packages/sim/src/world.js';
+import { createWorld, stepWorld } from '../../packages/sim/src/world.js';
 import type { SimInputFrame } from '../../packages/sim/src/types.js';
 
 const ASSET_URL = 'https://raw.githubusercontent.com/mikeylambo/witch-hunter-x/main/public/assets/riven-rigged.glb';
@@ -23,13 +23,14 @@ const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 12
 const floor = new THREE.Mesh(new THREE.BoxGeometry(28, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0x273143, roughness: 0.85 })); floor.position.y = -0.2; floor.receiveShadow = true; scene.add(floor);
 const platform = new THREE.Mesh(new THREE.BoxGeometry(7, 0.25, 4), new THREE.MeshStandardMaterial({ color: 0x5b6c86, roughness: 0.7 })); platform.position.y = 3.9; scene.add(platform);
 
-let world = createInitialWorld(0x52_49_56_45);
+let world = createWorld(0x52_49_56_45);
 let previous = structuredClone(world);
 const keys = new Set<string>();
 let jumpLatch = false;
 let accumulator = 0;
 let last = performance.now();
 let loaded = false;
+const fighterVisual = new THREE.Group(); scene.add(fighterVisual);
 let modelRoot: THREE.Object3D | null = null;
 let sourceClipNames: string[] = [];
 let sourceMaterials: string[] = [];
@@ -62,13 +63,13 @@ new GLTFLoader().loadAsync(ASSET_URL).then((gltf) => {
     else if (mat) materials.add(mat.name || '(unnamed)');
   });
   sourceMaterials = [...materials];
-  scene.add(modelRoot);
+  fighterVisual.add(modelRoot);
   loaded = true;
 }).catch((error) => { hud.textContent = `REAL ASSET LOAD FAILED\n${String(error)}`; });
 
 addEventListener('keydown', (event) => {
   if (!event.repeat && event.code === 'Space') jumpLatch = true;
-  if (!event.repeat && event.code === 'KeyR') { world = createInitialWorld(0x52_49_56_45); previous = structuredClone(world); accumulator = 0; }
+  if (!event.repeat && event.code === 'KeyR') { world = createWorld(0x52_49_56_45); previous = structuredClone(world); accumulator = 0; }
   keys.add(event.code);
 });
 addEventListener('keyup', (event) => keys.delete(event.code));
@@ -87,10 +88,10 @@ function simStep() {
 function draw(alpha: number) {
   const current = world.fighters[0];
   const old = previous.fighters[0] ?? current;
-  if (loaded && modelRoot && current && old) {
-    modelRoot.position.x = THREE.MathUtils.lerp(fixed.toNumber(old.x), fixed.toNumber(current.x), alpha);
-    modelRoot.position.y = THREE.MathUtils.lerp(fixed.toNumber(old.y), fixed.toNumber(current.y), alpha);
-    modelRoot.scale.x = Math.abs(modelRoot.scale.x) * current.facing;
+  if (loaded && current && old) {
+    fighterVisual.position.x = THREE.MathUtils.lerp(fixed.toNumber(old.x), fixed.toNumber(current.x), alpha);
+    fighterVisual.position.y = THREE.MathUtils.lerp(fixed.toNumber(old.y), fixed.toNumber(current.y), alpha);
+    fighterVisual.scale.x = current.facing;
   }
   hud.textContent = [
     'SLU PLATFORM FIGHTER — REAL ASSET PILOT',
