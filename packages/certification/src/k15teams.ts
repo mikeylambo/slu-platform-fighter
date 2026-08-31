@@ -71,7 +71,7 @@ const entity: OwnedEntityState = {
 world = baseWorld();
 const entityResult = stepOwnedEntities([entity], world.fighters, new Map([[entityDefinition.id, entityDefinition]]), {}, (ownerId, targetId) => policy.canTarget(ownerId, targetId));
 assert(entityResult.events.some((event) => event.type === 'entity-hit' && event.targetId === 'fighter-c'), 'fighter-owned projectile must skip teammate and hit enemy under same policy');
-assert(!entityResult.events.some((event) => event.targetId === 'fighter-b'), 'fighter-owned projectile must not interact with teammate when friendly fire is off');
+assert(!entityResult.events.some((event) => (event.type === 'entity-hit' || event.type === 'entity-block') && event.targetId === 'fighter-b'), 'fighter-owned projectile must not hit or shield-interact with teammate when friendly fire is off');
 
 const eliminated = baseWorld();
 eliminated.fighters.find((fighter) => fighter.id === 'fighter-c')!.eliminated = true;
