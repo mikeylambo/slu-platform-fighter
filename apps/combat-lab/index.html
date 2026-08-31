@@ -8,8 +8,9 @@
       html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090b10;color:#eef2ff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}canvas{display:block}
       #hud,#events,#lab-tools{position:fixed;top:16px;padding:12px 14px;background:rgba(8,10,16,.88);border:1px solid rgba(255,255,255,.16);border-radius:8px;line-height:1.45}
       #hud,#events{white-space:pre;pointer-events:none}#hud{left:16px}#events{right:16px;text-align:right;min-width:260px}
-      #lab-tools{right:16px;top:220px;width:300px;max-height:calc(100vh - 300px);overflow:auto;font-size:12px}#lab-tools h3{margin:0 0 8px;font-size:13px}#lab-tools h4{margin:12px 0 6px;font-size:12px;color:#aebddd}
-      .row{display:flex;gap:6px;align-items:center;margin:5px 0}.row label{min-width:72px;color:#b8c4dc}.row input{min-width:0;flex:1;background:#111723;color:#eef2ff;border:1px solid #39465d;border-radius:4px;padding:4px 6px;font:inherit}.row button,#lab-tools>button{background:#1b2536;color:#eef2ff;border:1px solid #465775;border-radius:4px;padding:5px 7px;font:inherit;cursor:pointer}.row button:hover,#lab-tools>button:hover{background:#26344b}.button-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.status{margin-top:6px;color:#9fb4d8;white-space:pre-wrap}.hint{color:#7f91b1;font-size:11px}
+      #lab-tools{right:16px;top:220px;width:320px;max-height:calc(100vh - 300px);overflow:auto;font-size:12px}#lab-tools h3{margin:0 0 8px;font-size:13px}#lab-tools h4{margin:12px 0 6px;font-size:12px;color:#aebddd}
+      .row{display:flex;gap:6px;align-items:center;margin:5px 0}.row label{min-width:72px;color:#b8c4dc}.row input,.row select{min-width:0;flex:1;background:#111723;color:#eef2ff;border:1px solid #39465d;border-radius:4px;padding:4px 6px;font:inherit}.row input[type=checkbox]{flex:0}.row input[type=number]{max-width:62px}
+      .row button,#lab-tools>button{background:#1b2536;color:#eef2ff;border:1px solid #465775;border-radius:4px;padding:5px 7px;font:inherit;cursor:pointer}.row button:hover,#lab-tools>button:hover{background:#26344b}.button-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.status{margin-top:6px;color:#9fb4d8;white-space:pre-wrap}.hint{color:#7f91b1;font-size:11px}
       #help{position:fixed;inset:auto 16px 16px 16px;padding:10px 12px;background:rgba(8,10,16,.72);border:1px solid rgba(255,255,255,.12);border-radius:8px;text-align:center;pointer-events:none}
     </style>
   </head>
@@ -17,12 +18,13 @@
     <div id="hud"></div><div id="events">NO MATCH EVENTS YET</div>
     <aside id="lab-tools">
       <h3>LAB TOOLS</h3>
-      <div class="button-grid"><button id="record">Record</button><button id="stop-record">Stop</button><button id="live">Live</button><button id="back">◀ Frame</button><button id="forward">Frame ▶</button><button id="play-end">Play End</button></div>
+      <div class="button-grid"><button id="record">Record</button><button id="stop-record">Stop</button><button id="live">Live</button><button id="back">◀ Frame</button><button id="forward">Frame ▶</button><button id="play-replay">Play</button><button id="play-end">End</button></div>
       <div class="row"><label for="seek">Seek</label><input id="seek" type="range" min="0" max="0" value="0" /></div>
       <div id="replay-status" class="status">LIVE · no tape</div>
       <h4>INPUT REMAP</h4>
       <div id="button-bindings"></div>
-      <div class="hint">Click a binding field, then press a key. Gamepad defaults remain available unless removed.</div>
+      <div id="axis-bindings"></div>
+      <div class="hint">Button fields accept comma-separated physical IDs or capture the next key. Axis rows can swap/invert/deadzone the normalized physical axes.</div>
       <button id="reset-bindings">Reset bindings</button>
       <div id="input-status" class="status"></div>
     </aside>
