@@ -1,4 +1,6 @@
 import type { Fixed } from '../../deterministic-math/src/fixed.js';
+import type { ItemState } from './types.js';
+export type { ItemState } from './types.js';
 
 export type ItemUseMode = 'swing' | 'throw' | 'consume' | 'activate';
 export interface ItemDefinition {
@@ -13,14 +15,6 @@ export interface ItemDefinition {
 export interface ItemSpawnEntry { itemDefinitionId: string; weight: number; }
 export interface ItemSpawnTable { id: string; entries: readonly ItemSpawnEntry[]; intervalFrames: number; maxActive: number; }
 export interface ItemRules { enabled: boolean; spawnTableId: string | null; }
-export interface ItemState {
-  id: string;
-  definitionId: string;
-  x: Fixed; y: Fixed; vx: Fixed; vy: Fixed;
-  holderId: string | null;
-  usesRemaining: number;
-  ageFrames: number;
-}
 
 export function validateItemDefinition(definition: ItemDefinition): void {
   if (!definition.id || !definition.holdSocket) throw new Error('item requires id and holdSocket');
