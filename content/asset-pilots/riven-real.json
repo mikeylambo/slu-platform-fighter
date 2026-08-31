@@ -8,6 +8,7 @@
     "url": "https://raw.githubusercontent.com/mikeylambo/witch-hunter-x/main/public/assets/riven-rigged.glb",
     "githubBlobSha": "c46772f47a2a5a3f39e8c182623701761214d3d3",
     "declaredSizeBytes": 4519372,
+    "sha256": "3bb70f428f06a61c1257ab27d554568d12c9a39262abac1b291c5287ccecde3f",
     "provenance": "Original SLU character asset owned by the project author; used here only as a cross-project physical pipeline proof."
   },
   "rigProfile": "mixamo-humanoid-v1",
@@ -25,6 +26,14 @@
       "mixamorig:LeftFoot",
       "mixamorig:RightFoot"
     ]
+  },
+  "observed": {
+    "glbVersion": 2,
+    "nodes": 165,
+    "meshes": 1,
+    "skins": 1,
+    "materials": ["mat0"],
+    "animations": ["mixamo.com"]
   },
   "animationStatus": "rig-proof-existing-source-clip-not-roster-complete"
 }
