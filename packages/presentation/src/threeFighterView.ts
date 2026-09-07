@@ -3,11 +3,22 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { fixed, type Fixed } from '../../deterministic-math/src/fixed.js';
 import type { CompiledRenderDefinition } from '../../content/src/compileRender.js';
 import type { AnimationIntent } from './animationResolver.js';
+import {
+  mountPlatformFighterVisual,
+  type MountedPlatformFighterVisual,
+} from './proceduralVisualRegistry.js';
 
 export interface ThreeFighterViewOptions {
   /** Optional resolver for fighter-relative model URLs in a Vite/host environment. */
   resolveModelUrl?: (definition: CompiledRenderDefinition) => string;
   loader?: GLTFLoader;
+  /**
+   * Optional presentation-only procedural overlay. Defaults to the convention
+   * fighter.<fighterId>.overlay when that key is registered. This is intended for
+   * generated weapons, armor shells, energy rigs, accessories, and other visuals;
+   * the authored GLB remains the animation/rig source of truth.
+   */
+  proceduralOverlayKey?: string | false;
 }
 
 export interface FighterPresentationPose {
@@ -26,16 +37,21 @@ export class ThreeFighterView {
   private readonly definition: CompiledRenderDefinition;
   private readonly loader: GLTFLoader;
   private readonly resolveModelUrl: (definition: CompiledRenderDefinition) => string;
+  private readonly proceduralOverlayKey: string | false;
   private mixer: THREE.AnimationMixer | null = null;
   private readonly clipsByName = new Map<string, THREE.AnimationClip>();
   private currentRole: string | null = null;
   private currentAction: THREE.AnimationAction | null = null;
   private model: THREE.Object3D | null = null;
+  private proceduralOverlay: MountedPlatformFighterVisual | null = null;
 
   constructor(definition: CompiledRenderDefinition, options: ThreeFighterViewOptions = {}) {
     this.definition = definition;
     this.loader = options.loader ?? new GLTFLoader();
     this.resolveModelUrl = options.resolveModelUrl ?? ((value) => value.model);
+    this.proceduralOverlayKey = options.proceduralOverlayKey === false
+      ? false
+      : options.proceduralOverlayKey ?? `fighter.${definition.fighterId}.overlay`;
     this.root.name = `fighter-view:${definition.fighterId}`;
   }
 
@@ -49,6 +65,14 @@ export class ThreeFighterView {
     this.clipsByName.clear();
     for (const clip of gltf.animations) this.clipsByName.set(clip.name, clip);
     this.assertDeclaredClips();
+
+    if (this.proceduralOverlayKey) {
+      this.proceduralOverlay = mountPlatformFighterVisual(
+        this.proceduralOverlayKey,
+        this.model,
+        { fighterId: this.definition.fighterId },
+      );
+    }
   }
 
   get loaded(): boolean { return this.model !== null && this.mixer !== null; }
@@ -65,6 +89,11 @@ export class ThreeFighterView {
     this.root.position.set(fixed.toNumber(pose.x), fixed.toNumber(pose.y), 0);
     const authoredSign = this.definition.authoredFacing === 'right' ? 1 : -1;
     this.root.scale.x = authoredSign * pose.facing;
+  }
+
+  /** Presentation-only animation hook for registered generated overlays. */
+  updateProceduralVisual(dt: number): void {
+    this.proceduralOverlay?.update(dt);
   }
 
   /**
@@ -99,6 +128,8 @@ export class ThreeFighterView {
   }
 
   dispose(): void {
+    this.proceduralOverlay?.dispose();
+    this.proceduralOverlay = null;
     if (this.mixer && this.model) this.mixer.uncacheRoot(this.model);
     this.root.traverse((object) => {
       const mesh = object as THREE.Mesh;
