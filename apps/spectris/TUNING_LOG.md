@@ -15,4 +15,9 @@
 | Latch keyboard action taps until the next simulation sample | Quick presses must survive between rendered frames | Browser test samples a released jump and stance tap |
 | Clear the workbench freeze when starting a session | A new exchange must run after frame stepping or replay completion | Browser restart regression |
 
+| Compile attack duration as FAF − 1 | FAF is the first actionable one-based frame; previous conversion added one recovery frame | Runtime action acceptance for all 32 moves; determinism/replay/rollback rerun |
+
 No claim of feel approval has been made. Independent role budgets and controller playtesting remain required.
+
+
+Brawl source is now imported. No other move timing or movement values changed in this pass. Version 2 replay recordings prevent silent playback under changed timing.

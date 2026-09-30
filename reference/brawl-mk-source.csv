@@ -1,0 +1,116 @@
+,Character Attributes,,,,,,,,,,,
+,"Walk
+1.22","Initial dash 
+1.75","Dash
+1.847","Traction
+0.04","Weight
+79","Jumpsquat
+4 frames",,,,,,
+,"Gravity
+0.0956","Fall speed
+1.39","Fast fall
+1.946","Air accel
+0.08","Air speed
+0.752","Meteor cancel
+32 frames",,,,,,Use the button in the Bottom left corner to easily switch between Character tabs
+,,,,,,,,,,,,
+Attacks,Hitboxes active,Intangibility/armour,FAF,Damage,Angles,BKB,WKB,KBS,Landing lag,Auto-cancel,Shield advantage,Other notes
+Normals:,,,,,,,,,,,,
+Jab ,"7, 11, 15, 20, 24, 29, etc",,12,2/1(see note),361,8,,40,,,,Loops on frame 30
+Jab (final hit),30,,41,2,361,13,,60,,,-10,
+Dash attack,5-11,,32,8/7/6,60/70/80,40,,88,,,-24,Foot is extended and exposed until frame 10.
+,,,,,,,,,,,,
+Tilts:,Hitboxes active,Intangibility/armour,FAF,Damage,Angles,BKB,WKB,KBS,Landing lag,Auto-cancel,Shield advantage,Other notes
+Forward tilt 1,3,,24,4,361/60/80,14/8,,88,,,-19,Transitions into forward tilt 2 on frame 5
+Forward tilt 2,2,,28,3,361/60/80,14/8,,88,,,-24,Transitions into forward tilt 3 on frame 4
+Forward tilt 3,2,,34,5/4,70/65/65/50,50,,113,,,-30,
+Up tilt,7 (early),,36,7,85,40,,120,,,-26,Can hit tall opponents standing under an MK on a platform
+,8-18,,,7/8/6,85,35,,145/130/120,,,-25 - -15,
+Down tilt,3-4,,16,4/5/6/7,361,15/11/6,,88,,,-11/-10,Has a 30% trip chance
+,,,,,,,,,,,,
+Smashes:,Hitboxes active,Intangibility/armour,FAF,Damage,Angles,BKB,WKB,KBS,Landing lag,Auto-cancel,Shield advantage,Other notes
+Forward Smash,24-25,,42,14,361,28,,99,,,-12,Releases on frame 4 from charge
+Up Smash,8 (hit 1),,50,3,90/115,0/30,80/40/0,100,,,-40,Releases on frame 5 from charge
+,12 (hit 2),,,2,90/115,0/20,90/30/0,100,,,-37,
+,17 (hit 3),,,4,90/70,62,,145,,,-31,
+Down Smash,5-6* (front),,35*,11,361,50,,93,,,-26,Releases on frame 4 from charge
+,10-11* (back),,,13,361,50,,90,,,-20,
+,,,,,,,,,,,,
+Aerials:,Hitboxes active,Intangibility/armour,FAF,Damage,Angles,BKB,WKB,KBS,Landing lag,Auto-cancel,Shield advantage,Other notes
+Neutral air,3-4 (clean),,32,12,361,30,,100,15,"1-2, 25+",-11,Both hits can connect
+,5-24 (late),,,7/6/5,361,20,,100,,,-13/-14,
+Forward air,6 (hit 1),,40,3,60/98/45/90,,80/5,100,15,"1-3, 22+",-14,"The hitboxes on Fair are all in the same spot, but they get progressively larger as the move continues."
+,10 (hit 2),,,3,60/98/45/90,,80/5,100,,,-14,
+,13 (hit 3),,,4,50/361,60,,122,,,-14,
+Back air,7-8 (hit 1),,48,3,80,,48/35/20,100,12,"1-6, 33+",-11,The hitbox comes out 1 frame before the model visually attacks
+,13-14 (hit 2),,,3,80,,48/35/20,100,,,-11,
+,20-21 (hit 3),,,4,361,30,,175,,,-11,
+Messed Up air,2-3,,14,6,78/60,40,,125,12,"1, 21+",-10,"You can use this move 3 times in a short hop, 4 in full...why?"
+Down air,4-5,,26,7/9,35/23,30/15,,105,15,"1-3, 24+",-13/-12,
+,,,,,,,,,,,,
+Grabs:,Hitboxes active,Intangibility/armour,FAF,Damage,Angles,BKB,WKB,KBS,Landing lag,Auto-cancel,Shield advantage,Other notes
+Grab,6-7,,30,,,,,,,,,
+Dash grab,8-9,,40,,,,,,,,,
+Pivot grab,7-8,,36,,,,,,,,,Has relevant disjoint
+Pummel,4,,24,3,,,,,,,,
+,,,,,,,,,,,,
+Throws:,Hitboxes active,Intangibility/armour,FAF,Damage,Angles,BKB,WKB,KBS,Landing lag,Auto-cancel,Shield advantage,Other notes
+Forward throw,4 (hit),,28,6,,,,,,,,
+,5 (throw),,,3,65,50,,140,,,,WI
+Back throw,16 (hit),,35,7,,,,,,,,
+,17 (throw),,,3,45,60,,140,,,,WI
+Up throw,44,,78,12,77,70,,60,,,,WI
+Down throw,"11-13, 17-19, etc",,88,1 (x9),,,,,,,,
+,73 (hit 10),,,1,,,,,,,,
+,74 (throw),,,1,50,60,,110,,,,WI
+,,,,,,,,,,,,
+Specials:,Hitboxes active,Intangibility/armour,FAF,Damage,Angles,BKB,WKB,KBS,Landing lag,Auto-cancel,Shield advantage,Other notes
+Mach Tornado (loop),12- ,,,1,90/30/150,,50/90,100/45,30,,,"The move has no hitlag and the move has low priority hitboxes which clang with ground moves and aerial moves. Without approaching from above, the move cannot be beaten without either a hitbox with transcendent priority or a disjointed hitbox which outprioritises Nado. "
+Mach Tornado (final),1-3,,30,3,70,35,,170,,,-27,
+Mach Tornado (final air),1-2,,30,3,70,35,,170,,,,
+Drill Rush (loop),26-65,,,1 (x9),365/78/70,60/100/50,,50,30,,,Has increased ledge grab box starting on frame 42
+Drill Rush (final),66-67,,,3/2,70/361,30,,130/100,,,-27/-28,
+Drill Rush (final air),66-70,,,3,361,30,,200,,Always,-27,
+Broken Loop (ground clean),8-9 (clean),5-8,,9,70/80,90,,80,,,-24,"Has stupidly long range, MK is intangible when the hitbox comes out, MK goes into a glide so most characters can't consistenly punish, etc."
+Broken Loop (ground mid),10-12 (mid),,,6,70,70,,30,,,,Screw this move
+Broken Loop (ground late),21-31 (late),,,6,110,0,,100,,,,
+Broken Loop (air clean),8-14 (clean),,,9,30,90,,60,,,,Screw this version of the move too.
+Broken Loop (air late),15-30 (late),,,5,361,30,,80,,,,
+Dimensional Cape,,18-26,62,,,,,,,,,Reappears on frame 27
+Dimensional Cape (attack),32-33,18-26,82,14,60,20,,85/95,,,-47,
+,,,,,,,,,,,,
+Dodges:,Hitboxes active,Intangibility/armour,FAF,Damage,Angles,BKB,WKB,KBS,Landing lag,Auto-cancel,Shield advantage,Other notes
+Spotdodge,,2-20,26,,,,,,,,,
+Forward roll,,5-12,24,,,,,,,,,
+Back roll,,4-12,34,,,,,,,,,
+Air dodge,,4-29,40,,,,,,,,,
+,,,,,,,,,,,,
+Ledge options:,Hitboxes active,Intangibility/armour,FAF,Damage,Angles,BKB,WKB,KBS,Landing lag,Auto-cancel,Shield advantage,Other notes
+Fast ledge getup,,1-30,35,,,,,,,,,
+Slow ledge getup (100%+),,1-55,60,,,,,,,,,
+Fast ledge roll,,1-31,50,,,,,,,,,
+Slow ledge roll ,,1-62,80,,,,,,,,,
+Fast ledge jump,,1-15,16,,,,,,,,,
+Slow ledge jump ,,1-19,20,,,,,,,,,
+Fast edge attack,25-28,1-23,56,8 (+1),361,,110,100,,,-28,
+Slow edge attack,39-42,1-42,70,10 (+1),45,,110,100,,,-27,
+,,,,,,,,,,,,
+Forward get up attack,"16-17, 26-27",1-27,50,6 (+1),361,80,,50,,,"-32, -22",
+Back get up attack,"16-17, 26-27",1-27,50,6 (+1),361,80,,50,,,"-32, -22",
+Trip attack,"19-20, 25-26",1-8,50,5 (+1),361,60,,50,,,-29,
+Glide attack,5-7,,24,12,70,30,,105,,Always, +2/0,Does not have transcendent priority unlike other sword attacks.
+Galaxia Darkness,7-12?,The whole thing,?,40,74,60,,50,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+The sacred moment when there was 4 nados on the screen. This is the only VOD of a major featuring 4 nados at once.,,,,,,,,,,,,

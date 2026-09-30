@@ -17,3 +17,10 @@
 
 - The Spectris branch now uses a standalone Vercel root deployment (`dist-spectris`), per Michael’s request. The root opens the game, and legacy `/spectris/` URLs redirect to root. Main and its deployment configuration are untouched.
 - The reported Mac failure explicitly says `GL_VENDOR = Disabled` and `BindToCurrentSequence failed`. Add a default-GPU, no-antialiasing context retry, and show actual context failures. Do not claim this resolves browser-disabled graphics or validates the user’s Mac. Built-browser tests cover normal startup, preferred-context rejection with successful fallback, and total graphics unavailability.
+
+## Brawl source import and timing review (2026-09-30)
+
+- Supersedes earlier missing-reference statements: the user supplied a readable Brawl frame-data spreadsheet. Raw CSV and schema-2 source extraction are committed with provenance and checksum. Source measurements remain separate from game design targets.
+- The check now produces a reproducible comparison of all 32 authored moves and nine movement attributes. Source import is complete; the feel gate is still pending, not falsely certified by ranges derived from the implementation.
+- Fixed a one-frame error converting first actionable frame to the PF attack duration. All moves now release after FAF minus one steps. Real simulation tests assert lockout before FAF and fresh attack acceptance on FAF.
+- Replay game version bumped to spectris-feel-v2. Existing v1 tapes deliberately fail validation instead of silently changing results. The offstage proof was re-recorded under current timing.

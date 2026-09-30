@@ -15,7 +15,7 @@ try{renderer=new Renderer(document.querySelector('#canvas')!);}catch(error){show
 let world=createSession(),previous=world,menu=true,paused=false,local=false,debug=false,dev=false,showHelp=false,accumulator=0,lastTime=performance.now(),introUntil=0,toastUntil=0;
 let dummy='still',tape:ReplayTape|null=null,playback:ReplayPlayer|null=null,playbackFrames=new Map<number,ReplayTape['frames'][number]>(),slots:(ReplayTape|null)[]=Array.from({length:5},()=>null),slot=0,recorder:ReplayRecorder;
 let simMs=0,steps=0,lastInput:SimInputFrame=neutral(0),fps=60,frameTimes:number[]=[];
-function record(){recorder=new ReplayRecorder(world,{gameVersion:'spectris-feel-v1',participantIds:IDS,stageId:'mirror-sanctum',rulesetId:'feel-lab'},120);}
+function record(){recorder=new ReplayRecorder(world,{gameVersion:'spectris-feel-v2',participantIds:IDS,stageId:'mirror-sanctum',rulesetId:'feel-lab'},120);}
 record();
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>app.querySelector<T>(s)!;
 function on(s:string,fn:()=>void){app.querySelector(s)?.addEventListener('click',fn);}
@@ -50,7 +50,7 @@ function bindDev(){if(!dev)return;
  on('#apply-tuning',()=>{const m=MOVES.get(moveSel.value)!,value=Number($<HTMLInputElement>('#startup').value);if(!Number.isInteger(value)||value<1||value>60)return toast('Startup must be an integer from 1 to 60.');const delta=value-m.strikes[0]!.start;m.strikes=m.strikes.map(s=>({...s,start:s.start+delta}));m.faf+=delta;ATTACKS.clear();for(const [id,a] of compileMoves())ATTACKS.set(id,a);slots=slots.map(()=>null);playback=null;record();toast('Applied. Replay slots cleared for the changed rules.');});
 }
 function saveReplay(){downloadJson(recorder.finish(),'spectris-exchange.json');toast('Replay exported');}
-function loadReplay(value:ReplayTape){if(value.metadata.gameVersion!=='spectris-feel-v1'||value.frames.length>216000)throw new Error('Unsupported replay or too many frames');const player=new ReplayPlayer(value,stepSession);player.playToEnd();tape=value;playback=player;world=player.seek(player.startFrame);previous=world;playbackFrames=new Map(value.frames.map(i=>[i.frame,i]));frozen=false;paused=false;menu=false;renderUi();toast('Playing verified input replay');}
+function loadReplay(value:ReplayTape){if(value.metadata.gameVersion!=='spectris-feel-v2'||value.frames.length>216000)throw new Error('Unsupported replay or too many frames');const player=new ReplayPlayer(value,stepSession);player.playToEnd();tape=value;playback=player;world=player.seek(player.startFrame);previous=world;playbackFrames=new Map(value.frames.map(i=>[i.frame,i]));frozen=false;paused=false;menu=false;renderUi();toast('Playing verified input replay');}
 function dummyInput(frame:number,p1:SimInputFrame):SimInputFrame{if(dummy==='mirror')return {...p1,moveX:-p1.moveX};if(dummy==='patrol')return {...neutral(frame),moveX:frame%180<80?-650:frame%180<160?650:0,jumpPressed:frame%100===0,jumpHeld:frame%100<30,attackPressed:frame%40===0,auxiliaryButtons:frame%240===0?1:0};return neutral(frame);}
 function tick(){previous=world;const begin=performance.now();let result;
  if(playback){const input=playbackFrames.get(world.frame);if(!input){playback=null;frozen=true;toast('Replay complete');return;}result=stepSession(world,input);}

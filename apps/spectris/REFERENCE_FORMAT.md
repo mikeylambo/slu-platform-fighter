@@ -1,9 +1,11 @@
-# Independent feel reference
+# Independent Brawl reference
 
-The build brief names `reference/brawl-mk.json` as Michael-supplied. It was absent from the attachments and repository. No substitute data has been invented.
+Michael supplied the public **Super Smash Bros. Brawl frame data directory 2.0**, Meta Knight tab (`gid=481003737`). The raw CSV is committed at `reference/brawl-mk-source.csv`. `node scripts/spectris-import-reference.mjs` produces `reference/brawl-mk.json`, schema version 2, with attribution, retrieval date, CSV checksum, original strings, source row numbers, 54 move records, and 12 attributes.
 
-The cert runner accepts schema version 1 with `source` (attribution) and `budgets`. Each budget is keyed by a compiled move ID, e.g. `wings:jab`, and contains inclusive two-number ranges for `startup`, `faf`, and `landing` in frames. There must be one entry per authored move ID, including stance variants and jab follow-ups. The ranges are role budgets; they are not assertions that Spectris frame data matches Meta Knight exactly.
+Blank cells remain unknown or not applicable, never zero. Asterisks and question marks remain visible. CSV does not include cell comments. Source labels such as “Messed Up air” are retained, with explicit mappings to Spectris move names in the comparison script. This is community frame data, not a new independent measurement.
 
-Adapt the importer if the supplied file uses another schema. Do not simply generate matching ranges from Spectris itself: that would make the reference check circular. Runtime validity and actual hits already have independent local checks.
+After compiling the game, `npm run spectris:reference` validates and compares the source with all 32 authored move entries and nine movement attributes. It writes `REFERENCE_COMPARISON.md` and `proofs/reference-comparison.json`. This report is reproducible and does not modify source or game tuning.
 
-Movement/glide feel also needs human controller playtesting before closing Step 2. Automated movement proofs establish behavior, not subjective feel.
+`npm run spectris:check` still exits 2 at the feel gate: the missing-source issue is resolved, but accepted role budgets and controller feel are not established by a data comparison. No implementation-derived ranges have been introduced to force a pass. Source timings and Spectris design choices must remain separate.
+
+Full glide physics, ambiguous source footnotes, and controller movement review remain open. The current build is still a foundation/feel build.

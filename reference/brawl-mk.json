@@ -1,0 +1,1332 @@
+{
+  "schemaVersion": 2,
+  "source": {
+    "title": "Super Smash Bros. Brawl frame data directory 2.0",
+    "sheet": "Meta Knight**",
+    "url": "https://docs.google.com/spreadsheets/d/1_5NFTe3dvxxC6MMlsI49mnC5m7D3_y5UoGZ7mxPje1I/edit?gid=481003737",
+    "retrieved": "2026-09-30",
+    "csv": "reference/brawl-mk-source.csv",
+    "sha256": "8537ac6844bf36e9f1763d4ee4ab6c14b398084a0f1e0308709e4f1fcef3683e"
+  },
+  "conventions": {
+    "frames": "Source strings use one-based move frames. FAF means the first actionable frame, not the last recovery frame.",
+    "blank": "Unknown or not applicable; never converted to zero.",
+    "footnotes": "Asterisks and question marks retained. CSV excludes cell comments; ambiguous values require the original sheet.",
+    "scope": "Community measurements, not independent remeasurement. Full glide physics are not supplied."
+  },
+  "attributes": {
+    "Walk": {
+      "value": "1.22"
+    },
+    "Initial dash": {
+      "value": "1.75"
+    },
+    "Dash": {
+      "value": "1.847"
+    },
+    "Traction": {
+      "value": "0.04"
+    },
+    "Weight": {
+      "value": "79"
+    },
+    "Jumpsquat": {
+      "value": "4 frames"
+    },
+    "Gravity": {
+      "value": "0.0956"
+    },
+    "Fall speed": {
+      "value": "1.39"
+    },
+    "Fast fall": {
+      "value": "1.946"
+    },
+    "Air accel": {
+      "value": "0.08"
+    },
+    "Air speed": {
+      "value": "0.752"
+    },
+    "Meteor cancel": {
+      "value": "32 frames"
+    }
+  },
+  "moves": {
+    "Jab": {
+      "sourceRow": 7,
+      "rows": [
+        {
+          "label": "Jab ",
+          "active": "7, 11, 15, 20, 24, 29, etc",
+          "intangibility": "",
+          "faf": "12",
+          "damage": "2/1(see note)",
+          "angles": "361",
+          "baseKnockback": "8",
+          "weightKnockback": "",
+          "knockbackScaling": "40",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "Loops on frame 30"
+        }
+      ]
+    },
+    "Jab (final hit)": {
+      "sourceRow": 8,
+      "rows": [
+        {
+          "label": "Jab (final hit)",
+          "active": "30",
+          "intangibility": "",
+          "faf": "41",
+          "damage": "2",
+          "angles": "361",
+          "baseKnockback": "13",
+          "weightKnockback": "",
+          "knockbackScaling": "60",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-10",
+          "notes": ""
+        }
+      ]
+    },
+    "Dash attack": {
+      "sourceRow": 9,
+      "rows": [
+        {
+          "label": "Dash attack",
+          "active": "5-11",
+          "intangibility": "",
+          "faf": "32",
+          "damage": "8/7/6",
+          "angles": "60/70/80",
+          "baseKnockback": "40",
+          "weightKnockback": "",
+          "knockbackScaling": "88",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-24",
+          "notes": "Foot is extended and exposed until frame 10."
+        }
+      ]
+    },
+    "Forward tilt 1": {
+      "sourceRow": 12,
+      "rows": [
+        {
+          "label": "Forward tilt 1",
+          "active": "3",
+          "intangibility": "",
+          "faf": "24",
+          "damage": "4",
+          "angles": "361/60/80",
+          "baseKnockback": "14/8",
+          "weightKnockback": "",
+          "knockbackScaling": "88",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-19",
+          "notes": "Transitions into forward tilt 2 on frame 5"
+        }
+      ]
+    },
+    "Forward tilt 2": {
+      "sourceRow": 13,
+      "rows": [
+        {
+          "label": "Forward tilt 2",
+          "active": "2",
+          "intangibility": "",
+          "faf": "28",
+          "damage": "3",
+          "angles": "361/60/80",
+          "baseKnockback": "14/8",
+          "weightKnockback": "",
+          "knockbackScaling": "88",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-24",
+          "notes": "Transitions into forward tilt 3 on frame 4"
+        }
+      ]
+    },
+    "Forward tilt 3": {
+      "sourceRow": 14,
+      "rows": [
+        {
+          "label": "Forward tilt 3",
+          "active": "2",
+          "intangibility": "",
+          "faf": "34",
+          "damage": "5/4",
+          "angles": "70/65/65/50",
+          "baseKnockback": "50",
+          "weightKnockback": "",
+          "knockbackScaling": "113",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-30",
+          "notes": ""
+        }
+      ]
+    },
+    "Up tilt": {
+      "sourceRow": 15,
+      "rows": [
+        {
+          "label": "Up tilt",
+          "active": "7 (early)",
+          "intangibility": "",
+          "faf": "36",
+          "damage": "7",
+          "angles": "85",
+          "baseKnockback": "40",
+          "weightKnockback": "",
+          "knockbackScaling": "120",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-26",
+          "notes": "Can hit tall opponents standing under an MK on a platform"
+        },
+        {
+          "label": "",
+          "active": "8-18",
+          "intangibility": "",
+          "faf": "",
+          "damage": "7/8/6",
+          "angles": "85",
+          "baseKnockback": "35",
+          "weightKnockback": "",
+          "knockbackScaling": "145/130/120",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-25 - -15",
+          "notes": ""
+        }
+      ]
+    },
+    "Down tilt": {
+      "sourceRow": 17,
+      "rows": [
+        {
+          "label": "Down tilt",
+          "active": "3-4",
+          "intangibility": "",
+          "faf": "16",
+          "damage": "4/5/6/7",
+          "angles": "361",
+          "baseKnockback": "15/11/6",
+          "weightKnockback": "",
+          "knockbackScaling": "88",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-11/-10",
+          "notes": "Has a 30% trip chance"
+        }
+      ]
+    },
+    "Forward Smash": {
+      "sourceRow": 20,
+      "rows": [
+        {
+          "label": "Forward Smash",
+          "active": "24-25",
+          "intangibility": "",
+          "faf": "42",
+          "damage": "14",
+          "angles": "361",
+          "baseKnockback": "28",
+          "weightKnockback": "",
+          "knockbackScaling": "99",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-12",
+          "notes": "Releases on frame 4 from charge"
+        }
+      ]
+    },
+    "Up Smash": {
+      "sourceRow": 21,
+      "rows": [
+        {
+          "label": "Up Smash",
+          "active": "8 (hit 1)",
+          "intangibility": "",
+          "faf": "50",
+          "damage": "3",
+          "angles": "90/115",
+          "baseKnockback": "0/30",
+          "weightKnockback": "80/40/0",
+          "knockbackScaling": "100",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-40",
+          "notes": "Releases on frame 5 from charge"
+        },
+        {
+          "label": "",
+          "active": "12 (hit 2)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "2",
+          "angles": "90/115",
+          "baseKnockback": "0/20",
+          "weightKnockback": "90/30/0",
+          "knockbackScaling": "100",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-37",
+          "notes": ""
+        },
+        {
+          "label": "",
+          "active": "17 (hit 3)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "4",
+          "angles": "90/70",
+          "baseKnockback": "62",
+          "weightKnockback": "",
+          "knockbackScaling": "145",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-31",
+          "notes": ""
+        }
+      ]
+    },
+    "Down Smash": {
+      "sourceRow": 24,
+      "rows": [
+        {
+          "label": "Down Smash",
+          "active": "5-6* (front)",
+          "intangibility": "",
+          "faf": "35*",
+          "damage": "11",
+          "angles": "361",
+          "baseKnockback": "50",
+          "weightKnockback": "",
+          "knockbackScaling": "93",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-26",
+          "notes": "Releases on frame 4 from charge"
+        },
+        {
+          "label": "",
+          "active": "10-11* (back)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "13",
+          "angles": "361",
+          "baseKnockback": "50",
+          "weightKnockback": "",
+          "knockbackScaling": "90",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-20",
+          "notes": ""
+        }
+      ]
+    },
+    "Neutral air": {
+      "sourceRow": 28,
+      "rows": [
+        {
+          "label": "Neutral air",
+          "active": "3-4 (clean)",
+          "intangibility": "",
+          "faf": "32",
+          "damage": "12",
+          "angles": "361",
+          "baseKnockback": "30",
+          "weightKnockback": "",
+          "knockbackScaling": "100",
+          "landing": "15",
+          "autocancel": "1-2, 25+",
+          "shieldAdvantage": "-11",
+          "notes": "Both hits can connect"
+        },
+        {
+          "label": "",
+          "active": "5-24 (late)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "7/6/5",
+          "angles": "361",
+          "baseKnockback": "20",
+          "weightKnockback": "",
+          "knockbackScaling": "100",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-13/-14",
+          "notes": ""
+        }
+      ]
+    },
+    "Forward air": {
+      "sourceRow": 30,
+      "rows": [
+        {
+          "label": "Forward air",
+          "active": "6 (hit 1)",
+          "intangibility": "",
+          "faf": "40",
+          "damage": "3",
+          "angles": "60/98/45/90",
+          "baseKnockback": "",
+          "weightKnockback": "80/5",
+          "knockbackScaling": "100",
+          "landing": "15",
+          "autocancel": "1-3, 22+",
+          "shieldAdvantage": "-14",
+          "notes": "The hitboxes on Fair are all in the same spot, but they get progressively larger as the move continues."
+        },
+        {
+          "label": "",
+          "active": "10 (hit 2)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "3",
+          "angles": "60/98/45/90",
+          "baseKnockback": "",
+          "weightKnockback": "80/5",
+          "knockbackScaling": "100",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-14",
+          "notes": ""
+        },
+        {
+          "label": "",
+          "active": "13 (hit 3)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "4",
+          "angles": "50/361",
+          "baseKnockback": "60",
+          "weightKnockback": "",
+          "knockbackScaling": "122",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-14",
+          "notes": ""
+        }
+      ]
+    },
+    "Back air": {
+      "sourceRow": 33,
+      "rows": [
+        {
+          "label": "Back air",
+          "active": "7-8 (hit 1)",
+          "intangibility": "",
+          "faf": "48",
+          "damage": "3",
+          "angles": "80",
+          "baseKnockback": "",
+          "weightKnockback": "48/35/20",
+          "knockbackScaling": "100",
+          "landing": "12",
+          "autocancel": "1-6, 33+",
+          "shieldAdvantage": "-11",
+          "notes": "The hitbox comes out 1 frame before the model visually attacks"
+        },
+        {
+          "label": "",
+          "active": "13-14 (hit 2)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "3",
+          "angles": "80",
+          "baseKnockback": "",
+          "weightKnockback": "48/35/20",
+          "knockbackScaling": "100",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-11",
+          "notes": ""
+        },
+        {
+          "label": "",
+          "active": "20-21 (hit 3)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "4",
+          "angles": "361",
+          "baseKnockback": "30",
+          "weightKnockback": "",
+          "knockbackScaling": "175",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-11",
+          "notes": ""
+        }
+      ]
+    },
+    "Messed Up air": {
+      "sourceRow": 36,
+      "rows": [
+        {
+          "label": "Messed Up air",
+          "active": "2-3",
+          "intangibility": "",
+          "faf": "14",
+          "damage": "6",
+          "angles": "78/60",
+          "baseKnockback": "40",
+          "weightKnockback": "",
+          "knockbackScaling": "125",
+          "landing": "12",
+          "autocancel": "1, 21+",
+          "shieldAdvantage": "-10",
+          "notes": "You can use this move 3 times in a short hop, 4 in full...why?"
+        }
+      ]
+    },
+    "Down air": {
+      "sourceRow": 37,
+      "rows": [
+        {
+          "label": "Down air",
+          "active": "4-5",
+          "intangibility": "",
+          "faf": "26",
+          "damage": "7/9",
+          "angles": "35/23",
+          "baseKnockback": "30/15",
+          "weightKnockback": "",
+          "knockbackScaling": "105",
+          "landing": "15",
+          "autocancel": "1-3, 24+",
+          "shieldAdvantage": "-13/-12",
+          "notes": ""
+        }
+      ]
+    },
+    "Grab": {
+      "sourceRow": 40,
+      "rows": [
+        {
+          "label": "Grab",
+          "active": "6-7",
+          "intangibility": "",
+          "faf": "30",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Dash grab": {
+      "sourceRow": 41,
+      "rows": [
+        {
+          "label": "Dash grab",
+          "active": "8-9",
+          "intangibility": "",
+          "faf": "40",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Pivot grab": {
+      "sourceRow": 42,
+      "rows": [
+        {
+          "label": "Pivot grab",
+          "active": "7-8",
+          "intangibility": "",
+          "faf": "36",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "Has relevant disjoint"
+        }
+      ]
+    },
+    "Pummel": {
+      "sourceRow": 43,
+      "rows": [
+        {
+          "label": "Pummel",
+          "active": "4",
+          "intangibility": "",
+          "faf": "24",
+          "damage": "3",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Forward throw": {
+      "sourceRow": 46,
+      "rows": [
+        {
+          "label": "Forward throw",
+          "active": "4 (hit)",
+          "intangibility": "",
+          "faf": "28",
+          "damage": "6",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        },
+        {
+          "label": "",
+          "active": "5 (throw)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "3",
+          "angles": "65",
+          "baseKnockback": "50",
+          "weightKnockback": "",
+          "knockbackScaling": "140",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "WI"
+        }
+      ]
+    },
+    "Back throw": {
+      "sourceRow": 48,
+      "rows": [
+        {
+          "label": "Back throw",
+          "active": "16 (hit)",
+          "intangibility": "",
+          "faf": "35",
+          "damage": "7",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        },
+        {
+          "label": "",
+          "active": "17 (throw)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "3",
+          "angles": "45",
+          "baseKnockback": "60",
+          "weightKnockback": "",
+          "knockbackScaling": "140",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "WI"
+        }
+      ]
+    },
+    "Up throw": {
+      "sourceRow": 50,
+      "rows": [
+        {
+          "label": "Up throw",
+          "active": "44",
+          "intangibility": "",
+          "faf": "78",
+          "damage": "12",
+          "angles": "77",
+          "baseKnockback": "70",
+          "weightKnockback": "",
+          "knockbackScaling": "60",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "WI"
+        }
+      ]
+    },
+    "Down throw": {
+      "sourceRow": 51,
+      "rows": [
+        {
+          "label": "Down throw",
+          "active": "11-13, 17-19, etc",
+          "intangibility": "",
+          "faf": "88",
+          "damage": "1 (x9)",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        },
+        {
+          "label": "",
+          "active": "73 (hit 10)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "1",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        },
+        {
+          "label": "",
+          "active": "74 (throw)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "1",
+          "angles": "50",
+          "baseKnockback": "60",
+          "weightKnockback": "",
+          "knockbackScaling": "110",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "WI"
+        }
+      ]
+    },
+    "Mach Tornado (loop)": {
+      "sourceRow": 56,
+      "rows": [
+        {
+          "label": "Mach Tornado (loop)",
+          "active": "12- ",
+          "intangibility": "",
+          "faf": "",
+          "damage": "1",
+          "angles": "90/30/150",
+          "baseKnockback": "",
+          "weightKnockback": "50/90",
+          "knockbackScaling": "100/45",
+          "landing": "30",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "The move has no hitlag and the move has low priority hitboxes which clang with ground moves and aerial moves. Without approaching from above, the move cannot be beaten without either a hitbox with transcendent priority or a disjointed hitbox which outprioritises Nado. "
+        }
+      ]
+    },
+    "Mach Tornado (final)": {
+      "sourceRow": 57,
+      "rows": [
+        {
+          "label": "Mach Tornado (final)",
+          "active": "1-3",
+          "intangibility": "",
+          "faf": "30",
+          "damage": "3",
+          "angles": "70",
+          "baseKnockback": "35",
+          "weightKnockback": "",
+          "knockbackScaling": "170",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-27",
+          "notes": ""
+        }
+      ]
+    },
+    "Mach Tornado (final air)": {
+      "sourceRow": 58,
+      "rows": [
+        {
+          "label": "Mach Tornado (final air)",
+          "active": "1-2",
+          "intangibility": "",
+          "faf": "30",
+          "damage": "3",
+          "angles": "70",
+          "baseKnockback": "35",
+          "weightKnockback": "",
+          "knockbackScaling": "170",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Drill Rush (loop)": {
+      "sourceRow": 59,
+      "rows": [
+        {
+          "label": "Drill Rush (loop)",
+          "active": "26-65",
+          "intangibility": "",
+          "faf": "",
+          "damage": "1 (x9)",
+          "angles": "365/78/70",
+          "baseKnockback": "60/100/50",
+          "weightKnockback": "",
+          "knockbackScaling": "50",
+          "landing": "30",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "Has increased ledge grab box starting on frame 42"
+        }
+      ]
+    },
+    "Drill Rush (final)": {
+      "sourceRow": 60,
+      "rows": [
+        {
+          "label": "Drill Rush (final)",
+          "active": "66-67",
+          "intangibility": "",
+          "faf": "",
+          "damage": "3/2",
+          "angles": "70/361",
+          "baseKnockback": "30",
+          "weightKnockback": "",
+          "knockbackScaling": "130/100",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-27/-28",
+          "notes": ""
+        }
+      ]
+    },
+    "Drill Rush (final air)": {
+      "sourceRow": 61,
+      "rows": [
+        {
+          "label": "Drill Rush (final air)",
+          "active": "66-70",
+          "intangibility": "",
+          "faf": "",
+          "damage": "3",
+          "angles": "361",
+          "baseKnockback": "30",
+          "weightKnockback": "",
+          "knockbackScaling": "200",
+          "landing": "",
+          "autocancel": "Always",
+          "shieldAdvantage": "-27",
+          "notes": ""
+        }
+      ]
+    },
+    "Broken Loop (ground clean)": {
+      "sourceRow": 62,
+      "rows": [
+        {
+          "label": "Broken Loop (ground clean)",
+          "active": "8-9 (clean)",
+          "intangibility": "5-8",
+          "faf": "",
+          "damage": "9",
+          "angles": "70/80",
+          "baseKnockback": "90",
+          "weightKnockback": "",
+          "knockbackScaling": "80",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-24",
+          "notes": "Has stupidly long range, MK is intangible when the hitbox comes out, MK goes into a glide so most characters can't consistenly punish, etc."
+        }
+      ]
+    },
+    "Broken Loop (ground mid)": {
+      "sourceRow": 63,
+      "rows": [
+        {
+          "label": "Broken Loop (ground mid)",
+          "active": "10-12 (mid)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "6",
+          "angles": "70",
+          "baseKnockback": "70",
+          "weightKnockback": "",
+          "knockbackScaling": "30",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "Screw this move"
+        }
+      ]
+    },
+    "Broken Loop (ground late)": {
+      "sourceRow": 64,
+      "rows": [
+        {
+          "label": "Broken Loop (ground late)",
+          "active": "21-31 (late)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "6",
+          "angles": "110",
+          "baseKnockback": "0",
+          "weightKnockback": "",
+          "knockbackScaling": "100",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Broken Loop (air clean)": {
+      "sourceRow": 65,
+      "rows": [
+        {
+          "label": "Broken Loop (air clean)",
+          "active": "8-14 (clean)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "9",
+          "angles": "30",
+          "baseKnockback": "90",
+          "weightKnockback": "",
+          "knockbackScaling": "60",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "Screw this version of the move too."
+        }
+      ]
+    },
+    "Broken Loop (air late)": {
+      "sourceRow": 66,
+      "rows": [
+        {
+          "label": "Broken Loop (air late)",
+          "active": "15-30 (late)",
+          "intangibility": "",
+          "faf": "",
+          "damage": "5",
+          "angles": "361",
+          "baseKnockback": "30",
+          "weightKnockback": "",
+          "knockbackScaling": "80",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Dimensional Cape": {
+      "sourceRow": 67,
+      "rows": [
+        {
+          "label": "Dimensional Cape",
+          "active": "",
+          "intangibility": "18-26",
+          "faf": "62",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": "Reappears on frame 27"
+        }
+      ]
+    },
+    "Dimensional Cape (attack)": {
+      "sourceRow": 68,
+      "rows": [
+        {
+          "label": "Dimensional Cape (attack)",
+          "active": "32-33",
+          "intangibility": "18-26",
+          "faf": "82",
+          "damage": "14",
+          "angles": "60",
+          "baseKnockback": "20",
+          "weightKnockback": "",
+          "knockbackScaling": "85/95",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-47",
+          "notes": ""
+        }
+      ]
+    },
+    "Spotdodge": {
+      "sourceRow": 71,
+      "rows": [
+        {
+          "label": "Spotdodge",
+          "active": "",
+          "intangibility": "2-20",
+          "faf": "26",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Forward roll": {
+      "sourceRow": 72,
+      "rows": [
+        {
+          "label": "Forward roll",
+          "active": "",
+          "intangibility": "5-12",
+          "faf": "24",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Back roll": {
+      "sourceRow": 73,
+      "rows": [
+        {
+          "label": "Back roll",
+          "active": "",
+          "intangibility": "4-12",
+          "faf": "34",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Air dodge": {
+      "sourceRow": 74,
+      "rows": [
+        {
+          "label": "Air dodge",
+          "active": "",
+          "intangibility": "4-29",
+          "faf": "40",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Fast ledge getup": {
+      "sourceRow": 77,
+      "rows": [
+        {
+          "label": "Fast ledge getup",
+          "active": "",
+          "intangibility": "1-30",
+          "faf": "35",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Slow ledge getup (100%+)": {
+      "sourceRow": 78,
+      "rows": [
+        {
+          "label": "Slow ledge getup (100%+)",
+          "active": "",
+          "intangibility": "1-55",
+          "faf": "60",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Fast ledge roll": {
+      "sourceRow": 79,
+      "rows": [
+        {
+          "label": "Fast ledge roll",
+          "active": "",
+          "intangibility": "1-31",
+          "faf": "50",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Slow ledge roll": {
+      "sourceRow": 80,
+      "rows": [
+        {
+          "label": "Slow ledge roll ",
+          "active": "",
+          "intangibility": "1-62",
+          "faf": "80",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Fast ledge jump": {
+      "sourceRow": 81,
+      "rows": [
+        {
+          "label": "Fast ledge jump",
+          "active": "",
+          "intangibility": "1-15",
+          "faf": "16",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Slow ledge jump": {
+      "sourceRow": 82,
+      "rows": [
+        {
+          "label": "Slow ledge jump ",
+          "active": "",
+          "intangibility": "1-19",
+          "faf": "20",
+          "damage": "",
+          "angles": "",
+          "baseKnockback": "",
+          "weightKnockback": "",
+          "knockbackScaling": "",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    },
+    "Fast edge attack": {
+      "sourceRow": 83,
+      "rows": [
+        {
+          "label": "Fast edge attack",
+          "active": "25-28",
+          "intangibility": "1-23",
+          "faf": "56",
+          "damage": "8 (+1)",
+          "angles": "361",
+          "baseKnockback": "",
+          "weightKnockback": "110",
+          "knockbackScaling": "100",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-28",
+          "notes": ""
+        }
+      ]
+    },
+    "Slow edge attack": {
+      "sourceRow": 84,
+      "rows": [
+        {
+          "label": "Slow edge attack",
+          "active": "39-42",
+          "intangibility": "1-42",
+          "faf": "70",
+          "damage": "10 (+1)",
+          "angles": "45",
+          "baseKnockback": "",
+          "weightKnockback": "110",
+          "knockbackScaling": "100",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-27",
+          "notes": ""
+        }
+      ]
+    },
+    "Forward get up attack": {
+      "sourceRow": 86,
+      "rows": [
+        {
+          "label": "Forward get up attack",
+          "active": "16-17, 26-27",
+          "intangibility": "1-27",
+          "faf": "50",
+          "damage": "6 (+1)",
+          "angles": "361",
+          "baseKnockback": "80",
+          "weightKnockback": "",
+          "knockbackScaling": "50",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-32, -22",
+          "notes": ""
+        }
+      ]
+    },
+    "Back get up attack": {
+      "sourceRow": 87,
+      "rows": [
+        {
+          "label": "Back get up attack",
+          "active": "16-17, 26-27",
+          "intangibility": "1-27",
+          "faf": "50",
+          "damage": "6 (+1)",
+          "angles": "361",
+          "baseKnockback": "80",
+          "weightKnockback": "",
+          "knockbackScaling": "50",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-32, -22",
+          "notes": ""
+        }
+      ]
+    },
+    "Trip attack": {
+      "sourceRow": 88,
+      "rows": [
+        {
+          "label": "Trip attack",
+          "active": "19-20, 25-26",
+          "intangibility": "1-8",
+          "faf": "50",
+          "damage": "5 (+1)",
+          "angles": "361",
+          "baseKnockback": "60",
+          "weightKnockback": "",
+          "knockbackScaling": "50",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "-29",
+          "notes": ""
+        }
+      ]
+    },
+    "Glide attack": {
+      "sourceRow": 89,
+      "rows": [
+        {
+          "label": "Glide attack",
+          "active": "5-7",
+          "intangibility": "",
+          "faf": "24",
+          "damage": "12",
+          "angles": "70",
+          "baseKnockback": "30",
+          "weightKnockback": "",
+          "knockbackScaling": "105",
+          "landing": "",
+          "autocancel": "Always",
+          "shieldAdvantage": " +2/0",
+          "notes": "Does not have transcendent priority unlike other sword attacks."
+        }
+      ]
+    },
+    "Galaxia Darkness": {
+      "sourceRow": 90,
+      "rows": [
+        {
+          "label": "Galaxia Darkness",
+          "active": "7-12?",
+          "intangibility": "The whole thing",
+          "faf": "?",
+          "damage": "40",
+          "angles": "74",
+          "baseKnockback": "60",
+          "weightKnockback": "",
+          "knockbackScaling": "50",
+          "landing": "",
+          "autocancel": "",
+          "shieldAdvantage": "",
+          "notes": ""
+        }
+      ]
+    }
+  }
+}

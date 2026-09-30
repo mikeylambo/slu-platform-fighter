@@ -7,20 +7,21 @@
     "One airborne switch; landing/hit/ledge refresh module",
     "Glide starts after jumps; attacking ends glide",
     "32 authored stance/move entries: valid windows and real kernel hits (GDD data only)",
+    "All 32 moves accept a fresh attack on their authored first actionable frame",
     "Triple Thrust lands three distinct hits",
-    "10,000-frame deterministic simulation: 79f0390a415742d8",
+    "10,000-frame deterministic simulation: 1a6fed2d890c4ab0",
     "Authoritative stance/glide state affects replay hashes",
     "720-frame replay serialization, seek, and round-trip",
     "Eight-frame delayed rollback including stance inputs (344 frames resimulated)",
     "Recorded offstage chase, glide, normal attack, stance switch, and recovery"
   ],
   "metrics": {
-    "simP50Ms": 0.012649000000010346,
-    "simP95Ms": 0.028804000000008045,
-    "simP99Ms": 0.10769199999998591,
-    "rollbackAdvanceP95Ms": 1.4412170000000515,
+    "simP50Ms": 0.014320999999995365,
+    "simP95Ms": 0.048471999999975424,
+    "simP99Ms": 0.22029499999999302,
+    "rollbackAdvanceP95Ms": 1.9550600000000031,
     "environment": "Linux Node.js container; not target Mac GPU validation"
   },
-  "referenceBudget": "BLOCKED: reference/brawl-mk.json missing",
+  "referenceBudget": "Source imported; see reference-comparison.json for deltas and remaining feel review",
   "fullGame": "Not implemented beyond feel gate"
 }

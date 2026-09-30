@@ -101,7 +101,8 @@
     "spectris:test": "npm run content:build && npm run build && node dist/apps/spectris/src/dev/check.js",
     "spectris:check": "npm run spectris:verify-foundation && node scripts/spectris-frame-budget.mjs",
     "spectris:lint": "node scripts/spectris-lint.mjs",
-    "spectris:verify-foundation": "npm run spectris:lint && npm run spectris:test && npm run certify:k8rollback && npm run certify:k9replay && npm run spectris:build"
+    "spectris:verify-foundation": "npm run spectris:lint && npm run spectris:test && npm run certify:k8rollback && npm run certify:k9replay && npm run spectris:build",
+    "spectris:reference": "node scripts/spectris-import-reference.mjs && node scripts/spectris-frame-budget.mjs --report-only"
   },
   "dependencies": {
     "three": "^0.185.0"
