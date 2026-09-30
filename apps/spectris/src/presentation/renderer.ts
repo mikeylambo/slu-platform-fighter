@@ -9,11 +9,12 @@ import { gameData } from '../game/session.js';
 import { PRESENTATION as P } from '../content/presentation.js';
 import { KnightView } from './knight.js';
 import { createArena,createBackdrop } from './arena.js';
+import { createGraphicsRenderer } from '../platform/graphics.js';
 export class Renderer {
  readonly renderer:T.WebGLRenderer;readonly scene=new T.Scene();readonly camera=new T.PerspectiveCamera(P.camera.fov,innerWidth/innerHeight,P.camera.near,P.camera.far);readonly knights=P.colors.map(c=>new KnightView(c));
  readonly arena=createArena();readonly composer:EffectComposer;private dust:T.Points;private particles:{mesh:T.Mesh;life:number;vx:number;vy:number}[]=[];private cursor=0;private target=new T.Vector3(0,6,0);
  constructor(host:HTMLElement){
-  this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,P.renderScale));this.renderer.setSize(innerWidth,innerHeight);this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.0;this.renderer.info.autoReset=false;host.append(this.renderer.domElement);
+  this.renderer=createGraphicsRenderer();this.renderer.setPixelRatio(Math.min(devicePixelRatio,P.renderScale));this.renderer.setSize(innerWidth,innerHeight);this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.0;this.renderer.info.autoReset=false;host.append(this.renderer.domElement);
   this.scene.background=new T.Color(P.background);this.scene.fog=new T.FogExp2(P.background,.007);
   const backdrop=createBackdrop(this.scene);this.dust=backdrop.dust;this.scene.add(this.arena);this.knights.forEach(k=>this.scene.add(k.root));
   this.camera.position.set(0,11,53);this.camera.lookAt(0,6,0);

@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "Built root URL opens Spectris title directly",
+    "Default GPU without antialiasing starts when preferred context fails",
+    "Disabled WebGL produces actionable error with actual context diagnostics"
+  ],
+  "environment": "Chromium SwiftShader; injected context failures; not user Mac verification"
+}

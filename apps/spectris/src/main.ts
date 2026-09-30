@@ -7,10 +7,11 @@ import { createSession,stepSession,gameData,neutral,IDS } from './game/session.j
 import { Renderer } from './presentation/renderer.js';
 import { SpectrisShell } from './platform/shell.js';
 import { downloadJson } from './platform/storage.js';
+import { showStartupError } from './platform/graphics.js';
 import { MOVES,ATTACKS,compileMoves } from './content/knight/moves/index.js';
 const app=document.querySelector<HTMLDivElement>('#app')!,shell=new SpectrisShell();
 let renderer:Renderer;
-try{renderer=new Renderer(document.querySelector('#canvas')!);}catch(error){app.innerHTML='<div class="error"><h1>WebGL 2 is required</h1><p>Enable hardware acceleration and reload to enter the Sanctum.</p></div>';throw error;}
+try{renderer=new Renderer(document.querySelector('#canvas')!);}catch(error){showStartupError(app,error);throw error;}
 let world=createSession(),previous=world,menu=true,paused=false,local=false,debug=false,dev=false,showHelp=false,accumulator=0,lastTime=performance.now(),introUntil=0,toastUntil=0;
 let dummy='still',tape:ReplayTape|null=null,playback:ReplayPlayer|null=null,playbackFrames=new Map<number,ReplayTape['frames'][number]>(),slots:(ReplayTape|null)[]=Array.from({length:5},()=>null),slot=0,recorder:ReplayRecorder;
 let simMs=0,steps=0,lastInput:SimInputFrame=neutral(0),fps=60,frameTimes:number[]=[];

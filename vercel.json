@@ -1,7 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run content:build && node scripts/build-vercel.mjs",
-  "outputDirectory": "dist-vercel",
+  "buildCommand": "npm run content:build && npm run spectris:build",
+  "outputDirectory": "dist-spectris",
   "framework": null,
-  "cleanUrls": true
+  "cleanUrls": true,
+  "redirects": [{ "source": "/spectris", "destination": "/", "permanent": false }, { "source": "/spectris/:path*", "destination": "/:path*", "permanent": false }]
 }

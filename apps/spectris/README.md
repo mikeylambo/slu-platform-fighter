@@ -13,7 +13,7 @@ npm run spectris:check
 
 `verify-foundation` typechecks, lints for unsafe simulation APIs, tests the actual runtime, verifies replay and rollback, and builds the app. `check` additionally requires the missing `reference/brawl-mk.json` budgets and exits nonzero until they are supplied and pass. Source the budget file independently; see `REFERENCE_FORMAT.md`.
 
-Vercel serves the game at `/spectris/`. The existing studio hub links to it. A standalone build is in `dist-spectris/` after `npm run spectris:build`.
+The Spectris branch deploys the game directly at `/`, with no lab hub. Old `/spectris/` links redirect to `/`. Vercel builds only this game into `dist-spectris/`. The shared lab build script remains available separately.
 
 ## Play
 
@@ -32,3 +32,7 @@ The workbench includes hit/hurt volumes, input/frame/hash telemetry, state setti
 ## Still required
 
 Independent Brawl role-budget file and human feel review; precise glide pitch and full per-move authoring; Steps 3–10 (Fracture/guard/grab/clash/meter, specials/Kindle, full AI/training, stages/Oaths, Gauntlet/Vigil, WebRTC, final art/audio, accessibility and performance certification). There is no full-game completion or AAA-quality claim.
+
+## Graphics startup
+
+The renderer first requests the high-performance GPU with antialiasing, then retries the default GPU without antialiasing on a fresh canvas. If both WebGL 2 context requests fail, the startup screen displays the browser’s actual failure details and recovery steps. Unrelated startup exceptions are reported separately. This cannot override browser-disabled graphics access.
