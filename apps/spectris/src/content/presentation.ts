@@ -1,0 +1,1 @@
+export const PRESENTATION = {colors:[0x71e9e0,0xe8a975],background:0x050b14,steel:0x283446,silver:0x8098ab,renderScale:1.5,bloomStrength:.24,bloomRadius:.25,bloomThreshold:1.2,particleCount:160,stars:700,wingFeathers:6,helmScale:1.25,bladeWidth:.22,hitPool:48,camera:{fov:38,near:.1,far:350},palettes:['#71e9e0','#e8a975']} as const;

@@ -5,6 +5,7 @@ export type LocomotionState =
   | 'ledge-hang' | 'air-dodge' | 'spot-dodge' | 'roll' | 'tech-in-place' | 'tech-roll' | 'knockdown' | 'grabbed' | 'respawn';
 
 export interface SimInputFrame {
+  auxiliaryButtons?: number;
   frame: number; moveX: number; moveY: number; jumpPressed: boolean; jumpHeld: boolean;
   attackPressed?: boolean; specialPressed?: boolean; grabPressed?: boolean; smashX?: number; smashY?: number;
   dodgePressed: boolean; shieldHeld: boolean;
@@ -35,6 +36,8 @@ export interface ItemState { id: string; definitionId: string; x: Fixed; y: Fixe
 export type MatchMode = 'stock' | 'time' | 'stock-time';
 export interface MatchRuntimeState { mode: MatchMode; framesRemaining: number | null; scores: Record<string, number>; suddenDeath: boolean; ended: boolean; winningTeamId: string | null; }
 export interface WorldState {
+  /** Canonical app-owned deterministic state, included in replay hashes. */
+  extensionState?: string;
   frame: number; seed: number; fighters: FighterState[]; entities?: OwnedEntityState[]; nextEntitySerial?: number; items?: ItemState[]; nextItemSerial?: number;
   surfaces: StageSurface[]; ledges: StageLedge[]; match?: MatchRuntimeState; winnerId: string | null;
 }

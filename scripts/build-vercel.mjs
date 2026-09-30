@@ -7,6 +7,7 @@ await rm(out, { recursive: true, force: true });
 
 const builds = [
   ['apps/hub', out, '/'],
+  ['apps/spectris', `${out}/spectris`, '/spectris/'],
   ['apps/combat-lab', `${out}/combat`, '/combat/'],
   ['apps/movement-lab', `${out}/movement`, '/movement/'],
   ['apps/stage-lab', `${out}/stage`, '/stage/'],

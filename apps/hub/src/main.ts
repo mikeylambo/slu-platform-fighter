@@ -2,6 +2,7 @@ const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('hub root missing');
 
 const tools = [
+  { href: '/spectris/', title: 'Spectris Duellum', desc: 'Playable Knight foundation: Wings and Cape, aerial movement, normal attacks, and replay tools in Mirror Sanctum.' },
   { href: '/combat/', title: 'Combat Lab', desc: 'Hitboxes, frame data, replay, remapping, shields, throws, items and matchup testing.' },
   { href: '/movement/', title: 'Movement Lab', desc: 'Tune deterministic movement, jumps, fastfall, ledges, dodges and platform behavior.' },
   { href: '/stage/', title: 'Stage Lab', desc: 'Author and inspect geometry, ledges, moving platforms and hazard timing.' },

@@ -1,0 +1,26 @@
+{
+  "checks": [
+    "PF fixed-point movement advances",
+    "Walking off an authored edge starts falling",
+    "Ground jump plus exactly three Wings air jumps",
+    "Unfurl locks six frames; action is available on frame seven",
+    "One airborne switch; landing/hit/ledge refresh module",
+    "Glide starts after jumps; attacking ends glide",
+    "32 authored stance/move entries: valid windows and real kernel hits (GDD data only)",
+    "Triple Thrust lands three distinct hits",
+    "10,000-frame deterministic simulation: 79f0390a415742d8",
+    "Authoritative stance/glide state affects replay hashes",
+    "720-frame replay serialization, seek, and round-trip",
+    "Eight-frame delayed rollback including stance inputs (344 frames resimulated)",
+    "Recorded offstage chase, glide, normal attack, stance switch, and recovery"
+  ],
+  "metrics": {
+    "simP50Ms": 0.012649000000010346,
+    "simP95Ms": 0.028804000000008045,
+    "simP99Ms": 0.10769199999998591,
+    "rollbackAdvanceP95Ms": 1.4412170000000515,
+    "environment": "Linux Node.js container; not target Mac GPU validation"
+  },
+  "referenceBudget": "BLOCKED: reference/brawl-mk.json missing",
+  "fullGame": "Not implemented beyond feel gate"
+}

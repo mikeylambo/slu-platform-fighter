@@ -45,7 +45,7 @@ assert(combined.state.fighters[1]!.percentTenths===104&&combined.state.fighters[
 assert(combined.state.fighters[0]!.recentAttackIds?.join(',')==='greybox:jab,greybox:jab,greybox:jab','newly-started attack must append exactly once to bounded recent-move history');
 
 const historyA=base(5005);const historyB={...historyA,fighters:historyA.fighters.map((fighter,index)=>index===0?{...fighter,recentAttackIds:['greybox:jab','greybox:forward-tilt']}:fighter)};
-assert(WORLD_BINARY_VERSION===17,'recent-move rollback state must use binary v17');
+assert(WORLD_BINARY_VERSION===18,'recent-move rollback state must use binary v17');
 assert(Buffer.from(serializeWorldState(historyA)).compare(Buffer.from(serializeWorldState(historyB)))!==0,'binary v17 must hash recent attack history differences');
 
 console.log('K50 COMBAT MODIFIERS PASS — stale history, percent-based rage and stock-deficit comeback independently and compositionally scale semantic damage/launch; bounded history is authoritative in binary v17.');

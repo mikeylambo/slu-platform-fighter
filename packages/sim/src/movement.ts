@@ -337,6 +337,14 @@ export function stepFighterMovement(
   x = fixed.add(x, vx);
   y = fixed.add(y, vy);
 
+  // Walking off an authored surface must start falling; grounded is not a floor plane.
+  if (grounded) {
+    const support = surfaces.find((surface) => surface.id === groundSurfaceId);
+    if (!support || x < support.xMin || x > support.xMax) {
+      grounded = false; groundSurfaceId = null; locomotion = 'airborne'; locomotionFrame = 0;
+    }
+  }
+
   if (!grounded && vy <= fixed.zero) {
     const landing = findLandingSurface(oldY, y, x, surfaces, dropThroughFrames > 0);
     if (landing) {

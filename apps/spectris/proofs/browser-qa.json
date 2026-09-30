@@ -1,0 +1,22 @@
+{
+  "errors": [],
+  "checks": [
+    "Title and controls render",
+    "Restart clears frozen workbench state",
+    "Keyboard movement",
+    "Keyboard stance switch",
+    "Quick keyboard jump tap survives between simulation frames",
+    "Frame advance",
+    "Slot record/playback",
+    "Two gamepads move independently",
+    "Gamepad LB stance switch",
+    "Offstage replay loads"
+  ],
+  "metrics": {
+    "fps": 5.309922475131862,
+    "simMs": 0.09999999986030161,
+    "drawCalls": 211,
+    "triangles": 16210
+  },
+  "renderer": "Chromium software SwiftShader; not a hardware performance benchmark"
+}

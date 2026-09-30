@@ -53,7 +53,8 @@ function cloneInput(input: SimInputFrame, frame = input.frame): SimInputFrame {
 
 function sameInput(a: SimInputFrame | undefined, b: SimInputFrame): boolean {
   if (!a) return false;
-  return a.frame === b.frame
+  return (a.auxiliaryButtons ?? 0) === (b.auxiliaryButtons ?? 0)
+    && a.frame === b.frame
     && a.moveX === b.moveX && a.moveY === b.moveY
     && a.jumpPressed === b.jumpPressed && a.jumpHeld === b.jumpHeld
     && Boolean(a.attackPressed) === Boolean(b.attackPressed)

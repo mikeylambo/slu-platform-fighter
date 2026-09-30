@@ -1,0 +1,1 @@
+{"name":"@slu/spectris","private":true,"type":"module","scripts":{"dev":"vite --host 0.0.0.0","build":"vite build --base=./","test":"cd ../.. && npm run spectris:test","check":"cd ../.. && npm run spectris:check"}}
