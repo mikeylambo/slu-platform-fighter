@@ -103,7 +103,9 @@
     "spectris:lint": "node scripts/spectris-lint.mjs",
     "spectris:verify-foundation": "npm run spectris:lint && npm run spectris:test && npm run certify:k8rollback && npm run certify:k9replay && npm run spectris:build",
     "spectris:reference": "node scripts/spectris-import-reference.mjs && node scripts/spectris-frame-budget.mjs --report-only",
-    "spectris:soak": "npm run build && node dist/apps/spectris/src/dev/soak.js 1000"
+    "spectris:soak": "npm run build && node dist/apps/spectris/src/dev/soak.js 1000",
+    "spectris:golden": "node dist/apps/spectris/src/dev/golden.js",
+    "spectris:golden:record": "npm run build && node dist/apps/spectris/src/dev/golden.js --record"
   },
   "dependencies": {
     "three": "^0.185.0"
