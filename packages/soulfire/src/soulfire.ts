@@ -85,6 +85,10 @@ export function tickSoulfire<Context>(
     remaining: Math.max(0, state.remaining - 1),
     activating: Math.max(0, state.activating - 1),
   };
+  if (state.remaining > 0 && next.remaining === 0) {
+    // The free flash belongs to one ignition; it does not outlive the buff.
+    next.freeFlash = false;
+  }
   if (state.remaining === 1 && context !== undefined) {
     pack?.hooks?.onEnd?.(context);
   }

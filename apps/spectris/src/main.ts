@@ -1,114 +1,1014 @@
 import './style.css';
-import {REPLAY_VERSION} from './content/version.js';
+import { DEFAULT_FEEL, FEEL, type FeelSettings, type TractionPreset } from './content/knight/physics.js';
+import { REPLAY_VERSION } from './content/version.js';
 import { fixed as f } from '../../../packages/deterministic-math/src/fixed.js';
 import { hashWorldState } from '../../../packages/sim/src/stateHash.js';
 import { ReplayRecorder, ReplayPlayer, type ReplayTape } from '../../../packages/sim/src/replay.js';
-import type { WorldState,SimInputFrame } from '../../../packages/sim/src/types.js';
-import { gameData,neutral,IDS } from './game/session.js';
+import type { WorldState, SimInputFrame } from '../../../packages/sim/src/types.js';
+import { gameData, neutral, IDS } from './game/session.js';
 import { Renderer } from './presentation/renderer.js';
 import { SpectrisShell } from './platform/shell.js';
 import { downloadJson } from './platform/storage.js';
 import { showStartupError } from './platform/graphics.js';
-import { MOVES,ATTACKS,compileMoves } from './content/knight/moves/index.js';
-import {createDuel,stepDuel,duelData,DEFAULT_DUEL,type DuelOptions} from './game/duel.js';
-import {STAGES,stageById} from './content/stages/roster.js';
-import {OATHS,type Oath} from './content/rules/duel.js';
-import {OnlineDuel} from './platform/online.js';
-import {readProgress,readSettings,persist} from './platform/progress.js';
-let counterpickStage:number|null=null,counterpickRound=0,vigilOffstage=false,vigilBlade=false;
-let online:OnlineDuel|null=null;
-let options:DuelOptions={...DEFAULT_DUEL},screen:'title'|'setup'|'gauntlet'|'options'='title',mode='versus',difficulty='Knight',cleared:Oath[]=[],currentOath:Oath='ember',resultShown=false,vigil=-1,vigilStart=0,replaySpeed=1;
-const progress=readProgress(),settings=readSettings();
-const app=document.querySelector<HTMLDivElement>('#app')!,shell=new SpectrisShell();
-let renderer:Renderer;
-try{renderer=new Renderer(document.querySelector('#canvas')!);}catch(error){showStartupError(app,error);throw error;}
-let world=createDuel(options),previous=world,menu=true,paused=false,local=false,debug=false,dev=false,showHelp=false,accumulator=0,lastTime=performance.now(),introUntil=0,toastUntil=0;
-let dummyRecord=false,dummyPlay=false,dummyCursor=0,dummyRecording:SimInputFrame[]=[],dummySlots:SimInputFrame[][]=Array.from({length:5},()=>[]),stanceLock='free';
-let dummy='still',tape:ReplayTape|null=null,playback:ReplayPlayer|null=null,playbackFrames=new Map<number,ReplayTape['frames'][number]>(),slots:(ReplayTape|null)[]=Array.from({length:5},()=>null),slot=0,recorder:ReplayRecorder;
-let menuPadHeld=false;
-let simMs=0,steps=0,lastInput:SimInputFrame=neutral(0),fps=60,frameTimes:number[]=[];
-function record(){recorder=new ReplayRecorder(world,{gameVersion:REPLAY_VERSION,participantIds:IDS,stageId:options.stage,rulesetId:options.format},120);}
-shell.input.remap(settings.bindings);record();
-const $=<T extends HTMLElement=HTMLElement>(s:string)=>app.querySelector<T>(s)!;
-function on(s:string,fn:()=>void){app.querySelector(s)?.addEventListener('click',fn);}
-function toast(text:string){let el=app.querySelector('.toast');if(!el){el=document.createElement('div');el.className='toast';app.append(el);}el.textContent=text;toastUntil=performance.now()+3000;}
-function start(two=false){renderer.freeCamera=false;counterpickStage=null;counterpickRound=0;vigilOffstage=false;vigilBlade=false;if(!online)options.buffer=settings.buffer;local=two;resultShown=false;menu=false;paused=false;frozen=false;showHelp=false;playback=null;shell.input.clear();world=createDuel(options);previous=world;record();shell.begin(two);shell.audio.cue('voice:start-01');introUntil=performance.now()+2200;accumulator=0;renderUi();}
-function title(){online?.close();online=null;screen='title';vigil=-1;menu=true;paused=false;dev=false;playback=null;shell.openTitle();shell.input.clear();renderUi();}
-function controls(){return `<div class="modal-shade"><section class="modal"><button class="close" id="close-help" aria-label="Close controls">×</button><div class="eyebrow">The first exchange</div><h2>One blade. Two ways to fight.</h2><p>Wings extend your aerial reach. Cape trades speed for weight. Switch in the air once; landing, catching a ledge, or being hit refreshes the switch.</p><table class="controls"><thead><tr><th>ACTION</th><th>KEYBOARD P1</th><th>CONTROLLER</th></tr></thead><tbody><tr><td>Move / aim attack</td><td>W A S D</td><td>Left stick</td></tr><tr><td>Jump / air jump</td><td>Space</td><td>X / Y</td></tr><tr><td>Normal attack</td><td>J + direction</td><td>A + direction</td></tr><tr><td>Smash attack</td><td>Shift + direction + J</td><td>Right stick</td></tr><tr><td>Special / charge</td><td>K + direction</td><td>B + direction</td></tr><tr><td>Guard / evade</td><td>L</td><td>RT</td></tr><tr><td>Grab / pummel / throw</td><td>U / J / direction</td><td>RB / A / stick</td></tr><tr><td>Switch stance</td><td>I</td><td>LB</td></tr><tr><td>Glide</td><td>Hold Space after final air jump</td><td>Hold X / Y</td></tr><tr><td>Drop through platform</td><td>S</td><td>Stick down</td></tr><tr><td>Pause / frame tools</td><td>Esc / Tab</td><td>Keyboard</td></tr></tbody></table><p>P2: arrow keys, Numpad 0 to jump, Numpad 1 to attack, Numpad 5 to switch. A second controller also works.</p><p class="note">Fracture the reflection four times to take a round. At 100 Strain, Shatter moves break a Fracture immediately. Cape guards toward the opponent; its first four frames parry. Wings evades instead. J + K feints for 25 meter; K + L ignites Kindle at full meter. I + L spends 25 meter for an instant stance switch.</p><button class="primary" id="close-help-bottom">RETURN <span>↗</span></button></section></div>`;}
-function renderUi(){
- if(menu){app.innerHTML=`<header class="topline"><div class="brand"><span class="sigil">♜</span> SOULFIRE LEGENDS</div><span class="build">DUEL BUILD · 003</span></header><div class="corner-line"></div><main class="hero"><div class="eyebrow">A duel with your reflection</div><h1>SPECTRIS<span>DUELLUM</span></h1><div class="divider"></div><p class="tagline">Face the knight who knows<br>every move you know.</p><nav class="menu"><button class="primary" id="versus">ENTER THE DUEL <span>↗</span></button><div class="menu-grid"><button class="menu-secondary" id="gauntlet">Fracture Gauntlet <span>SOLO</span></button><button class="menu-secondary" id="momentum">Pilgrimage <span>MOMENTUM</span></button><button class="menu-secondary" id="practice">Training <span>SANCTUM</span></button><button class="menu-secondary" id="vigil">The Vigil <span>LEARN</span></button><button class="menu-secondary" id="online">Direct online <span>1v1</span></button><button class="menu-secondary" id="options">Options</button><button class="menu-secondary" id="controls">Controls</button></div></nav></main><div class="knight-label">An empty helm. An unbroken will.<small>THE UNSWORN KNIGHT</small></div><footer class="title-bottom"><div class="caption">ONE KNIGHT. TWO STANCES.<br><span class="title-mark">EVERY DECISION LEAVES A CRACK.</span></div><div id="connection">KEYBOARD + CONTROLLER</div><div>SLU / 001</div></footer>${screen!=='title'?menuPanel():''}${showHelp?controls():''}`;
-  on('#online',onlinePanel);on('#versus',()=>setup('versus'));on('#momentum',()=>setup('momentum'));on('#practice',()=>setup('training'));on('#gauntlet',()=>{mode='gauntlet';screen='gauntlet';cleared=[];renderUi();});on('#options',()=>{screen='options';renderUi();});on('#vigil',()=>{mode='vigil';options={...DEFAULT_DUEL,format:'training',cpu:[0,0]};vigil=0;start();vigilStart=world.frame;});bindMenu();on('#controls',()=>{showHelp=true;renderUi();});
- }else{
- app.innerHTML=`<div class="hud">${hud(0)}<div class="hud-center"><span id="round-label">ROUND 1</span><b id="clock">6:00</b><small id="score">${options.oaths.every(o=>o==='unsworn')?'TRUE MIRROR':'OATH DUEL'}</small></div>${hud(1)}</div><div class="announcement" id="intro">IGNITE<small>MEET YOUR REFLECTION</small></div><div class="arena-label">${stageById(options.stage).name}<small>${mode.toUpperCase()} · ${local?'LOCAL DUEL':options.cpu[1]?`CPU ${options.cpu[1]}`:'TRAINING'}</small></div><div id="duel-message" class="duel-message"></div>${vigil>=0?'<div id="vigil-prompt" class="vigil-prompt"></div>':''}<div class="bottom-bar"><div class="key-hints"><span><kbd>WASD</kbd> Move</span><span><kbd>Space</kbd> Jump</span><span><kbd>J</kbd> Strike</span><span><kbd>I</kbd> Stance</span></div><div><button id="tools">${dev?'Hide':'Show'} tools · Tab</button> <button id="help">Controls</button> <button id="pause">${paused?'Resume':'Pause'} · Esc</button></div></div>${dev?devUi():''}${paused&&!showHelp?`<div class="modal-shade"><div class="modal" style="max-width:440px"><div class="eyebrow">A moment of stillness</div><div class="pause-title">The flame waits.</div><p>Your exchange is paused.</p><button class="primary" id="resume">RESUME <span>↗</span></button><button class="menu-secondary" id="restart">Reset the Sanctum</button><button class="menu-secondary" id="save-pause">Save input replay</button><button class="menu-secondary" id="leave">Return to title</button></div></div>`:''}${showHelp?controls():''}<input class="replay-file" id="file" type="file" accept=".json">`;
- on('#tools',()=>{dev=!dev;renderUi();});on('#help',()=>{showHelp=true;paused=true;renderUi();});on('#pause',togglePause);on('#resume',togglePause);on('#restart',()=>start(local));on('#leave',title);on('#save-pause',saveReplay);bindDev();
- }
- on('#close-help',closeHelp);on('#close-help-bottom',closeHelp);
+import { MOVES, ATTACKS, compileMoves } from './content/knight/moves/index.js';
+import { createDuel, stepDuel, duelData, DEFAULT_DUEL, type DuelOptions } from './game/duel.js';
+import { STAGES, stageById } from './content/stages/roster.js';
+import { OATHS, type Oath } from './content/rules/duel.js';
+import { OnlineDuel } from './platform/online.js';
+import { readProgress, readSettings, persist } from './platform/progress.js';
+let counterpickStage: number | null = null,
+  counterpickRound = 0,
+  vigilOffstage = false,
+  vigilBlade = false;
+let online: OnlineDuel | null = null;
+let options: DuelOptions = { ...DEFAULT_DUEL },
+  screen: 'title' | 'setup' | 'gauntlet' | 'options' = 'title',
+  mode = 'versus',
+  difficulty = 'Knight',
+  cleared: Oath[] = [],
+  currentOath: Oath = 'ember',
+  resultShown = false,
+  vigil = -1,
+  vigilStart = 0,
+  replaySpeed = 1;
+const progress = readProgress(),
+  settings = readSettings();
+const app = document.querySelector<HTMLDivElement>('#app')!,
+  shell = new SpectrisShell();
+let renderer: Renderer;
+try {
+  renderer = new Renderer(document.querySelector('#canvas')!);
+} catch (error) {
+  showStartupError(app, error);
+  throw error;
 }
-function closeHelp(){showHelp=false;if(!menu)paused=false;renderUi();}
-function togglePause(){if(online){toast('Online matches cannot be paused. Escape closes controls.');return;}paused=!paused;accumulator=0;shell.input.clear();renderUi();}
-function hud(i:number){return `<div class="fighter-hud ${i?'right':''}" style="color:${i?'#e8a975':'#8ce2da'}"><div class="helm-icon"></div><div><h3>${i?'The Reflection':'The Unsworn'}</h3><div class="sub" id="stance-${i}">P${i+1} / WINGS</div><div class="strain" id="strain-${i}">0<small>STRAIN</small></div><div class="fractures" id="lives-${i}"></div><div class="meter"><i id="meter-${i}"></i></div><div class="integrity"><i id="integrity-${i}"></i></div><div class="air-pips" id="jumps-${i}"></div></div></div>`;}
-function devUi(){return `<aside class="dev"><h3>TRAINING WORKBENCH</h3><label>Reflection<select id="dummy"><option value="cpu">CPU from rules</option><option value="still">Stationary</option><option value="mirror">Mirror inputs</option><option value="patrol">Movement drill</option></select></label><label>Hit / hurt volumes<input type="checkbox" id="boxes" ${debug?'checked':''}></label><label>Free camera<input type="checkbox" id="free-camera" ${renderer.freeCamera?'checked':''}></label><label>Sound<input type="checkbox" id="sound" ${shell.audio.enabled?'checked':''}></label><button id="reset">Reset</button><button id="freeze">Freeze</button><button id="advance">+1 frame</button><button id="thaw">Run</button><label>P2 Strain<input id="strain-set" type="number" min="0" max="999" value="${world.fighters[1]!.percentTenths/10}"></label><label>P1 meter<input id="meter-set" type="number" min="0" max="100" value="${(duelData(world)?.knights[IDS[0]]?.meter??0)/100}"></label><label>Playback speed<select id="speed"><option value="0.25">¼×</option><option value="0.5">½×</option><option value="1">1×</option><option value="2">2×</option></select></label><label>Stance lock<select id="stance-lock"><option value="free">Free</option><option value="wings">Wings</option><option value="cape">Cape</option></select></label><button id="dummy-record">Record P2 inputs</button><button id="dummy-stop">Store dummy slot</button><button id="dummy-play">Loop dummy slot</button><hr><h3>INPUT REPLAY</h3><label>Slot<select id="slot">${slots.map((v,i)=>`<option value="${i}">${i+1} · ${v?'Recorded':'Empty'}</option>`).join('')}</select></label><button id="record">New recording</button><button id="store">Store slot</button><button id="play">Play slot</button><button id="save">Export JSON</button><button id="load">Load JSON</button><hr><h3>MOVE TUNING · SESSION ONLY</h3><label>Move<select id="move-select">${[...MOVES].map(([id,m])=>`<option value="${id}">${id.startsWith('wings')?'W':'C'} · ${m.name}</option>`).join('')}</select></label><label>First startup<input id="startup" type="number" min="1" max="60" value="2"></label><button id="apply-tuning">Apply & restart recording</button><p style="color:#678b91;font-size:9px">Tuning invalidates earlier replay slots. Source defaults reload on refresh.</p><pre id="telemetry"></pre></aside>`;}
-let frozen=false;
-function bindDev(){if(!dev)return;
- const stance=$<HTMLSelectElement>('#stance-lock');stance.value=stanceLock;stance.onchange=()=>{stanceLock=stance.value;const d=duelData(world)!;d.options.stanceLock=stanceLock as 'free'|'wings'|'cape';world.extensionState=JSON.stringify({...gameData(world),duel:d});record();};on('#dummy-record',()=>{dummyRecord=true;dummyPlay=false;dummyRecording=[];toast('Recording P2 keyboard/controller inputs');});on('#dummy-stop',()=>{dummyRecord=false;dummySlots[slot]=dummyRecording;toast(`Dummy slot ${slot+1}: ${dummyRecording.length} frames`);});on('#dummy-play',()=>{dummyPlay=dummySlots[slot]!.length>0;dummyCursor=0;const d=duelData(world)!;d.options.cpu[1]=0;world.extensionState=JSON.stringify({...gameData(world),duel:d});toast(dummyPlay?'Dummy playback looping':'Record a dummy slot first');});
- const meter=$<HTMLInputElement>('#meter-set');meter.onchange=()=>{const d=duelData(world)!;d.knights[IDS[0]]!.meter=Math.round(Math.max(0,Math.min(100,Number(meter.value)||0))*100);world.extensionState=JSON.stringify({...gameData(world),duel:d});record();};
- const speed=$<HTMLSelectElement>('#speed');speed.value=String(replaySpeed);speed.onchange=()=>replaySpeed=Number(speed.value);
- const d=$<HTMLSelectElement>('#dummy');d.value=dummy;d.onchange=()=>{dummy=d.value;const data=duelData(world)!;data.options.cpu[1]=dummy==='cpu'?options.cpu[1]||5:0;world.extensionState=JSON.stringify({...gameData(world),duel:data});record();};
- $<HTMLInputElement>('#boxes').onchange=e=>debug=(e.target as HTMLInputElement).checked;
- $<HTMLInputElement>('#free-camera').onchange=e=>renderer.freeCamera=(e.target as HTMLInputElement).checked;
- $<HTMLInputElement>('#sound').onchange=e=>shell.audio.enabled=(e.target as HTMLInputElement).checked;
- on('#reset',()=>{world=createDuel(options);previous=world;playback=null;record();});on('#freeze',()=>frozen=true);on('#thaw',()=>frozen=false);on('#advance',()=>{frozen=true;tick();previous=world;});
- $<HTMLInputElement>('#strain-set').onchange=e=>{const value=Number((e.target as HTMLInputElement).value);if(!Number.isFinite(value))return;world=structuredClone(world);world.fighters[1]!.percentTenths=Math.round(Math.max(0,Math.min(999,value))*10);previous=world;record();};
- const sel=$<HTMLSelectElement>('#slot');sel.value=String(slot);sel.onchange=()=>slot=Number(sel.value);
- on('#record',()=>{playback=null;record();toast('Recording from the current state');});on('#store',()=>{slots[slot]=recorder.finish();renderUi();toast(`Stored slot ${slot+1}`);});on('#play',()=>{if(slots[slot])loadReplay(slots[slot]!);else toast('This slot is empty. Store an exchange first.');});on('#save',saveReplay);
- on('#load',()=>$<HTMLInputElement>('#file').click());$<HTMLInputElement>('#file').onchange=async e=>{const file=(e.target as HTMLInputElement).files?.[0];if(file)try{loadReplay(JSON.parse(await file.text()) as ReplayTape);}catch(error){toast(`Replay rejected: ${String(error).slice(0,90)}`);}};
- const moveSel=$<HTMLSelectElement>('#move-select');moveSel.onchange=()=>$<HTMLInputElement>('#startup').value=String(MOVES.get(moveSel.value)!.strikes[0]!.start);
- on('#apply-tuning',()=>{const m=MOVES.get(moveSel.value)!,value=Number($<HTMLInputElement>('#startup').value);if(!Number.isInteger(value)||value<1||value>60)return toast('Startup must be an integer from 1 to 60.');const delta=value-m.strikes[0]!.start;m.strikes=m.strikes.map(s=>({...s,start:s.start+delta}));m.faf+=delta;ATTACKS.clear();for(const [id,a] of compileMoves())ATTACKS.set(id,a);slots=slots.map(()=>null);playback=null;record();toast('Applied. Replay slots cleared for the changed rules.');});
+let world = createDuel(options),
+  previous = world,
+  menu = true,
+  paused = false,
+  local = false,
+  debug = false,
+  dev = false,
+  showHelp = false,
+  accumulator = 0,
+  lastTime = performance.now(),
+  introUntil = 0,
+  toastUntil = 0;
+let dummyRecord = false,
+  dummyPlay = false,
+  dummyCursor = 0,
+  dummyRecording: SimInputFrame[] = [],
+  dummySlots: SimInputFrame[][] = Array.from({ length: 5 }, () => []),
+  stanceLock = 'free';
+let dummy = 'still',
+  tape: ReplayTape | null = null,
+  playback: ReplayPlayer | null = null,
+  playbackFrames = new Map<number, ReplayTape['frames'][number]>(),
+  slots: (ReplayTape | null)[] = Array.from({ length: 5 }, () => null),
+  slot = 0,
+  recorder: ReplayRecorder;
+let menuPadHeld = false;
+let simMs = 0,
+  steps = 0,
+  lastInput: SimInputFrame = neutral(0),
+  fps = 60,
+  frameTimes: number[] = [];
+function record() {
+  recorder = new ReplayRecorder(
+    world,
+    { gameVersion: REPLAY_VERSION, participantIds: IDS, stageId: options.stage, rulesetId: options.format },
+    120,
+  );
 }
-function saveReplay(){downloadJson(recorder.finish(),'spectris-exchange.json');toast('Replay exported');}
-function loadReplay(value:ReplayTape){if(value.metadata.gameVersion!==REPLAY_VERSION||value.frames.length>216000)throw new Error('Unsupported replay or too many frames');const player=new ReplayPlayer(value,stepDuel);player.playToEnd();tape=value;playback=player;world=player.seek(player.startFrame);options=duelData(world)!.options;mode='replay';resultShown=false;previous=world;playbackFrames=new Map(value.frames.map(i=>[i.frame,i]));frozen=false;paused=false;menu=false;renderUi();toast('Playing verified input replay');}
-function dummyInput(frame:number,p1:SimInputFrame):SimInputFrame{if(dummyRecord){const input=shell.input.sample(1,frame);dummyRecording.push(input);return input;}if(dummyPlay&&dummySlots[slot]!.length)return {...dummySlots[slot]![dummyCursor++%dummySlots[slot]!.length]!,frame};if(dummy==='mirror')return {...p1,moveX:-p1.moveX};if(dummy==='patrol')return {...neutral(frame),moveX:frame%180<80?-650:frame%180<160?650:0,jumpPressed:frame%100===0,jumpHeld:frame%100<30,attackPressed:frame%40===0,auxiliaryButtons:frame%240===0?1:0};return neutral(frame);}
-function tick(){previous=world;const begin=performance.now();let result;
- if(online){const advanced=online.advance(shell.input.sample(0,world.frame));if(!advanced)return;result={state:advanced.state,events:[...advanced.events] as Awaited<ReturnType<typeof stepDuel>>['events']};}
- else if(playback){const input=playbackFrames.get(world.frame);if(!input){playback=null;frozen=true;toast('Replay complete');return;}result=stepDuel(world,input);}
- else{lastInput=shell.input.sample(0,world.frame);const input={frame:world.frame,byFighterId:{'player-1':lastInput,'player-2':local?shell.input.sample(1,world.frame):dummyInput(world.frame,lastInput)}};if(counterpickStage!==null){const d=duelData(world)!;const id=d.winner===IDS[0]?IDS[1]:IDS[0];input.byFighterId[id]={...neutral(world.frame),auxiliaryButtons:16|(counterpickStage<<5)};counterpickStage=null;}result=stepDuel(world,input);recorder.append(input,result.state);}
- world=result.state;for(const event of duelData(world)?.events??[])shell.audio.cue(event.type);updateFlow();simMs=performance.now()-begin;steps++;
- for(const event of result.events){if(event.type==='hit'){const p=world.fighters.find(p=>p.id===event.targetId)!;renderer.hit(f.toNumber(p.x),f.toNumber(p.y)+1.5);shell.audio.cue('hit');}else if(event.type==='clank')shell.audio.cue('clank');}
- for(const p of world.fighters){const before=previous.fighters.find(v=>v.id===p.id)!;if(p.attack&&!before.attack)shell.audio.cue(p.attack.attackId.split(':')[1]??'swing');if(p.grounded&&!before.grounded)shell.audio.cue('landing');if(p.locomotion==='ledge-hang'&&before.locomotion!=='ledge-hang')shell.audio.cue('ledge');if(p.respawnFrames===0&&before.respawnFrames>0)shell.audio.cue('respawn');if(Math.floor(p.percentTenths/250)>Math.floor(before.percentTenths/250))shell.audio.cue('helm-crack');if(p.definitionId!==before.definitionId)shell.audio.cue('stance');if(p.vy>before.vy&&p.hitstunFrames===0)shell.audio.cue('jump');}
+shell.input.remap(settings.bindings);
+record();
+const $ = <T extends HTMLElement = HTMLElement>(s: string) => app.querySelector<T>(s)!;
+function on(s: string, fn: () => void) {
+  app.querySelector(s)?.addEventListener('click', fn);
 }
-function updateHud(now:number){if(menu){const pad=Array.from(navigator.getGamepads?.()??[]).find(Boolean),pressed=pad?.buttons.some(b=>b.pressed)??false;if(pressed&&!menuPadHeld){const surface=app.querySelector('.modal-shade')??app;const controls=Array.from(surface.querySelectorAll<HTMLButtonElement|HTMLSelectElement>('button:not(:disabled),select')).filter(el=>el.getClientRects().length>0);const index=controls.indexOf(document.activeElement as HTMLButtonElement),current=controls[Math.max(0,index)];if(pad?.buttons[0]?.pressed)current?.click();else if(pad?.buttons[1]?.pressed){if(showHelp)closeHelp();else{screen='title';renderUi();}}else if(pad?.buttons[12]?.pressed||pad?.buttons[13]?.pressed)controls[(index+(pad.buttons[12]?.pressed?-1:1)+controls.length)%controls.length]?.focus();else if(current instanceof HTMLSelectElement&&(pad?.buttons[14]?.pressed||pad?.buttons[15]?.pressed)){current.selectedIndex=(current.selectedIndex+(pad.buttons[14]?.pressed?-1:1)+current.options.length)%current.options.length;current.dispatchEvent(new Event('change'));}}menuPadHeld=pressed;const el=app.querySelector('#connection');if(el)el.textContent=shell.input.connected?`${shell.input.connected} CONTROLLER${shell.input.connected>1?'S':''} CONNECTED`:'KEYBOARD + CONTROLLER';return;}
- const duel=duelData(world)!;const clock=app.querySelector('#clock');if(clock)clock.textContent=duel.sudden?'SUDDEN DEATH':options.timer===0?'∞':`${Math.floor(duel.clock/3600)}:${String(Math.floor(duel.clock/60)%60).padStart(2,'0')}`;const round=app.querySelector('#round-label');if(round)round.textContent=options.format==='momentum'?`RIGHT OF WAY ${duel.progress>0?'→':duel.progress<0?'←':'◇'} ${Math.abs(duel.progress)} / 5`:`ROUND ${duel.round} · ${duel.wins.join(' — ')}`;
- const message=app.querySelector('#duel-message');if(message)message.textContent=duel.clash?'CLASH · Forward: Press / Back: Parry / Down: Slip':duel.phase==='round-end'?`${duel.winner===IDS[0]?'YOUR FLAME ENDURES':'THE REFLECTION ENDURES'}`:'';
- const d=gameData(world);world.fighters.forEach((p,i)=>{const k=d.knights[p.id]!,dk=duel.knights[p.id]!;const lives=app.querySelector(`#lives-${i}`);if(lives)lives.innerHTML=Array.from({length:options.lives},(_,n)=>`<i class="${n>=p.stocks?'broken':''}"></i>`).join('');const meter=app.querySelector<HTMLElement>(`#meter-${i}`);if(meter){meter.style.width=`${dk.soul.remaining?dk.soul.remaining/480*100:dk.meter/100}%`;meter.parentElement!.classList.toggle('kindled',dk.soul.remaining>0);}const integrity=app.querySelector<HTMLElement>(`#integrity-${i}`);if(integrity)integrity.style.width=`${dk.integrity/100}%`;const s=app.querySelector(`#stance-${i}`);if(s)s.textContent=`P${i+1} / ${k.stance.id.toUpperCase()}${k.gliding?' · GLIDE':k.stance.unfurl?' · UNFURL':''}`;const n=app.querySelector(`#strain-${i}`);if(n)n.innerHTML=`${Math.floor(p.percentTenths/10)}<small>STRAIN</small>`;const j=app.querySelector(`#jumps-${i}`);if(j)j.innerHTML=Array.from({length:k.stance.id==='wings'?3:2},(_,i)=>`<i class="${i>=p.jumpsRemaining?'empty':''}"></i>`).join('');});
- const intro=app.querySelector<HTMLElement>('#intro');if(intro)intro.style.opacity=now<introUntil?'1':'0';
- const telemetry=app.querySelector('#telemetry');if(telemetry&&steps%6===0){const p=world.fighters[0]!,move=p.attack?MOVES.get(p.attack.attackId):null;telemetry.textContent=`${frozen?'FROZEN':playback?'REPLAY':'LIVE'} · ${world.frame}f · ${fps.toFixed(0)} fps\nSim ${simMs.toFixed(2)}ms · ${hashWorldState(world)}\n${move?.name??p.locomotion} ${p.attack?.frame??''}\nInput ${lastInput.moveX}, ${lastInput.moveY}\n${gameData(world).knights[p.id]!.stance.switchedAirborne?'Air switch spent':'Air switch available'}`;}
+function toast(text: string) {
+  let el = app.querySelector('.toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'toast';
+    app.append(el);
+  }
+  el.textContent = text;
+  toastUntil = performance.now() + 3000;
 }
-addEventListener('keydown',e=>{if((e.target as HTMLElement)?.matches('input,select,textarea')||e.repeat)return;if(e.code==='Escape'){if(showHelp)closeHelp();else if(!menu)togglePause();}if(e.code==='Tab'&&!menu){dev=!dev;renderUi();}if(e.code==='Period'&&!menu){frozen=true;tick();}if(e.code==='Enter'&&menu&&!showHelp&&screen==='title')setup('versus');});
-addEventListener('blur',()=>{if(!menu&&!paused&&!online){paused=true;renderUi();}});
-function frame(now:number){const rawElapsed=now-lastTime,elapsed=Math.min(100,rawElapsed);lastTime=now;frameTimes.push(rawElapsed);if(frameTimes.length>60)frameTimes.shift();fps=1000/(frameTimes.reduce((a,b)=>a+b,0)/frameTimes.length);
- if(!menu&&!paused&&!frozen)accumulator+=elapsed*(playback?replaySpeed:1);else accumulator=0;
- let n=0;while(accumulator>=1000/60&&n<6){tick();accumulator-=1000/60;n++;}
- renderer.shake=settings.shake;renderer.contrast=settings.contrast;shell.input.deadzone=settings.deadzone;shell.input.tapJump=settings.tapJump;shell.audio.voiceVolume=settings.voice;shell.audio.sfxVolume=settings.sfx;shell.audio.musicVolume=settings.music;const audioDuel=duelData(world);shell.audio.update(audioDuel?Object.values(audioDuel.knights).reduce((n,k)=>n+k.fractures,0):0,!!audioDuel&&(audioDuel.sudden||Object.values(audioDuel.knights).some(k=>k.soul.remaining>0)),!menu&&!paused,STAGES.findIndex(s=>s.id===options.stage));
- renderer.render(world,paused||frozen?1:accumulator/(1000/60),previous,now,menu,debug);updateHud(now);if(now>toastUntil)app.querySelector('.toast')?.remove();requestAnimationFrame(frame);
+function start(two = false) {
+  renderer.freeCamera = false;
+  counterpickStage = null;
+  counterpickRound = 0;
+  vigilOffstage = false;
+  vigilBlade = false;
+  if (!online) options.buffer = settings.buffer;
+  local = two;
+  resultShown = false;
+  menu = false;
+  paused = false;
+  frozen = false;
+  showHelp = false;
+  playback = null;
+  shell.input.clear();
+  world = createDuel(options);
+  previous = world;
+  record();
+  shell.begin(two);
+  shell.audio.cue('voice:start-01');
+  introUntil = performance.now() + 2200;
+  accumulator = 0;
+  renderUi();
+}
+function title() {
+  online?.close();
+  online = null;
+  screen = 'title';
+  vigil = -1;
+  menu = true;
+  paused = false;
+  dev = false;
+  playback = null;
+  shell.openTitle();
+  shell.input.clear();
+  renderUi();
+}
+function controls() {
+  return `<div class="modal-shade"><section class="modal"><button class="close" id="close-help" aria-label="Close controls">×</button><div class="eyebrow">The first exchange</div><h2>One blade. Two ways to fight.</h2><p>Wings extend your aerial reach. Cape trades speed for weight. Switch in the air once; landing, catching a ledge, or being hit refreshes the switch.</p><table class="controls"><thead><tr><th>ACTION</th><th>KEYBOARD P1</th><th>CONTROLLER</th></tr></thead><tbody><tr><td>Move / aim attack</td><td>W A S D</td><td>Left stick</td></tr><tr><td>Jump / air jump</td><td>Space</td><td>X / Y</td></tr><tr><td>Normal attack</td><td>J + direction</td><td>A + direction</td></tr><tr><td>Smash attack</td><td>Shift + direction + J</td><td>Right stick</td></tr><tr><td>Special / charge</td><td>K + direction</td><td>B + direction</td></tr><tr><td>Guard / evade</td><td>L</td><td>RT</td></tr><tr><td>Grab / pummel / throw</td><td>U / J / direction</td><td>RB / A / stick</td></tr><tr><td>Switch stance</td><td>I</td><td>LB</td></tr><tr><td>Glide</td><td>Hold Space after final air jump</td><td>Hold X / Y</td></tr><tr><td>Drop through platform</td><td>S</td><td>Stick down</td></tr><tr><td>Pause / frame tools</td><td>Esc / Tab</td><td>Keyboard</td></tr></tbody></table><p>P2: arrow keys, Numpad 0 to jump, Numpad 1 to attack, Numpad 5 to switch. A second controller also works.</p><p class="note">Fracture the reflection four times to take a round. At 100 Strain, Shatter moves break a Fracture immediately. Cape guards toward the opponent; its first four frames parry. Wings evades instead. J + K feints for 25 meter; K + L ignites Kindle at full meter. I + L spends 25 meter for an instant stance switch.</p><button class="primary" id="close-help-bottom">RETURN <span>↗</span></button></section></div>`;
+}
+function renderUi() {
+  if (menu) {
+    app.innerHTML = `<header class="topline"><div class="brand"><span class="sigil">♜</span> SOULFIRE LEGENDS</div><span class="build">DUEL BUILD · 003</span></header><div class="corner-line"></div><main class="hero"><div class="eyebrow">A duel with your reflection</div><h1>SPECTRIS<span>DUELLUM</span></h1><div class="divider"></div><p class="tagline">Face the knight who knows<br>every move you know.</p><nav class="menu"><button class="primary" id="versus">ENTER THE DUEL <span>↗</span></button><div class="menu-grid"><button class="menu-secondary" id="gauntlet">Fracture Gauntlet <span>SOLO</span></button><button class="menu-secondary" id="momentum">Pilgrimage <span>MOMENTUM</span></button><button class="menu-secondary" id="practice">Training <span>SANCTUM</span></button><button class="menu-secondary" id="vigil">The Vigil <span>LEARN</span></button><button class="menu-secondary" id="online">Direct online <span>1v1</span></button><button class="menu-secondary" id="options">Options</button><button class="menu-secondary" id="controls">Controls</button></div></nav></main><div class="knight-label">An empty helm. An unbroken will.<small>THE UNSWORN KNIGHT</small></div><footer class="title-bottom"><div class="caption">ONE KNIGHT. TWO STANCES.<br><span class="title-mark">EVERY DECISION LEAVES A CRACK.</span></div><div id="connection">KEYBOARD + CONTROLLER</div><div>SLU / 001</div></footer>${screen !== 'title' ? menuPanel() : ''}${showHelp ? controls() : ''}`;
+    on('#online', onlinePanel);
+    on('#versus', () => setup('versus'));
+    on('#momentum', () => setup('momentum'));
+    on('#practice', () => setup('training'));
+    on('#gauntlet', () => {
+      mode = 'gauntlet';
+      screen = 'gauntlet';
+      cleared = [];
+      renderUi();
+    });
+    on('#options', () => {
+      screen = 'options';
+      renderUi();
+    });
+    on('#vigil', () => {
+      mode = 'vigil';
+      options = { ...DEFAULT_DUEL, format: 'training', cpu: [0, 0] };
+      vigil = 0;
+      start();
+      vigilStart = world.frame;
+    });
+    bindMenu();
+    on('#controls', () => {
+      showHelp = true;
+      renderUi();
+    });
+  } else {
+    app.innerHTML = `<div class="hud">${hud(0)}<div class="hud-center"><span id="round-label">ROUND 1</span><b id="clock">6:00</b><small id="score">${options.oaths.every((o) => o === 'unsworn') ? 'TRUE MIRROR' : 'OATH DUEL'}</small></div>${hud(1)}</div><div class="announcement" id="intro">IGNITE<small>MEET YOUR REFLECTION</small></div><div class="arena-label">${stageById(options.stage).name}<small>${mode.toUpperCase()} · ${local ? 'LOCAL DUEL' : options.cpu[1] ? `CPU ${options.cpu[1]}` : 'TRAINING'}</small></div><div id="duel-message" class="duel-message"></div>${vigil >= 0 ? '<div id="vigil-prompt" class="vigil-prompt"></div>' : ''}<div class="bottom-bar"><div class="key-hints"><span><kbd>WASD</kbd> Move</span><span><kbd>Space</kbd> Jump</span><span><kbd>J</kbd> Strike</span><span><kbd>I</kbd> Stance</span></div><div><button id="tools">${dev ? 'Hide' : 'Show'} tools · Tab</button> <button id="help">Controls</button> <button id="pause">${paused ? 'Resume' : 'Pause'} · Esc</button></div></div>${dev ? devUi() : ''}${paused && !showHelp ? `<div class="modal-shade"><div class="modal" style="max-width:440px"><div class="eyebrow">A moment of stillness</div><div class="pause-title">The flame waits.</div><p>Your exchange is paused.</p><button class="primary" id="resume">RESUME <span>↗</span></button><button class="menu-secondary" id="restart">Reset the Sanctum</button><button class="menu-secondary" id="save-pause">Save input replay</button><button class="menu-secondary" id="leave">Return to title</button></div></div>` : ''}${showHelp ? controls() : ''}<input class="replay-file" id="file" type="file" accept=".json">`;
+    on('#tools', () => {
+      dev = !dev;
+      renderUi();
+    });
+    on('#help', () => {
+      showHelp = true;
+      paused = true;
+      renderUi();
+    });
+    on('#pause', togglePause);
+    on('#resume', togglePause);
+    on('#restart', () => start(local));
+    on('#leave', title);
+    on('#save-pause', saveReplay);
+    bindDev();
+  }
+  on('#close-help', closeHelp);
+  on('#close-help-bottom', closeHelp);
+}
+function closeHelp() {
+  showHelp = false;
+  if (!menu) paused = false;
+  renderUi();
+}
+function togglePause() {
+  if (online) {
+    toast('Online matches cannot be paused. Escape closes controls.');
+    return;
+  }
+  paused = !paused;
+  accumulator = 0;
+  shell.input.clear();
+  renderUi();
+}
+function hud(i: number) {
+  return `<div class="fighter-hud ${i ? 'right' : ''}" style="color:${i ? '#e8a975' : '#8ce2da'}"><div class="helm-icon"></div><div><h3>${i ? 'The Reflection' : 'The Unsworn'}</h3><div class="sub" id="stance-${i}">P${i + 1} / WINGS</div><div class="strain" id="strain-${i}">0<small>STRAIN</small></div><div class="fractures" id="lives-${i}"></div><div class="meter"><i id="meter-${i}"></i></div><div class="integrity"><i id="integrity-${i}"></i></div><div class="air-pips" id="jumps-${i}"></div></div></div>`;
+}
+/** Feel lab: jumpsquat and traction presets live in match state, so A/B runs replay exactly. */
+function feelLabUi() {
+  const feel = options.feel ?? DEFAULT_FEEL;
+  const squat = FEEL.jumpsquat
+    .map(
+      (value) =>
+        `<option value="${value}" ${feel.jumpsquat === value ? 'selected' : ''}>${value}f${value === DEFAULT_FEEL.jumpsquat ? ' · GDD' : ' · Brawl'}</option>`,
+    )
+    .join('');
+  const traction = (Object.keys(FEEL.traction) as TractionPreset[])
+    .map(
+      (key) =>
+        `<option value="${key}" ${feel.traction === key ? 'selected' : ''}>${FEEL.traction[key].toFixed(2)} · ${TRACTION_LABELS[key]}</option>`,
+    )
+    .join('');
+  return `<label>Jumpsquat<select id="feel-squat">${squat}</select></label><label>Traction<select id="feel-traction">${traction}</select></label><p style="color:#678b91;font-size:9px">Changing feel restarts the exchange and a new recording.</p>`;
 }
 
-function onlinePanel(){const el=document.createElement('div');el.className='modal-shade';el.innerHTML=`<section class="modal"><button id="online-close" class="close">×</button><div class="eyebrow">Direct peer-to-peer duel</div><h2>Invite your reflection.</h2><p>Host sends an invitation. Guest pastes it and sends an answer back. Both use keyboard P1 controls on their own device.</p><label>Input delay <select id="net-delay">${[0,1,2,3,4,5,6,7,8].map(n=>`<option ${n===settings.delay?'selected':''}>${n}</option>`).join('')}</select> frames</label><textarea id="pair-code" placeholder="Paste a pairing code here" rows="4" style="width:100%;margin:20px 0;background:#10232e;color:#c8dede"></textarea><button id="net-host" class="primary">CREATE INVITATION ↗</button><button id="net-join" class="menu-secondary">Join with invitation</button><button id="net-accept" class="menu-secondary">Host: accept answer</button><p id="net-status">Direct connection uses rollback and state-hash checks. Pairing codes contain connection information; share them only with your opponent. Some networks need a relay, which this build does not provide.</p></section>`;app.append(el);const make=()=>{online?.close();online=new OnlineDuel({...options,format:'continuous',cpu:[0,0]},Number($<HTMLSelectElement>('#net-delay').value));online.onStatus=s=>{const target=app.querySelector('#net-status');if(target)target.textContent=s;else if(!online?.ready)toast(s);};online.onReady=o=>{mode='online';options=o;start();};return online;};const run=async(fn:()=>Promise<string|void>)=>{try{const result=await fn();if(result){const field=$<HTMLTextAreaElement>('#pair-code');field.value=result;field.select();}}catch(error){$('#net-status').textContent=String(error);}};on('#net-host',()=>void run(()=>make().host()));on('#net-join',()=>{const code=$<HTMLTextAreaElement>('#pair-code').value;void run(()=>make().join(code));});on('#net-accept',()=>void run(async()=>{if(!online)throw Error('Create an invitation first');await online.accept($<HTMLTextAreaElement>('#pair-code').value);}));on('#online-close',()=>{online?.close();online=null;el.remove();});}
-function setup(next:string){mode=next;screen='setup';options={...DEFAULT_DUEL,counterpick:next==='versus',format:next==='training'?'training':next==='momentum'?'momentum':'rounds',stage:next==='momentum'?'pilgrimage':'mirror-sanctum',cpu:[0,next==='training'?0:5]};renderUi();}
-function stagePreview(id:string){const stage=stageById(id);return `<svg viewBox="0 0 220 90" aria-hidden="true"><path d="M${110-stage.width/2} 72H${110+stage.width/2}" stroke="currentColor" stroke-width="4"/>${stage.platforms.map(([x,y,w])=>`<path d="M${110+x-w/2} ${72-y}h${w}" stroke="currentColor" stroke-width="2"/>`).join('')}<circle cx="110" cy="14" r="2" fill="currentColor"/></svg>`;}
-function menuPanel(){return `<div class="modal-shade"><section class="modal selection"><button class="close" id="back-menu">×</button>${screen==='setup'?`<div class="eyebrow">Choose your battleground</div><h2>${mode==='training'?'The Sanctum':mode==='momentum'?'A pilgrimage of blades':'Write the rules of your duel.'}</h2><div class="rule-grid"><label>Opponent<select id="opponent"><option value="0">Player 2 · local</option>${Array.from({length:9},(_,i)=>`<option value="${i+1}" ${options.cpu[1]===i+1?'selected':''}>CPU level ${i+1}</option>`).join('')}</select></label>${mode==='versus'?`<label>Format<select id="format"><option value="rounds">Rounds · best of 3</option><option value="five">Rounds · best of 5</option><option value="continuous">Continuous · 6 Fractures</option></select></label>`:''}<label>Timer<select id="timer"><option value="21600">6 minutes</option><option value="14400">4 minutes</option><option value="28800">8 minutes</option><option value="0">Off</option></select></label><label>Your Oath<select id="oath-0">${oathOptions(0)}</select></label><label>Reflection's Oath<select id="oath-1">${oathOptions(1)}</select></label></div><p class="note" id="oath-note">${OATHS[options.oaths[0]].description}</p><div class="star-map">${STAGES.filter(s=>mode==='momentum'?s.id==='pilgrimage':!['pilgrimage','unsworn'].includes(s.id)).map(s=>`<button class="stage-card ${s.id===options.stage?'selected':''}" data-stage="${s.id}" style="--star:#${s.color.toString(16).padStart(6,'0')}">${stagePreview(s.id)}<b>${s.name}</b><small>${['skyreach','hollow-throne'].includes(s.id)?'COUNTERPICK':'STARTER'}</small></button>`).join('')}</div><button class="primary" id="launch">IGNITE <span>↗</span></button>`:screen==='gauntlet'?`<div class="eyebrow">${cleared.length} / 7 Fractures reclaimed</div><h2>Become whole.</h2><p>Choose the next echo. Each Oath fights on its home ground. The Unsworn waits beyond the six.</p><label>Difficulty <select id="difficulty"><option>Squire</option><option>Knight</option>${progress.clears.includes('Knight')?'<option>Paragon</option>':''}</select></label><div class="star-map">${Object.entries(OATHS).filter(([id])=>id!=='unsworn'||cleared.length>=6).map(([id,o])=>`<button class="stage-card" data-fracture="${id}" ${cleared.includes(id as Oath)?'disabled':''} style="--star:#${o.color.toString(16)}">${stagePreview(id==='unsworn'?'unsworn':o.stage)}<b>${o.name}${cleared.includes(id as Oath)?' · reclaimed':''}</b><small>${o.description}</small></button>`).join('')}</div>`:`<div class="eyebrow">Tune your experience</div><h2>Keep the flame readable.</h2><div class="rule-grid"><label>Music<input id="music-volume" type="range" min="0" max="1" step=".05" value="${settings.music}"></label><label>Effects<input id="sfx-volume" type="range" min="0" max="1" step=".05" value="${settings.sfx}"></label><label>Voice<input id="voice-volume" type="range" min="0" max="1" step=".05" value="${settings.voice}"></label><label>Stick deadzone<input id="deadzone" type="range" min=".05" max=".4" step=".01" value="${settings.deadzone}"></label><label>Action buffer<select id="action-buffer">${[3,4,5,6,7,8].map(n=>`<option ${n===settings.buffer?'selected':''}>${n}</option>`).join('')}</select></label><label>High contrast<input id="contrast" type="checkbox" ${settings.contrast?'checked':''}></label><label>Screen shake<input id="shake" type="checkbox" ${settings.shake?'checked':''}></label><label>Tap jump<input id="tap-jump" type="checkbox" ${settings.tapJump?'checked':''}></label></div><div class="remap-grid">${Object.entries(settings.bindings).map(([action,key])=>`<button class="menu-secondary" data-remap="${action}">${action}<kbd>${key}</kbd></button>`).join('')}</div><p>Click a key to rebind it. Progress and options save on this device.</p><button class="primary" id="save-options">SAVE OPTIONS <span>↗</span></button>`}</section></div>`;}
-function oathOptions(index:number){return Object.entries(OATHS).map(([id,o])=>`<option value="${id}" ${options.oaths[index]===id?'selected':''}>${o.name}${id==='unsworn'?' · True Mirror':''}</option>`).join('');}
-function bindMenu(){on('#back-menu',()=>{screen='title';renderUi();});on('#launch',()=>{const opponent=$<HTMLSelectElement>('#opponent');options.cpu=[0,Number(opponent.value)];const format=app.querySelector<HTMLSelectElement>('#format')?.value;options.bestOf=format==='five'?5:3;if(mode==='versus')options.format=format==='continuous'?'continuous':'rounds';options.lives=options.format==='continuous'?6:4;options.timer=Number($<HTMLSelectElement>('#timer').value);start(options.cpu[1]===0&&mode!=='training');dev=mode==='training';renderUi();});
- app.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach(b=>b.onclick=()=>{options.stage=b.dataset.stage!;app.querySelectorAll('[data-stage]').forEach(n=>n.classList.toggle('selected',n===b));});
- for(const i of [0,1]){const el=app.querySelector<HTMLSelectElement>(`#oath-${i}`);if(el)el.onchange=()=>{options.oaths[i]=el.value as Oath;$('#oath-note').textContent=OATHS[el.value as Oath].description;};}
- const diff=app.querySelector<HTMLSelectElement>('#difficulty');if(diff){diff.value=difficulty;diff.onchange=()=>difficulty=diff.value;}
- app.querySelectorAll<HTMLButtonElement>('[data-fracture]').forEach(b=>b.onclick=()=>{currentOath=b.dataset.fracture as Oath;options={...DEFAULT_DUEL,stage:currentOath==='unsworn'?'unsworn':OATHS[currentOath].stage,cpu:[0,currentOath==='unsworn'?9:difficulty==='Squire'?3:difficulty==='Paragon'?9:6],oaths:['unsworn',currentOath]};start();});
- app.querySelectorAll<HTMLButtonElement>('[data-remap]').forEach(button=>button.onclick=()=>{button.textContent='Press a key…';const capture=(event:KeyboardEvent)=>{event.preventDefault();event.stopImmediatePropagation();settings.bindings[button.dataset.remap!]=event.code;shell.input.remap(settings.bindings);removeEventListener('keydown',capture,true);renderUi();};addEventListener('keydown',capture,true);});
- on('#save-options',()=>{settings.buffer=Number($<HTMLSelectElement>('#action-buffer').value);settings.music=Number($<HTMLInputElement>('#music-volume').value);settings.sfx=Number($<HTMLInputElement>('#sfx-volume').value);settings.voice=Number($<HTMLInputElement>('#voice-volume').value);settings.deadzone=Number($<HTMLInputElement>('#deadzone').value);settings.shake=$<HTMLInputElement>('#shake').checked;settings.contrast=$<HTMLInputElement>('#contrast').checked;settings.tapJump=$<HTMLInputElement>('#tap-jump').checked;persist('settings',settings);screen='title';renderUi();toast('Options saved');});
-}
-function results(){const d=duelData(world)!,won=d.winner===IDS[0];const el=document.createElement('div');el.className='modal-shade';el.innerHTML=`<section class="modal result"><div class="eyebrow">${stageById(options.stage).name} · ${d.wins.join(' — ')}</div><h2>${won?'Your flame endures.':'The reflection remembers.'}</h2><div class="result-stats">${world.fighters.map((p,i)=>{const k=d.knights[p.id]!;return `<div><h3>${i?'THE REFLECTION':'THE UNSWORN'}</h3><b>${k.parries}</b> parries <b>${k.clashes}</b> clashes won <b>${k.fractures}</b> Fractures lost</div>`;}).join('')}</div><p>${Math.floor(world.frame/3600)}:${String(Math.floor(world.frame/60)%60).padStart(2,'0')} elapsed · deterministic replay captured</p><button class="primary" id="result-next">${mode==='gauntlet'&&won?'RECLAIM THE SHARD':'REMATCH'} <span>↗</span></button><button class="menu-secondary" id="result-replay">Save replay</button><button class="menu-secondary" id="result-card">Save result card</button><button class="menu-secondary" id="result-exit">Return to title</button></section>`;app.append(el);on('#result-exit',title);on('#result-replay',saveReplay);on('#result-card',()=>{const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=630;const c=canvas.getContext('2d')!;c.fillStyle='#08131d';c.fillRect(0,0,1200,630);c.fillStyle='#b2e1d9';c.font='20px sans-serif';c.fillText('SOULFIRE LEGENDS / SPECTRIS DUELLUM',80,90);c.font='60px Georgia';c.fillText(won?'Your flame endures.':'The reflection remembers.',80,220);c.font='24px sans-serif';c.fillText(`${stageById(options.stage).name} · ${d.wins.join(' — ')} · ${world.frame} frames`,80,300);c.fillText(`${d.knights[IDS[0]]!.parries} parries / ${d.knights[IDS[0]]!.clashes} clashes won`,80,360);c.font='16px monospace';c.fillText(`REPLAY HASH ${hashWorldState(world)}`,80,530);const a=document.createElement('a');a.href=canvas.toDataURL();a.download='spectris-duel.png';a.click();});on('#result-next',()=>{if(mode==='gauntlet'&&won){if(!cleared.includes(currentOath))cleared.push(currentOath);if(!progress.unlocked.includes(currentOath))progress.unlocked.push(currentOath);if(cleared.length===7&&!progress.clears.includes(difficulty))progress.clears.push(difficulty);persist('progress',progress);menu=true;screen='gauntlet';renderUi();}else start(local);});}
-const vigilPrompts=[['Find your footing','Move with A / D, then jump with Space.'],['Trust the sky','Use your three air jumps, then hold Space while falling to glide.'],['Change your answer','Press I to unfurl the Cape.'],['Turn the blade aside','Hold L in Cape stance. Its first 4 frames parry.'],['Leave an echo','Switch to Wings with I, then press L to evade.'],['Take hold','Approach the reflection. U grabs; J pummels; a direction throws.'],['Meet steel with steel','Strike together. In Clash, choose forward, back, or down.'],['Let the sword fly','In Wings, K throws the blade. K again recalls it.'],['Find your way home','Jump off the edge and recover with jumps, I, and up + K.'],['Ignite','Your meter is full. Press K + L to Kindle.']];
-function updateFlow(){const d=duelData(world)!;options=d.options;if(d.phase==='round-end'&&d.options.counterpick&&d.winner&&counterpickRound!==d.round){counterpickRound=d.round;const loser=d.winner===IDS[0]?1:0;if(!d.options.cpu[loser]){const overlay=document.createElement('div');overlay.className='modal-shade counterpick';overlay.innerHTML=`<section class="modal selection"><div class="eyebrow">P${loser+1} chooses the next ground</div><h2>A new answer.</h2><div class="star-map">${STAGES.slice(0,7).map((stage,i)=>`<button class="stage-card" data-counterpick="${i}">${stagePreview(stage.id)}<b>${stage.name}</b></button>`).join('')}</div></section>`;app.append(overlay);overlay.querySelectorAll<HTMLButtonElement>('[data-counterpick]').forEach(b=>b.onclick=()=>{counterpickStage=Number(b.dataset.counterpick);overlay.remove();});}}if(d.phase==='fight'&&duelData(previous)?.phase==='round-end'){renderUi();introUntil=performance.now()+1500;}if(d.phase==='over'&&!resultShown){resultShown=true;frozen=true;shell.audio.cue(`voice:reflection-${String(1+d.round%8).padStart(2,'0')}`);results();}if(vigil<0)return;const p=world.fighters[0]!,k=d.knights[p.id]!,g=gameData(world).knights[p.id]!;const elapsed=world.frame-vigilStart;const checks=[elapsed>30&&!p.grounded,g.gliding,g.stance.id==='cape',k.parries>0,k.evade>0,d.events.some(e=>e.type==='throw'),d.events.some(e=>e.type==='clash-resolve'),vigilBlade&&!k.blade,vigilOffstage&&p.grounded,k.soul.remaining>0];if(k.blade)vigilBlade=true;if(Math.abs(f.toNumber(p.x))>16&&!p.grounded)vigilOffstage=true;if(vigil===3&&elapsed%100===1){const target=world.fighters[1]!;p.x=f.fromInt(-1);target.x=f.fromInt(2);target.facing=-1;target.attack={attackId:'wings:forward-smash',frame:0,hitTargets:[]};record();}if(vigil===6&&elapsed===1){d.clash=12;d.knights[IDS[1]]!.choice='press';world.extensionState=JSON.stringify({...gameData(world),duel:d});record();}if(vigil===9&&elapsed===1){k.meter=10000;world.extensionState=JSON.stringify({...gameData(world),duel:d});record();}const prompt=app.querySelector('#vigil-prompt');if(prompt)prompt.innerHTML=`<span class="eyebrow">THE VIGIL · ${vigil+1} / 10</span><h3>${vigilPrompts[vigil]![0]}</h3><p>${vigilPrompts[vigil]![1]}</p><button id="vigil-skip">Next lesson →</button>`;on('#vigil-skip',advanceVigil);if(checks[vigil])advanceVigil();}
-function advanceVigil(){vigil++;vigilBlade=false;vigilOffstage=false;vigilStart=world.frame;if(vigil>=10){vigil=-1;progress.vigil=true;persist('progress',progress);mode='versus';options={...DEFAULT_DUEL,cpu:[0,3]};start();toast('The Vigil is complete. Face your first reflection.');}}
+const TRACTION_LABELS: Record<TractionPreset, string> = { brawl: 'Brawl slide', gdd: 'GDD', grippy: 'Grippy' };
 
-const hooks={getState:()=>structuredClone(world),setState:(state:WorldState)=>{gameData(state);world=structuredClone(state);previous=world;record();},step:(frames=1)=>{for(let i=0;i<Math.min(10000,frames);i++)tick();return structuredClone(world);},hash:()=>hashWorldState(world),start,configure:(value:Partial<DuelOptions>)=>{options={...options,...value};start(value.cpu?.[1]===0);},loadReplay,pause:()=>{frozen=true;},resume:()=>{frozen=false;},input:(input:SimInputFrame)=>{const result=stepDuel(world,{frame:world.frame,byFighterId:{'player-1':{...input,frame:world.frame},'player-2':neutral(world.frame)}});world=result.state;previous=world;return world;},metrics:()=>({fps,simMs,drawCalls:renderer.renderer.info.render.calls,triangles:renderer.renderer.info.render.triangles}),saveReplay:()=>recorder.finish()};
-Object.assign(window,{__spectris:hooks});renderUi();requestAnimationFrame(frame);
+function bindFeelLab() {
+  const squat = $<HTMLSelectElement>('#feel-squat');
+  const traction = $<HTMLSelectElement>('#feel-traction');
+  const apply = () => {
+    const jumpsquat = Number(squat.value) as FeelSettings['jumpsquat'];
+    options.feel = { jumpsquat, traction: traction.value as TractionPreset };
+    world = createDuel({ ...options, stanceLock: stanceLock as 'free' | 'wings' | 'cape' });
+    previous = world;
+    playback = null;
+    record();
+    toast(`Feel: ${jumpsquat}f jumpsquat · traction ${FEEL.traction[options.feel.traction]}`);
+  };
+  squat.onchange = apply;
+  traction.onchange = apply;
+}
+
+function devUi() {
+  return `<aside class="dev"><h3>TRAINING WORKBENCH</h3><label>Reflection<select id="dummy"><option value="cpu">CPU from rules</option><option value="still">Stationary</option><option value="mirror">Mirror inputs</option><option value="patrol">Movement drill</option></select></label><label>Hit / hurt volumes<input type="checkbox" id="boxes" ${debug ? 'checked' : ''}></label><label>Free camera<input type="checkbox" id="free-camera" ${renderer.freeCamera ? 'checked' : ''}></label><label>Sound<input type="checkbox" id="sound" ${shell.audio.enabled ? 'checked' : ''}></label><button id="reset">Reset</button><button id="freeze">Freeze</button><button id="advance">+1 frame</button><button id="thaw">Run</button><label>P2 Strain<input id="strain-set" type="number" min="0" max="999" value="${world.fighters[1]!.percentTenths / 10}"></label><label>P1 meter<input id="meter-set" type="number" min="0" max="100" value="${(duelData(world)?.knights[IDS[0]]?.meter ?? 0) / 100}"></label><label>Playback speed<select id="speed"><option value="0.25">¼×</option><option value="0.5">½×</option><option value="1">1×</option><option value="2">2×</option></select></label><label>Stance lock<select id="stance-lock"><option value="free">Free</option><option value="wings">Wings</option><option value="cape">Cape</option></select></label><button id="dummy-record">Record P2 inputs</button><button id="dummy-stop">Store dummy slot</button><button id="dummy-play">Loop dummy slot</button><hr><h3>INPUT REPLAY</h3><label>Slot<select id="slot">${slots.map((v, i) => `<option value="${i}">${i + 1} · ${v ? 'Recorded' : 'Empty'}</option>`).join('')}</select></label><button id="record">New recording</button><button id="store">Store slot</button><button id="play">Play slot</button><button id="save">Export JSON</button><button id="load">Load JSON</button><hr><h3>FEEL LAB · A/B</h3>${feelLabUi()}<hr><h3>MOVE TUNING · SESSION ONLY</h3><label>Move<select id="move-select">${[...MOVES].map(([id, m]) => `<option value="${id}">${id.startsWith('wings') ? 'W' : 'C'} · ${m.name}</option>`).join('')}</select></label><label>First startup<input id="startup" type="number" min="1" max="60" value="2"></label><button id="apply-tuning">Apply & restart recording</button><p style="color:#678b91;font-size:9px">Tuning invalidates earlier replay slots. Source defaults reload on refresh.</p><pre id="telemetry"></pre></aside>`;
+}
+let frozen = false;
+function bindDev() {
+  if (!dev) return;
+  const stance = $<HTMLSelectElement>('#stance-lock');
+  stance.value = stanceLock;
+  stance.onchange = () => {
+    stanceLock = stance.value;
+    const d = duelData(world)!;
+    d.options.stanceLock = stanceLock as 'free' | 'wings' | 'cape';
+    world.extensionState = JSON.stringify({ ...gameData(world), duel: d });
+    record();
+  };
+  on('#dummy-record', () => {
+    dummyRecord = true;
+    dummyPlay = false;
+    dummyRecording = [];
+    toast('Recording P2 keyboard/controller inputs');
+  });
+  on('#dummy-stop', () => {
+    dummyRecord = false;
+    dummySlots[slot] = dummyRecording;
+    toast(`Dummy slot ${slot + 1}: ${dummyRecording.length} frames`);
+  });
+  on('#dummy-play', () => {
+    dummyPlay = dummySlots[slot]!.length > 0;
+    dummyCursor = 0;
+    const d = duelData(world)!;
+    d.options.cpu[1] = 0;
+    world.extensionState = JSON.stringify({ ...gameData(world), duel: d });
+    toast(dummyPlay ? 'Dummy playback looping' : 'Record a dummy slot first');
+  });
+  const meter = $<HTMLInputElement>('#meter-set');
+  meter.onchange = () => {
+    const d = duelData(world)!;
+    d.knights[IDS[0]]!.meter = Math.round(Math.max(0, Math.min(100, Number(meter.value) || 0)) * 100);
+    world.extensionState = JSON.stringify({ ...gameData(world), duel: d });
+    record();
+  };
+  const speed = $<HTMLSelectElement>('#speed');
+  speed.value = String(replaySpeed);
+  speed.onchange = () => (replaySpeed = Number(speed.value));
+  const d = $<HTMLSelectElement>('#dummy');
+  d.value = dummy;
+  d.onchange = () => {
+    dummy = d.value;
+    const data = duelData(world)!;
+    data.options.cpu[1] = dummy === 'cpu' ? options.cpu[1] || 5 : 0;
+    world.extensionState = JSON.stringify({ ...gameData(world), duel: data });
+    record();
+  };
+  $<HTMLInputElement>('#boxes').onchange = (e) => (debug = (e.target as HTMLInputElement).checked);
+  $<HTMLInputElement>('#free-camera').onchange = (e) => (renderer.freeCamera = (e.target as HTMLInputElement).checked);
+  $<HTMLInputElement>('#sound').onchange = (e) => (shell.audio.enabled = (e.target as HTMLInputElement).checked);
+  bindFeelLab();
+  on('#reset', () => {
+    world = createDuel(options);
+    previous = world;
+    playback = null;
+    record();
+  });
+  on('#freeze', () => (frozen = true));
+  on('#thaw', () => (frozen = false));
+  on('#advance', () => {
+    frozen = true;
+    tick();
+    previous = world;
+  });
+  $<HTMLInputElement>('#strain-set').onchange = (e) => {
+    const value = Number((e.target as HTMLInputElement).value);
+    if (!Number.isFinite(value)) return;
+    world = structuredClone(world);
+    world.fighters[1]!.percentTenths = Math.round(Math.max(0, Math.min(999, value)) * 10);
+    previous = world;
+    record();
+  };
+  const sel = $<HTMLSelectElement>('#slot');
+  sel.value = String(slot);
+  sel.onchange = () => (slot = Number(sel.value));
+  on('#record', () => {
+    playback = null;
+    record();
+    toast('Recording from the current state');
+  });
+  on('#store', () => {
+    slots[slot] = recorder.finish();
+    renderUi();
+    toast(`Stored slot ${slot + 1}`);
+  });
+  on('#play', () => {
+    if (slots[slot]) loadReplay(slots[slot]!);
+    else toast('This slot is empty. Store an exchange first.');
+  });
+  on('#save', saveReplay);
+  on('#load', () => $<HTMLInputElement>('#file').click());
+  $<HTMLInputElement>('#file').onchange = async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file)
+      try {
+        loadReplay(JSON.parse(await file.text()) as ReplayTape);
+      } catch (error) {
+        toast(`Replay rejected: ${String(error).slice(0, 90)}`);
+      }
+  };
+  const moveSel = $<HTMLSelectElement>('#move-select');
+  moveSel.onchange = () =>
+    ($<HTMLInputElement>('#startup').value = String(MOVES.get(moveSel.value)!.strikes[0]!.start));
+  on('#apply-tuning', () => {
+    const m = MOVES.get(moveSel.value)!,
+      value = Number($<HTMLInputElement>('#startup').value);
+    if (!Number.isInteger(value) || value < 1 || value > 60) return toast('Startup must be an integer from 1 to 60.');
+    const delta = value - m.strikes[0]!.start;
+    m.strikes = m.strikes.map((s) => ({ ...s, start: s.start + delta }));
+    m.faf += delta;
+    ATTACKS.clear();
+    for (const [id, a] of compileMoves()) ATTACKS.set(id, a);
+    slots = slots.map(() => null);
+    playback = null;
+    record();
+    toast('Applied. Replay slots cleared for the changed rules.');
+  });
+}
+function saveReplay() {
+  downloadJson(recorder.finish(), 'spectris-exchange.json');
+  toast('Replay exported');
+}
+function loadReplay(value: ReplayTape) {
+  if (value.metadata.gameVersion !== REPLAY_VERSION || value.frames.length > 216000)
+    throw new Error('Unsupported replay or too many frames');
+  const player = new ReplayPlayer(value, stepDuel);
+  player.playToEnd();
+  tape = value;
+  playback = player;
+  world = player.seek(player.startFrame);
+  options = duelData(world)!.options;
+  mode = 'replay';
+  resultShown = false;
+  previous = world;
+  playbackFrames = new Map(value.frames.map((i) => [i.frame, i]));
+  frozen = false;
+  paused = false;
+  menu = false;
+  renderUi();
+  toast('Playing verified input replay');
+}
+function dummyInput(frame: number, p1: SimInputFrame): SimInputFrame {
+  if (dummyRecord) {
+    const input = shell.input.sample(1, frame);
+    dummyRecording.push(input);
+    return input;
+  }
+  if (dummyPlay && dummySlots[slot]!.length)
+    return { ...dummySlots[slot]![dummyCursor++ % dummySlots[slot]!.length]!, frame };
+  if (dummy === 'mirror') return { ...p1, moveX: -p1.moveX };
+  if (dummy === 'patrol')
+    return {
+      ...neutral(frame),
+      moveX: frame % 180 < 80 ? -650 : frame % 180 < 160 ? 650 : 0,
+      jumpPressed: frame % 100 === 0,
+      jumpHeld: frame % 100 < 30,
+      attackPressed: frame % 40 === 0,
+      auxiliaryButtons: frame % 240 === 0 ? 1 : 0,
+    };
+  return neutral(frame);
+}
+function tick() {
+  previous = world;
+  const begin = performance.now();
+  let result;
+  if (online) {
+    const advanced = online.advance(shell.input.sample(0, world.frame));
+    if (!advanced) return;
+    result = { state: advanced.state, events: [...advanced.events] as Awaited<ReturnType<typeof stepDuel>>['events'] };
+  } else if (playback) {
+    const input = playbackFrames.get(world.frame);
+    if (!input) {
+      playback = null;
+      frozen = true;
+      toast('Replay complete');
+      return;
+    }
+    result = stepDuel(world, input);
+  } else {
+    lastInput = shell.input.sample(0, world.frame);
+    const input = {
+      frame: world.frame,
+      byFighterId: {
+        'player-1': lastInput,
+        'player-2': local ? shell.input.sample(1, world.frame) : dummyInput(world.frame, lastInput),
+      },
+    };
+    if (counterpickStage !== null) {
+      const d = duelData(world)!;
+      const id = d.winner === IDS[0] ? IDS[1] : IDS[0];
+      input.byFighterId[id] = { ...neutral(world.frame), auxiliaryButtons: 16 | (counterpickStage << 5) };
+      counterpickStage = null;
+    }
+    result = stepDuel(world, input);
+    recorder.append(input, result.state);
+  }
+  world = result.state;
+  for (const event of duelData(world)?.events ?? []) shell.audio.cue(event.type);
+  updateFlow();
+  simMs = performance.now() - begin;
+  steps++;
+  for (const event of result.events) {
+    if (event.type === 'hit') {
+      const p = world.fighters.find((p) => p.id === event.targetId)!;
+      renderer.hit(f.toNumber(p.x), f.toNumber(p.y) + 1.5);
+      shell.audio.cue('hit');
+    } else if (event.type === 'clank') shell.audio.cue('clank');
+  }
+  for (const p of world.fighters) {
+    const before = previous.fighters.find((v) => v.id === p.id)!;
+    if (p.attack && !before.attack) shell.audio.cue(p.attack.attackId.split(':')[1] ?? 'swing');
+    if (p.grounded && !before.grounded) shell.audio.cue('landing');
+    if (p.locomotion === 'ledge-hang' && before.locomotion !== 'ledge-hang') shell.audio.cue('ledge');
+    if (p.respawnFrames === 0 && before.respawnFrames > 0) shell.audio.cue('respawn');
+    if (Math.floor(p.percentTenths / 250) > Math.floor(before.percentTenths / 250)) shell.audio.cue('helm-crack');
+    if (p.definitionId !== before.definitionId) shell.audio.cue('stance');
+    if (p.vy > before.vy && p.hitstunFrames === 0) shell.audio.cue('jump');
+  }
+}
+function updateHud(now: number) {
+  if (menu) {
+    const pad = Array.from(navigator.getGamepads?.() ?? []).find(Boolean),
+      pressed = pad?.buttons.some((b) => b.pressed) ?? false;
+    if (pressed && !menuPadHeld) {
+      const surface = app.querySelector('.modal-shade') ?? app;
+      const controls = Array.from(
+        surface.querySelectorAll<HTMLButtonElement | HTMLSelectElement>('button:not(:disabled),select'),
+      ).filter((el) => el.getClientRects().length > 0);
+      const index = controls.indexOf(document.activeElement as HTMLButtonElement),
+        current = controls[Math.max(0, index)];
+      if (pad?.buttons[0]?.pressed) current?.click();
+      else if (pad?.buttons[1]?.pressed) {
+        if (showHelp) closeHelp();
+        else {
+          screen = 'title';
+          renderUi();
+        }
+      } else if (pad?.buttons[12]?.pressed || pad?.buttons[13]?.pressed)
+        controls[(index + (pad.buttons[12]?.pressed ? -1 : 1) + controls.length) % controls.length]?.focus();
+      else if (current instanceof HTMLSelectElement && (pad?.buttons[14]?.pressed || pad?.buttons[15]?.pressed)) {
+        current.selectedIndex =
+          (current.selectedIndex + (pad.buttons[14]?.pressed ? -1 : 1) + current.options.length) %
+          current.options.length;
+        current.dispatchEvent(new Event('change'));
+      }
+    }
+    menuPadHeld = pressed;
+    const el = app.querySelector('#connection');
+    if (el)
+      el.textContent = shell.input.connected
+        ? `${shell.input.connected} CONTROLLER${shell.input.connected > 1 ? 'S' : ''} CONNECTED`
+        : 'KEYBOARD + CONTROLLER';
+    return;
+  }
+  const duel = duelData(world)!;
+  const clock = app.querySelector('#clock');
+  if (clock)
+    clock.textContent = duel.sudden
+      ? 'SUDDEN DEATH'
+      : options.timer === 0
+        ? '∞'
+        : `${Math.floor(duel.clock / 3600)}:${String(Math.floor(duel.clock / 60) % 60).padStart(2, '0')}`;
+  const round = app.querySelector('#round-label');
+  if (round)
+    round.textContent =
+      options.format === 'momentum'
+        ? `RIGHT OF WAY ${duel.progress > 0 ? '→' : duel.progress < 0 ? '←' : '◇'} ${Math.abs(duel.progress)} / 5`
+        : `ROUND ${duel.round} · ${duel.wins.join(' — ')}`;
+  const message = app.querySelector('#duel-message');
+  if (message)
+    message.textContent = duel.clash
+      ? 'CLASH · Forward: Press / Back: Parry / Down: Slip'
+      : duel.phase === 'round-end'
+        ? `${duel.winner === IDS[0] ? 'YOUR FLAME ENDURES' : 'THE REFLECTION ENDURES'}`
+        : '';
+  const d = gameData(world);
+  world.fighters.forEach((p, i) => {
+    const k = d.knights[p.id]!,
+      dk = duel.knights[p.id]!;
+    const lives = app.querySelector(`#lives-${i}`);
+    if (lives)
+      lives.innerHTML = Array.from(
+        { length: options.lives },
+        (_, n) => `<i class="${n >= p.stocks ? 'broken' : ''}"></i>`,
+      ).join('');
+    const meter = app.querySelector<HTMLElement>(`#meter-${i}`);
+    if (meter) {
+      meter.style.width = `${dk.soul.remaining ? (dk.soul.remaining / 480) * 100 : dk.meter / 100}%`;
+      meter.parentElement!.classList.toggle('kindled', dk.soul.remaining > 0);
+    }
+    const integrity = app.querySelector<HTMLElement>(`#integrity-${i}`);
+    if (integrity) integrity.style.width = `${dk.integrity / 100}%`;
+    const s = app.querySelector(`#stance-${i}`);
+    if (s)
+      s.textContent = `P${i + 1} / ${k.stance.id.toUpperCase()}${k.gliding ? ' · GLIDE' : k.stance.unfurl ? ' · UNFURL' : ''}`;
+    const n = app.querySelector(`#strain-${i}`);
+    if (n) n.innerHTML = `${Math.floor(p.percentTenths / 10)}<small>STRAIN</small>`;
+    const j = app.querySelector(`#jumps-${i}`);
+    if (j)
+      j.innerHTML = Array.from(
+        { length: k.stance.id === 'wings' ? 3 : 2 },
+        (_, i) => `<i class="${i >= p.jumpsRemaining ? 'empty' : ''}"></i>`,
+      ).join('');
+  });
+  const intro = app.querySelector<HTMLElement>('#intro');
+  if (intro) intro.style.opacity = now < introUntil ? '1' : '0';
+  const telemetry = app.querySelector('#telemetry');
+  if (telemetry && steps % 6 === 0) {
+    const p = world.fighters[0]!,
+      move = p.attack ? MOVES.get(p.attack.attackId) : null;
+    telemetry.textContent = `${frozen ? 'FROZEN' : playback ? 'REPLAY' : 'LIVE'} · ${world.frame}f · ${fps.toFixed(0)} fps\nSim ${simMs.toFixed(2)}ms · ${hashWorldState(world)}\n${move?.name ?? p.locomotion} ${p.attack?.frame ?? ''}\nInput ${lastInput.moveX}, ${lastInput.moveY}\n${gameData(world).knights[p.id]!.stance.switchedAirborne ? 'Air switch spent' : 'Air switch available'}`;
+  }
+}
+addEventListener('keydown', (e) => {
+  if ((e.target as HTMLElement)?.matches('input,select,textarea') || e.repeat) return;
+  if (e.code === 'Escape') {
+    if (showHelp) closeHelp();
+    else if (!menu) togglePause();
+  }
+  if (e.code === 'Tab' && !menu) {
+    dev = !dev;
+    renderUi();
+  }
+  if (e.code === 'Period' && !menu) {
+    frozen = true;
+    tick();
+  }
+  if (e.code === 'Enter' && menu && !showHelp && screen === 'title') setup('versus');
+});
+addEventListener('blur', () => {
+  if (!menu && !paused && !online) {
+    paused = true;
+    renderUi();
+  }
+});
+function frame(now: number) {
+  const rawElapsed = now - lastTime,
+    elapsed = Math.min(100, rawElapsed);
+  lastTime = now;
+  frameTimes.push(rawElapsed);
+  if (frameTimes.length > 60) frameTimes.shift();
+  fps = 1000 / (frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length);
+  if (!menu && !paused && !frozen) accumulator += elapsed * (playback ? replaySpeed : 1);
+  else accumulator = 0;
+  let n = 0;
+  while (accumulator >= 1000 / 60 && n < 6) {
+    tick();
+    accumulator -= 1000 / 60;
+    n++;
+  }
+  renderer.shake = settings.shake;
+  renderer.contrast = settings.contrast;
+  shell.input.deadzone = settings.deadzone;
+  shell.input.tapJump = settings.tapJump;
+  shell.audio.voiceVolume = settings.voice;
+  shell.audio.sfxVolume = settings.sfx;
+  shell.audio.musicVolume = settings.music;
+  const audioDuel = duelData(world);
+  shell.audio.update(
+    audioDuel ? Object.values(audioDuel.knights).reduce((n, k) => n + k.fractures, 0) : 0,
+    !!audioDuel && (audioDuel.sudden || Object.values(audioDuel.knights).some((k) => k.soul.remaining > 0)),
+    !menu && !paused,
+    STAGES.findIndex((s) => s.id === options.stage),
+  );
+  renderer.render(world, paused || frozen ? 1 : accumulator / (1000 / 60), previous, now, menu, debug);
+  updateHud(now);
+  if (now > toastUntil) app.querySelector('.toast')?.remove();
+  requestAnimationFrame(frame);
+}
+
+function onlinePanel() {
+  const el = document.createElement('div');
+  el.className = 'modal-shade';
+  el.innerHTML = `<section class="modal"><button id="online-close" class="close">×</button><div class="eyebrow">Direct peer-to-peer duel</div><h2>Invite your reflection.</h2><p>Host sends an invitation. Guest pastes it and sends an answer back. Both use keyboard P1 controls on their own device.</p><label>Input delay <select id="net-delay">${[0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => `<option ${n === settings.delay ? 'selected' : ''}>${n}</option>`).join('')}</select> frames</label><textarea id="pair-code" placeholder="Paste a pairing code here" rows="4" style="width:100%;margin:20px 0;background:#10232e;color:#c8dede"></textarea><button id="net-host" class="primary">CREATE INVITATION ↗</button><button id="net-join" class="menu-secondary">Join with invitation</button><button id="net-accept" class="menu-secondary">Host: accept answer</button><p id="net-status">Direct connection uses rollback and state-hash checks. Pairing codes contain connection information; share them only with your opponent. Some networks need a relay, which this build does not provide.</p></section>`;
+  app.append(el);
+  const make = () => {
+    online?.close();
+    online = new OnlineDuel(
+      { ...options, format: 'continuous', cpu: [0, 0] },
+      Number($<HTMLSelectElement>('#net-delay').value),
+    );
+    online.onStatus = (s) => {
+      const target = app.querySelector('#net-status');
+      if (target) target.textContent = s;
+      else if (!online?.ready) toast(s);
+    };
+    online.onReady = (o) => {
+      mode = 'online';
+      options = o;
+      start();
+    };
+    return online;
+  };
+  const run = async (fn: () => Promise<string | void>) => {
+    try {
+      const result = await fn();
+      if (result) {
+        const field = $<HTMLTextAreaElement>('#pair-code');
+        field.value = result;
+        field.select();
+      }
+    } catch (error) {
+      $('#net-status').textContent = String(error);
+    }
+  };
+  on('#net-host', () => void run(() => make().host()));
+  on('#net-join', () => {
+    const code = $<HTMLTextAreaElement>('#pair-code').value;
+    void run(() => make().join(code));
+  });
+  on(
+    '#net-accept',
+    () =>
+      void run(async () => {
+        if (!online) throw Error('Create an invitation first');
+        await online.accept($<HTMLTextAreaElement>('#pair-code').value);
+      }),
+  );
+  on('#online-close', () => {
+    online?.close();
+    online = null;
+    el.remove();
+  });
+}
+function setup(next: string) {
+  mode = next;
+  screen = 'setup';
+  options = {
+    ...DEFAULT_DUEL,
+    counterpick: next === 'versus',
+    format: next === 'training' ? 'training' : next === 'momentum' ? 'momentum' : 'rounds',
+    stage: next === 'momentum' ? 'pilgrimage' : 'mirror-sanctum',
+    cpu: [0, next === 'training' ? 0 : 5],
+  };
+  renderUi();
+}
+function stagePreview(id: string) {
+  const stage = stageById(id);
+  return `<svg viewBox="0 0 220 90" aria-hidden="true"><path d="M${110 - stage.width / 2} 72H${110 + stage.width / 2}" stroke="currentColor" stroke-width="4"/>${stage.platforms.map(([x, y, w]) => `<path d="M${110 + x - w / 2} ${72 - y}h${w}" stroke="currentColor" stroke-width="2"/>`).join('')}<circle cx="110" cy="14" r="2" fill="currentColor"/></svg>`;
+}
+function menuPanel() {
+  return `<div class="modal-shade"><section class="modal selection"><button class="close" id="back-menu">×</button>${
+    screen === 'setup'
+      ? `<div class="eyebrow">Choose your battleground</div><h2>${mode === 'training' ? 'The Sanctum' : mode === 'momentum' ? 'A pilgrimage of blades' : 'Write the rules of your duel.'}</h2><div class="rule-grid"><label>Opponent<select id="opponent"><option value="0">Player 2 · local</option>${Array.from({ length: 9 }, (_, i) => `<option value="${i + 1}" ${options.cpu[1] === i + 1 ? 'selected' : ''}>CPU level ${i + 1}</option>`).join('')}</select></label>${mode === 'versus' ? `<label>Format<select id="format"><option value="rounds">Rounds · best of 3</option><option value="five">Rounds · best of 5</option><option value="continuous">Continuous · 6 Fractures</option></select></label>` : ''}<label>Timer<select id="timer"><option value="21600">6 minutes</option><option value="14400">4 minutes</option><option value="28800">8 minutes</option><option value="0">Off</option></select></label><label>Your Oath<select id="oath-0">${oathOptions(0)}</select></label><label>Reflection's Oath<select id="oath-1">${oathOptions(1)}</select></label></div><p class="note" id="oath-note">${OATHS[options.oaths[0]].description}</p><div class="star-map">${STAGES.filter(
+          (s) => (mode === 'momentum' ? s.id === 'pilgrimage' : !['pilgrimage', 'unsworn'].includes(s.id)),
+        )
+          .map(
+            (s) =>
+              `<button class="stage-card ${s.id === options.stage ? 'selected' : ''}" data-stage="${s.id}" style="--star:#${s.color.toString(16).padStart(6, '0')}">${stagePreview(s.id)}<b>${s.name}</b><small>${['skyreach', 'hollow-throne'].includes(s.id) ? 'COUNTERPICK' : 'STARTER'}</small></button>`,
+          )
+          .join('')}</div><button class="primary" id="launch">IGNITE <span>↗</span></button>`
+      : screen === 'gauntlet'
+        ? `<div class="eyebrow">${cleared.length} / 7 Fractures reclaimed</div><h2>Become whole.</h2><p>Choose the next echo. Each Oath fights on its home ground. The Unsworn waits beyond the six.</p><label>Difficulty <select id="difficulty"><option>Squire</option><option>Knight</option>${progress.clears.includes('Knight') ? '<option>Paragon</option>' : ''}</select></label><div class="star-map">${Object.entries(
+            OATHS,
+          )
+            .filter(([id]) => id !== 'unsworn' || cleared.length >= 6)
+            .map(
+              ([id, o]) =>
+                `<button class="stage-card" data-fracture="${id}" ${cleared.includes(id as Oath) ? 'disabled' : ''} style="--star:#${o.color.toString(16)}">${stagePreview(id === 'unsworn' ? 'unsworn' : o.stage)}<b>${o.name}${cleared.includes(id as Oath) ? ' · reclaimed' : ''}</b><small>${o.description}</small></button>`,
+            )
+            .join('')}</div>`
+        : `<div class="eyebrow">Tune your experience</div><h2>Keep the flame readable.</h2><div class="rule-grid"><label>Music<input id="music-volume" type="range" min="0" max="1" step=".05" value="${settings.music}"></label><label>Effects<input id="sfx-volume" type="range" min="0" max="1" step=".05" value="${settings.sfx}"></label><label>Voice<input id="voice-volume" type="range" min="0" max="1" step=".05" value="${settings.voice}"></label><label>Stick deadzone<input id="deadzone" type="range" min=".05" max=".4" step=".01" value="${settings.deadzone}"></label><label>Action buffer<select id="action-buffer">${[3, 4, 5, 6, 7, 8].map((n) => `<option ${n === settings.buffer ? 'selected' : ''}>${n}</option>`).join('')}</select></label><label>High contrast<input id="contrast" type="checkbox" ${settings.contrast ? 'checked' : ''}></label><label>Screen shake<input id="shake" type="checkbox" ${settings.shake ? 'checked' : ''}></label><label>Tap jump<input id="tap-jump" type="checkbox" ${settings.tapJump ? 'checked' : ''}></label></div><div class="remap-grid">${Object.entries(
+            settings.bindings,
+          )
+            .map(
+              ([action, key]) =>
+                `<button class="menu-secondary" data-remap="${action}">${action}<kbd>${key}</kbd></button>`,
+            )
+            .join(
+              '',
+            )}</div><p>Click a key to rebind it. Progress and options save on this device.</p><button class="primary" id="save-options">SAVE OPTIONS <span>↗</span></button>`
+  }</section></div>`;
+}
+function oathOptions(index: number) {
+  return Object.entries(OATHS)
+    .map(
+      ([id, o]) =>
+        `<option value="${id}" ${options.oaths[index] === id ? 'selected' : ''}>${o.name}${id === 'unsworn' ? ' · True Mirror' : ''}</option>`,
+    )
+    .join('');
+}
+function bindMenu() {
+  on('#back-menu', () => {
+    screen = 'title';
+    renderUi();
+  });
+  on('#launch', () => {
+    const opponent = $<HTMLSelectElement>('#opponent');
+    options.cpu = [0, Number(opponent.value)];
+    const format = app.querySelector<HTMLSelectElement>('#format')?.value;
+    options.bestOf = format === 'five' ? 5 : 3;
+    if (mode === 'versus') options.format = format === 'continuous' ? 'continuous' : 'rounds';
+    options.lives = options.format === 'continuous' ? 6 : 4;
+    options.timer = Number($<HTMLSelectElement>('#timer').value);
+    start(options.cpu[1] === 0 && mode !== 'training');
+    dev = mode === 'training';
+    renderUi();
+  });
+  app.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach(
+    (b) =>
+      (b.onclick = () => {
+        options.stage = b.dataset.stage!;
+        app.querySelectorAll('[data-stage]').forEach((n) => n.classList.toggle('selected', n === b));
+      }),
+  );
+  for (const i of [0, 1]) {
+    const el = app.querySelector<HTMLSelectElement>(`#oath-${i}`);
+    if (el)
+      el.onchange = () => {
+        options.oaths[i] = el.value as Oath;
+        $('#oath-note').textContent = OATHS[el.value as Oath].description;
+      };
+  }
+  const diff = app.querySelector<HTMLSelectElement>('#difficulty');
+  if (diff) {
+    diff.value = difficulty;
+    diff.onchange = () => (difficulty = diff.value);
+  }
+  app.querySelectorAll<HTMLButtonElement>('[data-fracture]').forEach(
+    (b) =>
+      (b.onclick = () => {
+        currentOath = b.dataset.fracture as Oath;
+        options = {
+          ...DEFAULT_DUEL,
+          stage: currentOath === 'unsworn' ? 'unsworn' : OATHS[currentOath].stage,
+          cpu: [0, currentOath === 'unsworn' ? 9 : difficulty === 'Squire' ? 3 : difficulty === 'Paragon' ? 9 : 6],
+          oaths: ['unsworn', currentOath],
+        };
+        start();
+      }),
+  );
+  app.querySelectorAll<HTMLButtonElement>('[data-remap]').forEach(
+    (button) =>
+      (button.onclick = () => {
+        button.textContent = 'Press a key…';
+        const capture = (event: KeyboardEvent) => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          settings.bindings[button.dataset.remap!] = event.code;
+          shell.input.remap(settings.bindings);
+          removeEventListener('keydown', capture, true);
+          renderUi();
+        };
+        addEventListener('keydown', capture, true);
+      }),
+  );
+  on('#save-options', () => {
+    settings.buffer = Number($<HTMLSelectElement>('#action-buffer').value);
+    settings.music = Number($<HTMLInputElement>('#music-volume').value);
+    settings.sfx = Number($<HTMLInputElement>('#sfx-volume').value);
+    settings.voice = Number($<HTMLInputElement>('#voice-volume').value);
+    settings.deadzone = Number($<HTMLInputElement>('#deadzone').value);
+    settings.shake = $<HTMLInputElement>('#shake').checked;
+    settings.contrast = $<HTMLInputElement>('#contrast').checked;
+    settings.tapJump = $<HTMLInputElement>('#tap-jump').checked;
+    persist('settings', settings);
+    screen = 'title';
+    renderUi();
+    toast('Options saved');
+  });
+}
+function results() {
+  const d = duelData(world)!,
+    won = d.winner === IDS[0];
+  const el = document.createElement('div');
+  el.className = 'modal-shade';
+  el.innerHTML = `<section class="modal result"><div class="eyebrow">${stageById(options.stage).name} · ${d.wins.join(' — ')}</div><h2>${won ? 'Your flame endures.' : 'The reflection remembers.'}</h2><div class="result-stats">${world.fighters
+    .map((p, i) => {
+      const k = d.knights[p.id]!;
+      return `<div><h3>${i ? 'THE REFLECTION' : 'THE UNSWORN'}</h3><b>${k.parries}</b> parries <b>${k.clashes}</b> clashes won <b>${k.fractures}</b> Fractures lost</div>`;
+    })
+    .join(
+      '',
+    )}</div><p>${Math.floor(world.frame / 3600)}:${String(Math.floor(world.frame / 60) % 60).padStart(2, '0')} elapsed · deterministic replay captured</p><button class="primary" id="result-next">${mode === 'gauntlet' && won ? 'RECLAIM THE SHARD' : 'REMATCH'} <span>↗</span></button><button class="menu-secondary" id="result-replay">Save replay</button><button class="menu-secondary" id="result-card">Save result card</button><button class="menu-secondary" id="result-exit">Return to title</button></section>`;
+  app.append(el);
+  on('#result-exit', title);
+  on('#result-replay', saveReplay);
+  on('#result-card', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 630;
+    const c = canvas.getContext('2d')!;
+    c.fillStyle = '#08131d';
+    c.fillRect(0, 0, 1200, 630);
+    c.fillStyle = '#b2e1d9';
+    c.font = '20px sans-serif';
+    c.fillText('SOULFIRE LEGENDS / SPECTRIS DUELLUM', 80, 90);
+    c.font = '60px Georgia';
+    c.fillText(won ? 'Your flame endures.' : 'The reflection remembers.', 80, 220);
+    c.font = '24px sans-serif';
+    c.fillText(`${stageById(options.stage).name} · ${d.wins.join(' — ')} · ${world.frame} frames`, 80, 300);
+    c.fillText(`${d.knights[IDS[0]]!.parries} parries / ${d.knights[IDS[0]]!.clashes} clashes won`, 80, 360);
+    c.font = '16px monospace';
+    c.fillText(`REPLAY HASH ${hashWorldState(world)}`, 80, 530);
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL();
+    a.download = 'spectris-duel.png';
+    a.click();
+  });
+  on('#result-next', () => {
+    if (mode === 'gauntlet' && won) {
+      if (!cleared.includes(currentOath)) cleared.push(currentOath);
+      if (!progress.unlocked.includes(currentOath)) progress.unlocked.push(currentOath);
+      if (cleared.length === 7 && !progress.clears.includes(difficulty)) progress.clears.push(difficulty);
+      persist('progress', progress);
+      menu = true;
+      screen = 'gauntlet';
+      renderUi();
+    } else start(local);
+  });
+}
+const vigilPrompts = [
+  ['Find your footing', 'Move with A / D, then jump with Space.'],
+  ['Trust the sky', 'Use your three air jumps, then hold Space while falling to glide.'],
+  ['Change your answer', 'Press I to unfurl the Cape.'],
+  ['Turn the blade aside', 'Hold L in Cape stance. Its first 4 frames parry.'],
+  ['Leave an echo', 'Switch to Wings with I, then press L to evade.'],
+  ['Take hold', 'Approach the reflection. U grabs; J pummels; a direction throws.'],
+  ['Meet steel with steel', 'Strike together. In Clash, choose forward, back, or down.'],
+  ['Let the sword fly', 'In Wings, K throws the blade. K again recalls it.'],
+  ['Find your way home', 'Jump off the edge and recover with jumps, I, and up + K.'],
+  ['Ignite', 'Your meter is full. Press K + L to Kindle.'],
+];
+function updateFlow() {
+  const d = duelData(world)!;
+  options = d.options;
+  if (d.phase === 'round-end' && d.options.counterpick && d.winner && counterpickRound !== d.round) {
+    counterpickRound = d.round;
+    const loser = d.winner === IDS[0] ? 1 : 0;
+    if (!d.options.cpu[loser]) {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-shade counterpick';
+      overlay.innerHTML = `<section class="modal selection"><div class="eyebrow">P${loser + 1} chooses the next ground</div><h2>A new answer.</h2><div class="star-map">${STAGES.slice(
+        0,
+        7,
+      )
+        .map(
+          (stage, i) =>
+            `<button class="stage-card" data-counterpick="${i}">${stagePreview(stage.id)}<b>${stage.name}</b></button>`,
+        )
+        .join('')}</div></section>`;
+      app.append(overlay);
+      overlay.querySelectorAll<HTMLButtonElement>('[data-counterpick]').forEach(
+        (b) =>
+          (b.onclick = () => {
+            counterpickStage = Number(b.dataset.counterpick);
+            overlay.remove();
+          }),
+      );
+    }
+  }
+  if (d.phase === 'fight' && duelData(previous)?.phase === 'round-end') {
+    renderUi();
+    introUntil = performance.now() + 1500;
+  }
+  if (d.phase === 'over' && !resultShown) {
+    resultShown = true;
+    frozen = true;
+    shell.audio.cue(`voice:reflection-${String(1 + (d.round % 8)).padStart(2, '0')}`);
+    results();
+  }
+  if (vigil < 0) return;
+  const p = world.fighters[0]!,
+    k = d.knights[p.id]!,
+    g = gameData(world).knights[p.id]!;
+  const elapsed = world.frame - vigilStart;
+  const checks = [
+    elapsed > 30 && !p.grounded,
+    g.gliding,
+    g.stance.id === 'cape',
+    k.parries > 0,
+    k.evade > 0,
+    d.events.some((e) => e.type === 'throw'),
+    d.events.some((e) => e.type === 'clash-resolve'),
+    vigilBlade && !k.blade,
+    vigilOffstage && p.grounded,
+    k.soul.remaining > 0,
+  ];
+  if (k.blade) vigilBlade = true;
+  if (Math.abs(f.toNumber(p.x)) > 16 && !p.grounded) vigilOffstage = true;
+  if (vigil === 3 && elapsed % 100 === 1) {
+    const target = world.fighters[1]!;
+    p.x = f.fromInt(-1);
+    target.x = f.fromInt(2);
+    target.facing = -1;
+    target.attack = { attackId: 'wings:forward-smash', frame: 0, hitTargets: [] };
+    record();
+  }
+  if (vigil === 6 && elapsed === 1) {
+    d.clash = 12;
+    d.knights[IDS[1]]!.choice = 'press';
+    world.extensionState = JSON.stringify({ ...gameData(world), duel: d });
+    record();
+  }
+  if (vigil === 9 && elapsed === 1) {
+    k.meter = 10000;
+    world.extensionState = JSON.stringify({ ...gameData(world), duel: d });
+    record();
+  }
+  const prompt = app.querySelector('#vigil-prompt');
+  if (prompt)
+    prompt.innerHTML = `<span class="eyebrow">THE VIGIL · ${vigil + 1} / 10</span><h3>${vigilPrompts[vigil]![0]}</h3><p>${vigilPrompts[vigil]![1]}</p><button id="vigil-skip">Next lesson →</button>`;
+  on('#vigil-skip', advanceVigil);
+  if (checks[vigil]) advanceVigil();
+}
+function advanceVigil() {
+  vigil++;
+  vigilBlade = false;
+  vigilOffstage = false;
+  vigilStart = world.frame;
+  if (vigil >= 10) {
+    vigil = -1;
+    progress.vigil = true;
+    persist('progress', progress);
+    mode = 'versus';
+    options = { ...DEFAULT_DUEL, cpu: [0, 3] };
+    start();
+    toast('The Vigil is complete. Face your first reflection.');
+  }
+}
+
+const hooks = {
+  getState: () => structuredClone(world),
+  setState: (state: WorldState) => {
+    gameData(state);
+    world = structuredClone(state);
+    previous = world;
+    record();
+  },
+  step: (frames = 1) => {
+    for (let i = 0; i < Math.min(10000, frames); i++) tick();
+    return structuredClone(world);
+  },
+  hash: () => hashWorldState(world),
+  start,
+  configure: (value: Partial<DuelOptions>) => {
+    options = { ...options, ...value };
+    start(value.cpu?.[1] === 0);
+  },
+  loadReplay,
+  pause: () => {
+    frozen = true;
+  },
+  resume: () => {
+    frozen = false;
+  },
+  input: (input: SimInputFrame) => {
+    const result = stepDuel(world, {
+      frame: world.frame,
+      byFighterId: { 'player-1': { ...input, frame: world.frame }, 'player-2': neutral(world.frame) },
+    });
+    world = result.state;
+    previous = world;
+    return world;
+  },
+  metrics: () => ({
+    fps,
+    simMs,
+    drawCalls: renderer.renderer.info.render.calls,
+    triangles: renderer.renderer.info.render.triangles,
+  }),
+  saveReplay: () => recorder.finish(),
+};
+Object.assign(window, { __spectris: hooks });
+renderUi();
+requestAnimationFrame(frame);

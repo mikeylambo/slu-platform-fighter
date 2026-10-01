@@ -13,6 +13,7 @@ export function duelFrame(options: Partial<DuelOptions> = {}): Frame {
     w,
     d,
     inputs: { [IDS[0]]: neutral(w.frame), [IDS[1]]: neutral(w.frame) },
+    samples: { [IDS[0]]: neutral(w.frame), [IDS[1]]: neutral(w.frame) },
     guards: new Map(),
     immediate: [],
     shatterTargets: new Set(),
@@ -22,6 +23,7 @@ export function duelFrame(options: Partial<DuelOptions> = {}): Frame {
 /** Builds the Actor for a slot with the given input this frame. */
 export function actorFor(frame: Frame, index: 0 | 1, input: Partial<SimInputFrame> = {}): Actor {
   frame.inputs[IDS[index]] = { ...neutral(frame.w.frame), ...input };
+  frame.samples[IDS[index]] = { ...frame.inputs[IDS[index]]! };
   return makeActor(frame, index, frame.w.fighters[index]!);
 }
 

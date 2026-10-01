@@ -104,11 +104,12 @@ export function stepHolding(actor: Actor): void {
   if (!k.holding) {
     return;
   }
-  const { w, d, inputs } = frame;
+  const { w, d } = frame;
   p.grabFrames = 0;
   const victim = w.fighters.find((fighter) => fighter.id === k.holding)!;
   const vk = d.knights[victim.id]!;
-  const mash = inputs[victim.id]!;
+  // Read the victim's own sample: their input may already be frozen this frame.
+  const mash = frame.samples[victim.id]!;
   victim.x = f.add(p.x, (R.holdOffset * p.facing) as Fixed);
   victim.y = p.y;
   victim.vx = f.zero;
@@ -189,7 +190,10 @@ function release(actor: Actor, victim: FighterState, vk: DuelKnight): void {
   k.holding = null;
   victim.grabbedById = null;
   p.grabTargetId = null;
-  victim.locomotion = victim.grounded ? 'idle' : 'airborne';
+  if (victim.locomotion !== 'knockdown') {
+    // Cape down throw forces a tech; every other release returns the victim to neutral.
+    victim.locomotion = victim.grounded ? 'idle' : 'airborne';
+  }
   k.lock = 0;
   victim.invulnerableFrames = 0;
   if (!p.grounded) {

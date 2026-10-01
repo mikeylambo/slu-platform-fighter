@@ -79,15 +79,10 @@ export function stepDuel(original: WorldState, bundle: MatchInputFrame): StepRes
     return stepRoundEnd(w, d, bundle, IDS);
   }
   applyStanceLock(w, d);
-  const frame: Frame = {
-    w,
-    d,
-    inputs: readInputs(w, d, bundle),
-    guards: new Map(),
-    immediate: [],
-    shatterTargets: new Set(),
-  };
-  stripStanceInput(d, frame.inputs);
+  const inputs = readInputs(w, d, bundle);
+  stripStanceInput(d, inputs);
+  const samples = Object.fromEntries(Object.entries(inputs).map(([id, input]) => [id, { ...input }]));
+  const frame: Frame = { w, d, inputs, samples, guards: new Map(), immediate: [], shatterTargets: new Set() };
   if (d.clash > 0) {
     stepClashWindow(frame, IDS, (slot) => (d.options.cpu[slot] ? cpuClashChoice(w, slot) : null));
     return idle(w, d);

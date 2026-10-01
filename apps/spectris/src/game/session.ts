@@ -9,7 +9,7 @@ import {
 import { resolveStandardMove } from '../../../../packages/sim/src/actionResolver.js';
 import type { SimInputFrame, WorldState } from '../../../../packages/sim/src/types.js';
 import { requestStance, tickStance, type StanceState } from '../../../../packages/stance/src/stance.js';
-import { PHYSICS, MOVEMENT, PHYSICS_REGISTRY, worldValue } from '../content/knight/physics.js';
+import { PHYSICS, MOVEMENT, physicsRegistry, worldValue, type FeelSettings } from '../content/knight/physics.js';
 import { STANCES } from '../content/knight/stances.js';
 import { ATTACKS, MOVES } from '../content/knight/moves/index.js';
 import { SURFACES, LEDGES, SANCTUM, STOCK_RULES } from '../content/stages/sanctum.js';
@@ -28,6 +28,8 @@ export interface KnightState {
   lastHitReset: number;
 }
 export interface GameData {
+  /** Feel-lab physics preset for this match (absent = GDD default). */
+  feel?: FeelSettings;
   modifiers?: Record<string, { extraJumps: number; glideDuration: number; buffer: number }>;
   knights: Record<string, KnightState>;
 }
@@ -250,7 +252,7 @@ export function stepSession(
     new Map(),
     new Map(),
     new Map(),
-    PHYSICS_REGISTRY,
+    physicsRegistry(data.feel),
   );
   for (const p of result.state.fighters) {
     const before = w.fighters.find((v) => v.id === p.id)!,

@@ -1,125 +1,135 @@
 {
-  "version": "spectris-duel-v3",
+  "version": "spectris-duel-v4",
   "matches": [
     {
       "id": 0,
       "label": "cpu 1 vs cpu 9 on mirror-sanctum",
-      "frames": 3814,
+      "frames": 3648,
       "checkpoints": [
         "94a991f2b5b2acc3",
-        "d0f2ebf8789ece29",
-        "1809829d58fc6d25",
-        "4d6bcdb69a4c8e72",
-        "a8d5a9e2ce9d25db",
-        "9416d9a9e16e4385",
-        "4656b64464c802a5"
+        "551f916ab33a2199",
+        "aa270bd3361a3eec",
+        "95f11be7683e5b37",
+        "f2917136239257a4",
+        "6a66c349c1b3ccca",
+        "04a873e10d864bba"
       ],
-      "final": "45bcdc8ccc9eeccb"
+      "final": "393a4f3bae969a0c"
     },
     {
       "id": 1,
       "label": "cpu 2 vs cpu 8 on eclipse",
-      "frames": 3657,
+      "frames": 4000,
       "checkpoints": [
         "74dbc03e47c239d2",
-        "cb0a489edab29b29",
-        "3163ed3f2bc00658",
-        "d8f34bf08563a907",
-        "1d85b527752e7eb5",
-        "08a0ea9628ee4fd8",
-        "3ca268ea5c5fe849"
+        "8e1ab3370588ed26",
+        "038faeccab9703b8",
+        "299c56d577a87089",
+        "317086601b0d1ce8",
+        "691dbd1cf4702830",
+        "c6acdd2abbeb705a"
       ],
-      "final": "512b23f3ef3de4a9"
+      "final": "9db9a596af533d3f"
     },
     {
       "id": 2,
       "label": "cpu 3 vs cpu 7 on fault-screen",
-      "frames": 3643,
+      "frames": 3725,
       "checkpoints": [
         "e878e1507d7e4e2b",
-        "379f3ac489d7a51f",
-        "92c1c5328e48c975",
-        "74f7ae2963a90579",
-        "a106c9aebc388111",
-        "f8caea18c3d14b7b",
-        "b0ecb708022a93b2"
+        "b35a829c4b27d2ae",
+        "56e4083a0c06f302",
+        "5e4e8d87a7a81387",
+        "4b07f2d7be8415d3",
+        "350a71097fb8614d",
+        "a6e8e4760f5c8d10"
       ],
-      "final": "bd0ad0cc148ef5bd"
+      "final": "f813b893b0d3a528"
     },
     {
       "id": 3,
       "label": "cpu 4 vs cpu 6 on stillwater",
-      "frames": 3629,
+      "frames": 7200,
       "checkpoints": [
         "203637112cb9b57f",
-        "823ee62343e721ab",
-        "13cb87ec74c5b168",
-        "51f4114cae60a04b",
-        "e16d530a45a843ca",
-        "1765f7084ba09d45",
-        "78916f178e45156c"
+        "eeba51dbf60b4b99",
+        "f4968762a3fc2ae9",
+        "366b19ecff7e4ff5",
+        "0305ca2e9e1e9b55",
+        "4c8ef656c8c8d498",
+        "90d1b809d9bfde20",
+        "5676e336e776e724",
+        "a5229c18710d261f",
+        "5511106ad3c7ca5d",
+        "c3afa2a0a96863d9",
+        "c6ca9fbdfdec05a6"
       ],
-      "final": "af8256e6fd46e08d"
+      "final": "55b36b98015583cf"
     },
     {
       "id": 4,
       "label": "cpu 5 vs cpu 5 on bell-foundry",
-      "frames": 4011,
+      "frames": 7200,
       "checkpoints": [
         "182dbff149d49851",
-        "a4a3e05bdef79648",
-        "ef564a853383ca2a",
-        "c86e5bf8e9044e0b",
-        "1c940ecc31660b62",
-        "d7dea55c8bc525eb",
-        "d4ad8be48777dc6f"
+        "428856c7381b08d5",
+        "aa1da545ca474de6",
+        "17fefedfa4df5efe",
+        "34ecbb041e7e0ad7",
+        "599ffe9d6e394fdd",
+        "6ce313f76fb2a895",
+        "a4a22bd6d66658c0",
+        "9b287cdf77c8a5c4",
+        "342f32ead60e0eb7",
+        "3aee370f06f9ef9f",
+        "533ceacdbe2625e6"
       ],
-      "final": "d9c837553e2db389"
+      "final": "a8f5624546a2e771"
     },
     {
       "id": 5,
       "label": "cpu 6 vs cpu 4 on skyreach",
-      "frames": 3671,
+      "frames": 3708,
       "checkpoints": [
         "601279bbc60aa33b",
-        "8c45d31afcebc87f",
-        "9d12871cf20cc3be",
-        "2fae4ce9fcd176a0",
-        "bb9a05d17e357f27",
-        "f411fa3b0b5467ef",
-        "2748952c4f42e0e9"
+        "4f21419ff98c351f",
+        "b7c9236a3f14f6f2",
+        "f3538224d27cabc6",
+        "a0cdb255b0d3e94b",
+        "9ab9fbc8b7db0183",
+        "f96ff53ddad02573"
       ],
-      "final": "ff561ee161d89431"
+      "final": "5e3aae2bff53cc4d"
     },
     {
       "id": 6,
       "label": "cpu 7 vs cpu 3 on hollow-throne",
-      "frames": 3850,
+      "frames": 3730,
       "checkpoints": [
         "780e4d9bee1a18e4",
-        "763fc01d2b3582c3",
-        "c20c32d1a0f4208b",
-        "ce73e216900e59b4",
-        "d260222fb72dde49",
-        "a67f2af352abf161",
-        "2be6a3eaebc8648f"
+        "0c0e0d49bed2cf43",
+        "a9b5632c875353ff",
+        "97dde64d519b6003",
+        "71d3f665cec1f20a",
+        "05afc6cbe24c36f6",
+        "b5074cc29edd58ef"
       ],
-      "final": "151f27771e99721f"
+      "final": "a8573ee0cb039937"
     },
     {
       "id": 7,
       "label": "cpu 8 vs cpu 2 on unsworn",
-      "frames": 3700,
+      "frames": 3628,
       "checkpoints": [
         "a8faa31bbd7ce632",
-        "10f926ff751e4619",
-        "0ccab0144ed8eed9",
-        "46dfa61e720a1641",
-        "b70bc23a9ee90555",
-        "c5d58e772e5b3ed3",
-        "918a72cb2a044f14"
+        "0940e3cf35cf389a",
+        "6a4717b6e3bbd1d6",
+        "aa6ee67ce7226bdf",
+        "ffb03a1a48a1de06",
+        "eb0d322fda359100",
+        "a97bc2bf240b3ccf"
       ],
-      "final": "57383bc63981797f"
+      "final": "fd88d5ebe2b6572d"
     },
     {
       "id": 8,
@@ -127,19 +137,19 @@
       "frames": 7200,
       "checkpoints": [
         "d39f7b5367356e25",
-        "452103163b5d00c3",
-        "76131a13a9aae02f",
-        "d0bc296a8b825c05",
-        "5d8e60ac4b24f3b4",
-        "411e20645c4bb30e",
-        "2b89475ab2e16e03",
-        "2004593282375ed5",
-        "6dcac91f22734387",
-        "b0786164ee75e468",
-        "9305bf43e525c5a2",
-        "429cf6c60f7bf49c"
+        "72c9c9de13cb6013",
+        "ba13242e846a1de5",
+        "98807f26872bd0aa",
+        "b25892f01fc59500",
+        "0ed6b980780b834e",
+        "fcfce2727b63e40b",
+        "9564daebfbd17599",
+        "d2cf44ef9602c14f",
+        "5f774f07cb32e0b4",
+        "11b83a907f99fde2",
+        "2c37196df5fb06e8"
       ],
-      "final": "22f107a5b210eb6e"
+      "final": "0a1d1cbe25f59c2e"
     },
     {
       "id": 9,
@@ -147,19 +157,19 @@
       "frames": 7200,
       "checkpoints": [
         "5f844427c4069e01",
-        "a85be2ebdb5d8465",
-        "8060b14bcf4a309b",
-        "38e2ebe580f75ef4",
-        "9a4a37472125e55a",
-        "298c367f345214f0",
-        "316b61c45ad3bc31",
-        "2c9168128f072537",
-        "14d2740679cb726d",
-        "7b2be230b915d946",
-        "405c493c4653994c",
-        "6fa4a4929c073a62"
+        "1c773c898f6886bb",
+        "c83a2f1efaad3bbc",
+        "f0ec3b2b0e99066a",
+        "8b148fdd5c3a41c5",
+        "aa5fe3556aa51656",
+        "b6a9ee58187bdc27",
+        "e791e91e6dd749b1",
+        "042241964572efbb",
+        "e15f9a657a1657c0",
+        "ec69464ea642ab4a",
+        "1b5201d612edf694"
       ],
-      "final": "747ff14b3157b4d0"
+      "final": "3a73b6aef89df776"
     },
     {
       "id": 10,
@@ -167,19 +177,19 @@
       "frames": 7200,
       "checkpoints": [
         "7156b9087250c292",
-        "b06def9cc7858268",
-        "363ddfd499383f7b",
-        "e84599ed36749081",
-        "4db154f3a7591abd",
-        "7d104c0e18786187",
-        "b9a6903a0ab5fbfc",
-        "e8c504da7023981e",
-        "714a49279988fc20",
-        "180b42a7248036e1",
-        "eb245dd54f7bf6bb",
-        "9611ec1fabb4d765"
+        "280aa700489213cb",
+        "b1b328139fb4ad0d",
+        "315977642ca51b6b",
+        "f5cf46dd44e85409",
+        "489a78ca3e7e3aef",
+        "777ff4a36ddedcaa",
+        "8d019fd36cd15b80",
+        "66b9fe04e1b9572e",
+        "dc9cb1450cea01cd",
+        "0997659e02d31693",
+        "4ed9caa683e3db81"
       ],
-      "final": "9f7f98b785342727"
+      "final": "dc32e3285b669f4f"
     },
     {
       "id": 11,
@@ -187,47 +197,46 @@
       "frames": 7200,
       "checkpoints": [
         "a2606961a9a94564",
-        "e9e8b8ae5584ff30",
-        "8333157b713e414b",
-        "bf31a5cba5b955f1",
-        "7ee7a997513f723e",
-        "4e3de7290065d214",
-        "8b1592aab07f1999",
-        "5a86a1879c06c16f",
-        "450bbddb01abdac5",
-        "b3d33ed618484682",
-        "2d99512dcc30a6c0",
-        "5c33a61fc3b1769e"
+        "7cb1af33954ef4d3",
+        "6570be3393e8bc87",
+        "74d7723cb5137852",
+        "2d0c7100697cc6a0",
+        "378343c40dcc2ca6",
+        "fe509834778bfd0b",
+        "d3c7e4c11feeb771",
+        "37cd0c765401f01f",
+        "cae4ddb3a1ac95d4",
+        "1e70a52f08270b4a",
+        "f3837b46edc570e8"
       ],
-      "final": "20e7c26575292834"
+      "final": "92cc88d1ea2c4d86"
     },
     {
       "id": 12,
       "label": "fuzz vs cpu momentum",
-      "frames": 3040,
+      "frames": 3652,
       "checkpoints": [
         "9a872bfab56e4940",
-        "a8a31b01ae9fc7cb",
-        "a25b01e87ec71746",
-        "950208d0f3eb8768",
-        "a3fe291b142d48ff",
-        "26ad8b8b5f8f8371"
+        "e2650c4fca5d0dfe",
+        "7152fef37367b986",
+        "8623e21ddb042243",
+        "2eda0597cb1185aa",
+        "d442ba8f8d473d7f",
+        "c9fd1650bf56b838"
       ],
-      "final": "cd060ba776cb7632"
+      "final": "4146b908cf7742fd"
     },
     {
       "id": 13,
       "label": "fuzz vs cpu momentum",
-      "frames": 3251,
+      "frames": 2051,
       "checkpoints": [
         "81b1320b45b1d0f0",
-        "dc44d38cc499db2e",
-        "e3231b2d8fd4859c",
-        "f0964516b540ba46",
-        "59ec5c12c986d923",
-        "d04a07cace9f0065"
+        "2dbdf508cad133fd",
+        "92a7f5490b2be050",
+        "75eccd05f185ed21"
       ],
-      "final": "56416fa1b6fc1e39"
+      "final": "e59579a68651da16"
     },
     {
       "id": 14,
@@ -235,19 +244,19 @@
       "frames": 7200,
       "checkpoints": [
         "6c1dc79a1ee4ffa4",
-        "c0706d62d9aad460",
-        "9fc9c8890b24891f",
-        "63fffe44f92d33b8",
-        "b4018ccd17f5fbda",
-        "3feb89b57d4093bd",
-        "f09b17970cc6fccd",
-        "773763f88f65412f",
-        "174dd6c444c818bb",
-        "7f2a047f2734e496",
-        "1da274516a290f25",
-        "d6a842a94c510e14"
+        "519bdcd976222c26",
+        "7e1c91f092b5a822",
+        "c27e89f3fe044315",
+        "5c85ec2bb3072fd2",
+        "acc7e6e263102513",
+        "a823c0aa1c1a80a9",
+        "0ecfb1514c181a9c",
+        "5eccac3c4d6190d3",
+        "45de21926ffb18cf",
+        "898506aae9a5a1bc",
+        "73974770e713d3fc"
       ],
-      "final": "b4effb1dec5ed539"
+      "final": "9fed6a73d6c79030"
     },
     {
       "id": 15,
@@ -255,66 +264,63 @@
       "frames": 7200,
       "checkpoints": [
         "2791c63ab447fdde",
-        "bcc9bb5bd64f76d7",
-        "4a677335d1ebc605",
-        "df2e6ba8deb50ad2",
-        "b24e5c862f804dad",
-        "b4dee02a9090f97f",
-        "85e069289755371e",
-        "9ef864a87b3c58ec",
-        "d791c3c5b572ab1b",
-        "2a3c44a6adc21bbd",
-        "125c48b11a136e78",
-        "2674de6469c1aa5a"
+        "b8c33fc1b35520ea",
+        "2ffd5b100518e7ef",
+        "b972d458548e484c",
+        "b36423ab20b31498",
+        "db6a322f6bc2e976",
+        "b67b6387b26691c2",
+        "018922dbde8e21c2",
+        "82521ed0dee99171",
+        "b0f2d0fa90f31ae5",
+        "527fca93a2bb7504",
+        "e4be69a7134090b8"
       ],
-      "final": "b37891f001aac6d5"
+      "final": "93a2693aa91d43c9"
     },
     {
       "id": 16,
       "label": "fuzz vs fuzz continuous on unsworn",
-      "frames": 1969,
+      "frames": 2034,
       "checkpoints": [
         "0ff330101a181607",
-        "b03215238c148ef6",
-        "8903678a81e9561e",
-        "6f36445bf6c0d255"
+        "d66a4123c5a363b1",
+        "a0bbb25fb0f32c72",
+        "1038dba40457d83b"
       ],
-      "final": "ce8e357a31a2d594"
+      "final": "81bf2c16633a4add"
     },
     {
       "id": 17,
       "label": "fuzz vs fuzz continuous on pilgrimage",
-      "frames": 2609,
+      "frames": 1658,
       "checkpoints": [
         "c138fe26f147c2c4",
-        "7789cbff7685e16f",
-        "7f3abef67cb78390",
-        "dbae7f458e6a0f3f",
-        "25f9436aa40bf66d"
+        "c62bc3e608667be4",
+        "aacabaf5882e51e2"
       ],
-      "final": "2e20fa339f849df3"
+      "final": "e9d9c9943c003e65"
     },
     {
       "id": 18,
       "label": "fuzz vs fuzz continuous on mirror-sanctum",
-      "frames": 2216,
+      "frames": 1211,
       "checkpoints": [
         "2af062f6425d8fd8",
-        "fb2bb4cdfdcc3445",
-        "261d7cf4212e3846",
-        "8e55e70ab2531c9d"
+        "5ef8d569e16dfef6",
+        "2e5a270f7091da29"
       ],
-      "final": "264a8974e398564c"
+      "final": "e21389abb6e51aee"
     },
     {
       "id": 19,
       "label": "fuzz vs fuzz continuous on eclipse",
-      "frames": 1066,
+      "frames": 1146,
       "checkpoints": [
         "ed535ae3b9e66181",
-        "0103ec92c5bc79dc"
+        "e14621d1c4f7fc5f"
       ],
-      "final": "1a15ff92bbd72064"
+      "final": "bd2be174c568f8ca"
     }
   ]
 }

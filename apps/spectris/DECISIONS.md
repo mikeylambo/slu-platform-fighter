@@ -49,3 +49,10 @@ Mike authorized building through the GDD without a conservative feel-gate stop. 
 - Proof method: `dev/golden.ts` recorded 20 seeded matches (CPU ladders, fuzzed human input with full meter, best-of-three with counterpick, Momentum, training stance locks) before the split. The refactor reproduces every 600-frame checkpoint hash and every final hash. `spectris:golden` is now part of `spectris:check`; it is re-recorded only together with a replay-version bump.
 - Prettier is now a dev dependency with a repository `.prettierrc.json` (single quotes, 120 columns).
 - Defects found while transcribing, deliberately preserved for hash equality and fixed in Step 2 under a version bump: (1) Player 1 could not mash out of Player 2's grab (the victim's input was frozen before the holder read it); (2) Cape down throw's knockdown was immediately overwritten by the release; (3) Kindle's free Flash Unfurl survived the end of Kindle.
+
+## 2026-10-01 — Continuation Step 2: physics and reference corrections
+
+- GDD revision 2 values applied (see `TUNING_LOG.md`). Replay version bumped to `spectris-duel-v4` (feel-lab tapes `spectris-feel-v3`); the golden hashes and the offstage proof (`proofs/offstage-exchange.json`) were re-recorded under v4.
+- Feel lab: jumpsquat (3f GDD / 4f Brawl) and traction (0.04 Brawl / 0.06 GDD / 0.10 grippy) are a `feel` match option stored in the world's extension state, so an A/B run replays and rolls back exactly. The physics registry is selected per world (`physicsRegistry(feel)`); the dev panel's FEEL LAB section restarts the exchange on change.
+- Reference comparison corrected per GDD 3.8: Jab 1 and Rapid Jab vs Brawl rapid jab (f7), Rapid Jab finisher vs Brawl jab finisher (f30), Jab 2/3 against role budgets only. Role budgets now live in `content/knight/role-budgets.ts`, and every normal must sit inside its budget or `spectris:check` fails.
+- The whole Spectris app (including `main.ts`) is now Prettier-formatted.

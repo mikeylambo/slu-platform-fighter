@@ -7,9 +7,27 @@
     "csv": "reference/brawl-mk-source.csv",
     "sha256": "8537ac6844bf36e9f1763d4ee4ab6c14b398084a0f1e0308709e4f1fcef3683e"
   },
+  "mapping": "GDD 3.8: Jab 1 + Rapid Jab vs Brawl rapid jab (f7); Rapid Jab finisher vs Brawl jab finisher (f30); Jab 2/3 role budgets only",
   "comparisons": [
     {
       "id": "wings:jab",
+      "role": "jab opener",
+      "spectrisTiming": {
+        "startup": 2,
+        "faf": 18,
+        "landing": 0
+      },
+      "budget": {
+        "role": "jab opener",
+        "startup": [
+          1,
+          4
+        ],
+        "faf": [
+          12,
+          20
+        ]
+      },
       "sourceName": "Jab",
       "sourceRow": 7,
       "sourceTiming": {
@@ -17,21 +35,77 @@
         "faf": 12,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 2,
-        "faf": 18,
-        "landing": 0
-      },
       "delta": {
         "startup": -5,
         "faf": 6,
         "landing": null
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Timing comparison; not a claim of equal range or knockback",
       "notes": null
     },
     {
       "id": "wings:jab-2",
+      "role": "jab follow-up",
+      "spectrisTiming": {
+        "startup": 2,
+        "faf": 18,
+        "landing": 0
+      },
+      "budget": {
+        "role": "jab follow-up",
+        "startup": [
+          1,
+          5
+        ],
+        "faf": [
+          12,
+          22
+        ]
+      },
+      "sourceName": null,
+      "comparison": "Role budget only: no Brawl counterpart (Brawl MK has no 3-hit jab)"
+    },
+    {
+      "id": "wings:jab-3",
+      "role": "jab follow-up",
+      "spectrisTiming": {
+        "startup": 4,
+        "faf": 18,
+        "landing": 0
+      },
+      "budget": {
+        "role": "jab follow-up",
+        "startup": [
+          1,
+          5
+        ],
+        "faf": [
+          12,
+          22
+        ]
+      },
+      "sourceName": null,
+      "comparison": "Role budget only: no Brawl counterpart (Brawl MK has no 3-hit jab)"
+    },
+    {
+      "id": "wings:rapid-jab",
+      "role": "rapid jab",
+      "spectrisTiming": {
+        "startup": 2,
+        "faf": 24,
+        "landing": 0
+      },
+      "budget": {
+        "role": "rapid jab",
+        "startup": [
+          1,
+          4
+        ],
+        "faf": [
+          18,
+          30
+        ]
+      },
       "sourceName": "Jab",
       "sourceRow": 7,
       "sourceTiming": {
@@ -39,21 +113,29 @@
         "faf": 12,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 2,
-        "faf": 18,
-        "landing": 0
-      },
       "delta": {
         "startup": -5,
-        "faf": 6,
+        "faf": 12,
         "landing": null
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
-      "id": "wings:jab-3",
+      "id": "wings:rapid-jab (finisher)",
+      "role": "rapid jab finisher",
+      "spectrisTiming": {
+        "startup": 14,
+        "faf": null,
+        "landing": 0
+      },
+      "budget": {
+        "role": "rapid jab finisher",
+        "startup": [
+          10,
+          30
+        ]
+      },
       "sourceName": "Jab (final hit)",
       "sourceRow": 8,
       "sourceTiming": {
@@ -61,43 +143,33 @@
         "faf": 41,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 4,
-        "faf": 18,
-        "landing": 0
-      },
       "delta": {
-        "startup": -26,
-        "faf": -23,
+        "startup": -16,
+        "faf": null,
         "landing": null
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
-      "notes": null
-    },
-    {
-      "id": "wings:rapid-jab",
-      "sourceName": "Jab",
-      "sourceRow": 7,
-      "sourceTiming": {
-        "startup": 7,
-        "faf": 12,
-        "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 2,
-        "faf": 24,
-        "landing": 0
-      },
-      "delta": {
-        "startup": -5,
-        "faf": 12,
-        "landing": null
-      },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Finisher timing: our rapid jab ends on its fourth strike; Brawl loops until the finisher input",
       "notes": null
     },
     {
       "id": "wings:forward-tilt",
+      "role": "tilt",
+      "spectrisTiming": {
+        "startup": 5,
+        "faf": 30,
+        "landing": 0
+      },
+      "budget": {
+        "role": "tilt",
+        "startup": [
+          4,
+          8
+        ],
+        "faf": [
+          14,
+          32
+        ]
+      },
       "sourceName": "Forward tilt 1",
       "sourceRow": 12,
       "sourceTiming": {
@@ -105,32 +177,39 @@
         "faf": 24,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 5,
-        "faf": 30,
-        "landing": 0
-      },
       "delta": {
         "startup": 2,
         "faf": 6,
         "landing": null
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
       "id": "wings:up-tilt",
+      "role": "tilt",
+      "spectrisTiming": {
+        "startup": 6,
+        "faf": 26,
+        "landing": 0
+      },
+      "budget": {
+        "role": "tilt",
+        "startup": [
+          4,
+          8
+        ],
+        "faf": [
+          14,
+          32
+        ]
+      },
       "sourceName": "Up tilt",
       "sourceRow": 15,
       "sourceTiming": {
         "startup": 7,
         "faf": 36,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 6,
-        "faf": 26,
-        "landing": 0
       },
       "delta": {
         "startup": -1,
@@ -142,17 +221,29 @@
     },
     {
       "id": "wings:down-tilt",
+      "role": "tilt",
+      "spectrisTiming": {
+        "startup": 4,
+        "faf": 16,
+        "landing": 0
+      },
+      "budget": {
+        "role": "tilt",
+        "startup": [
+          4,
+          8
+        ],
+        "faf": [
+          14,
+          32
+        ]
+      },
       "sourceName": "Down tilt",
       "sourceRow": 17,
       "sourceTiming": {
         "startup": 3,
         "faf": 16,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 4,
-        "faf": 16,
-        "landing": 0
       },
       "delta": {
         "startup": 1,
@@ -164,17 +255,29 @@
     },
     {
       "id": "wings:dash-attack",
+      "role": "dash attack",
+      "spectrisTiming": {
+        "startup": 7,
+        "faf": 34,
+        "landing": 0
+      },
+      "budget": {
+        "role": "dash attack",
+        "startup": [
+          5,
+          10
+        ],
+        "faf": [
+          28,
+          40
+        ]
+      },
       "sourceName": "Dash attack",
       "sourceRow": 9,
       "sourceTiming": {
         "startup": 5,
         "faf": 32,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 7,
-        "faf": 34,
-        "landing": 0
       },
       "delta": {
         "startup": 2,
@@ -186,17 +289,29 @@
     },
     {
       "id": "wings:forward-smash",
+      "role": "smash (Shatter-class kill)",
+      "spectrisTiming": {
+        "startup": 14,
+        "faf": 48,
+        "landing": 0
+      },
+      "budget": {
+        "role": "smash (Shatter-class kill)",
+        "startup": [
+          7,
+          16
+        ],
+        "faf": [
+          36,
+          52
+        ]
+      },
       "sourceName": "Forward Smash",
       "sourceRow": 20,
       "sourceTiming": {
         "startup": 24,
         "faf": 42,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 14,
-        "faf": 48,
-        "landing": 0
       },
       "delta": {
         "startup": -10,
@@ -208,17 +323,29 @@
     },
     {
       "id": "wings:up-smash",
+      "role": "smash (Shatter-class kill)",
+      "spectrisTiming": {
+        "startup": 10,
+        "faf": 44,
+        "landing": 0
+      },
+      "budget": {
+        "role": "smash (Shatter-class kill)",
+        "startup": [
+          7,
+          16
+        ],
+        "faf": [
+          36,
+          52
+        ]
+      },
       "sourceName": "Up Smash",
       "sourceRow": 21,
       "sourceTiming": {
         "startup": 8,
         "faf": 50,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 10,
-        "faf": 44,
-        "landing": 0
       },
       "delta": {
         "startup": 2,
@@ -230,6 +357,23 @@
     },
     {
       "id": "wings:down-smash",
+      "role": "smash (Shatter-class kill)",
+      "spectrisTiming": {
+        "startup": 7,
+        "faf": 40,
+        "landing": 0
+      },
+      "budget": {
+        "role": "smash (Shatter-class kill)",
+        "startup": [
+          7,
+          16
+        ],
+        "faf": [
+          36,
+          52
+        ]
+      },
       "sourceName": "Down Smash",
       "sourceRow": 24,
       "sourceTiming": {
@@ -237,21 +381,33 @@
         "faf": null,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 7,
-        "faf": 40,
-        "landing": 0
-      },
       "delta": {
         "startup": 2,
         "faf": null,
         "landing": null
       },
       "comparison": "Timing comparison; not a claim of equal range or knockback",
-      "notes": "Source FAF has a footnote; numeric comparison deliberately omitted."
+      "notes": "Source FAF has a footnote; treat the numeric delta with care."
     },
     {
       "id": "wings:neutral-air",
+      "role": "Wings aerial (fast pressure)",
+      "spectrisTiming": {
+        "startup": 4,
+        "faf": 30,
+        "landing": 8
+      },
+      "budget": {
+        "role": "Wings aerial (fast pressure)",
+        "startup": [
+          3,
+          7
+        ],
+        "landing": [
+          6,
+          12
+        ]
+      },
       "sourceName": "Neutral air",
       "sourceRow": 28,
       "sourceTiming": {
@@ -259,32 +415,39 @@
         "faf": 32,
         "landing": 15
       },
-      "spectrisTiming": {
-        "startup": 4,
-        "faf": 30,
-        "landing": 8
-      },
       "delta": {
         "startup": 1,
         "faf": -2,
         "landing": -7
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
       "id": "wings:forward-air",
+      "role": "Wings aerial (fast pressure)",
+      "spectrisTiming": {
+        "startup": 5,
+        "faf": 32,
+        "landing": 9
+      },
+      "budget": {
+        "role": "Wings aerial (fast pressure)",
+        "startup": [
+          3,
+          7
+        ],
+        "landing": [
+          6,
+          12
+        ]
+      },
       "sourceName": "Forward air",
       "sourceRow": 30,
       "sourceTiming": {
         "startup": 6,
         "faf": 40,
         "landing": 15
-      },
-      "spectrisTiming": {
-        "startup": 5,
-        "faf": 32,
-        "landing": 9
       },
       "delta": {
         "startup": -1,
@@ -296,6 +459,23 @@
     },
     {
       "id": "wings:back-air",
+      "role": "Wings aerial (fast pressure)",
+      "spectrisTiming": {
+        "startup": 6,
+        "faf": 28,
+        "landing": 10
+      },
+      "budget": {
+        "role": "Wings aerial (fast pressure)",
+        "startup": [
+          3,
+          7
+        ],
+        "landing": [
+          6,
+          12
+        ]
+      },
       "sourceName": "Back air",
       "sourceRow": 33,
       "sourceTiming": {
@@ -303,32 +483,39 @@
         "faf": 48,
         "landing": 12
       },
-      "spectrisTiming": {
-        "startup": 6,
-        "faf": 28,
-        "landing": 10
-      },
       "delta": {
         "startup": -1,
         "faf": -20,
         "landing": -2
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
       "id": "wings:up-air",
+      "role": "Wings aerial (fast pressure)",
+      "spectrisTiming": {
+        "startup": 3,
+        "faf": 18,
+        "landing": 7
+      },
+      "budget": {
+        "role": "Wings aerial (fast pressure)",
+        "startup": [
+          3,
+          7
+        ],
+        "landing": [
+          6,
+          12
+        ]
+      },
       "sourceName": "Messed Up air",
       "sourceRow": 36,
       "sourceTiming": {
         "startup": 2,
         "faf": 14,
         "landing": 12
-      },
-      "spectrisTiming": {
-        "startup": 3,
-        "faf": 18,
-        "landing": 7
       },
       "delta": {
         "startup": 1,
@@ -340,17 +527,29 @@
     },
     {
       "id": "wings:down-air",
+      "role": "Wings aerial (fast pressure)",
+      "spectrisTiming": {
+        "startup": 5,
+        "faf": 28,
+        "landing": 12
+      },
+      "budget": {
+        "role": "Wings aerial (fast pressure)",
+        "startup": [
+          3,
+          7
+        ],
+        "landing": [
+          6,
+          12
+        ]
+      },
       "sourceName": "Down air",
       "sourceRow": 37,
       "sourceTiming": {
         "startup": 4,
         "faf": 26,
         "landing": 15
-      },
-      "spectrisTiming": {
-        "startup": 5,
-        "faf": 28,
-        "landing": 12
       },
       "delta": {
         "startup": 1,
@@ -362,6 +561,23 @@
     },
     {
       "id": "cape:jab",
+      "role": "jab opener",
+      "spectrisTiming": {
+        "startup": 2,
+        "faf": 18,
+        "landing": 0
+      },
+      "budget": {
+        "role": "jab opener",
+        "startup": [
+          1,
+          4
+        ],
+        "faf": [
+          12,
+          20
+        ]
+      },
       "sourceName": "Jab",
       "sourceRow": 7,
       "sourceTiming": {
@@ -369,21 +585,77 @@
         "faf": 12,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 2,
-        "faf": 18,
-        "landing": 0
-      },
       "delta": {
         "startup": -5,
         "faf": 6,
         "landing": null
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Timing comparison; not a claim of equal range or knockback",
       "notes": null
     },
     {
       "id": "cape:jab-2",
+      "role": "jab follow-up",
+      "spectrisTiming": {
+        "startup": 2,
+        "faf": 18,
+        "landing": 0
+      },
+      "budget": {
+        "role": "jab follow-up",
+        "startup": [
+          1,
+          5
+        ],
+        "faf": [
+          12,
+          22
+        ]
+      },
+      "sourceName": null,
+      "comparison": "Role budget only: no Brawl counterpart (Brawl MK has no 3-hit jab)"
+    },
+    {
+      "id": "cape:jab-3",
+      "role": "jab follow-up",
+      "spectrisTiming": {
+        "startup": 4,
+        "faf": 18,
+        "landing": 0
+      },
+      "budget": {
+        "role": "jab follow-up",
+        "startup": [
+          1,
+          5
+        ],
+        "faf": [
+          12,
+          22
+        ]
+      },
+      "sourceName": null,
+      "comparison": "Role budget only: no Brawl counterpart (Brawl MK has no 3-hit jab)"
+    },
+    {
+      "id": "cape:rapid-jab",
+      "role": "rapid jab",
+      "spectrisTiming": {
+        "startup": 2,
+        "faf": 24,
+        "landing": 0
+      },
+      "budget": {
+        "role": "rapid jab",
+        "startup": [
+          1,
+          4
+        ],
+        "faf": [
+          18,
+          30
+        ]
+      },
       "sourceName": "Jab",
       "sourceRow": 7,
       "sourceTiming": {
@@ -391,21 +663,29 @@
         "faf": 12,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 2,
-        "faf": 18,
-        "landing": 0
-      },
       "delta": {
         "startup": -5,
-        "faf": 6,
+        "faf": 12,
         "landing": null
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
-      "id": "cape:jab-3",
+      "id": "cape:rapid-jab (finisher)",
+      "role": "rapid jab finisher",
+      "spectrisTiming": {
+        "startup": 14,
+        "faf": null,
+        "landing": 0
+      },
+      "budget": {
+        "role": "rapid jab finisher",
+        "startup": [
+          10,
+          30
+        ]
+      },
       "sourceName": "Jab (final hit)",
       "sourceRow": 8,
       "sourceTiming": {
@@ -413,43 +693,33 @@
         "faf": 41,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 4,
-        "faf": 18,
-        "landing": 0
-      },
       "delta": {
-        "startup": -26,
-        "faf": -23,
+        "startup": -16,
+        "faf": null,
         "landing": null
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
-      "notes": null
-    },
-    {
-      "id": "cape:rapid-jab",
-      "sourceName": "Jab",
-      "sourceRow": 7,
-      "sourceTiming": {
-        "startup": 7,
-        "faf": 12,
-        "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 2,
-        "faf": 24,
-        "landing": 0
-      },
-      "delta": {
-        "startup": -5,
-        "faf": 12,
-        "landing": null
-      },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Finisher timing: our rapid jab ends on its fourth strike; Brawl loops until the finisher input",
       "notes": null
     },
     {
       "id": "cape:forward-tilt",
+      "role": "tilt",
+      "spectrisTiming": {
+        "startup": 5,
+        "faf": 30,
+        "landing": 0
+      },
+      "budget": {
+        "role": "tilt",
+        "startup": [
+          4,
+          8
+        ],
+        "faf": [
+          14,
+          32
+        ]
+      },
       "sourceName": "Forward tilt 1",
       "sourceRow": 12,
       "sourceTiming": {
@@ -457,32 +727,39 @@
         "faf": 24,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 5,
-        "faf": 30,
-        "landing": 0
-      },
       "delta": {
         "startup": 2,
         "faf": 6,
         "landing": null
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
       "id": "cape:up-tilt",
+      "role": "tilt",
+      "spectrisTiming": {
+        "startup": 6,
+        "faf": 26,
+        "landing": 0
+      },
+      "budget": {
+        "role": "tilt",
+        "startup": [
+          4,
+          8
+        ],
+        "faf": [
+          14,
+          32
+        ]
+      },
       "sourceName": "Up tilt",
       "sourceRow": 15,
       "sourceTiming": {
         "startup": 7,
         "faf": 36,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 6,
-        "faf": 26,
-        "landing": 0
       },
       "delta": {
         "startup": -1,
@@ -494,17 +771,29 @@
     },
     {
       "id": "cape:down-tilt",
+      "role": "tilt",
+      "spectrisTiming": {
+        "startup": 4,
+        "faf": 16,
+        "landing": 0
+      },
+      "budget": {
+        "role": "tilt",
+        "startup": [
+          4,
+          8
+        ],
+        "faf": [
+          14,
+          32
+        ]
+      },
       "sourceName": "Down tilt",
       "sourceRow": 17,
       "sourceTiming": {
         "startup": 3,
         "faf": 16,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 4,
-        "faf": 16,
-        "landing": 0
       },
       "delta": {
         "startup": 1,
@@ -516,17 +805,29 @@
     },
     {
       "id": "cape:dash-attack",
+      "role": "dash attack",
+      "spectrisTiming": {
+        "startup": 7,
+        "faf": 34,
+        "landing": 0
+      },
+      "budget": {
+        "role": "dash attack",
+        "startup": [
+          5,
+          10
+        ],
+        "faf": [
+          28,
+          40
+        ]
+      },
       "sourceName": "Dash attack",
       "sourceRow": 9,
       "sourceTiming": {
         "startup": 5,
         "faf": 32,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 7,
-        "faf": 34,
-        "landing": 0
       },
       "delta": {
         "startup": 2,
@@ -538,17 +839,29 @@
     },
     {
       "id": "cape:forward-smash",
+      "role": "smash (Shatter-class kill)",
+      "spectrisTiming": {
+        "startup": 14,
+        "faf": 48,
+        "landing": 0
+      },
+      "budget": {
+        "role": "smash (Shatter-class kill)",
+        "startup": [
+          7,
+          16
+        ],
+        "faf": [
+          36,
+          52
+        ]
+      },
       "sourceName": "Forward Smash",
       "sourceRow": 20,
       "sourceTiming": {
         "startup": 24,
         "faf": 42,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 14,
-        "faf": 48,
-        "landing": 0
       },
       "delta": {
         "startup": -10,
@@ -560,17 +873,29 @@
     },
     {
       "id": "cape:up-smash",
+      "role": "smash (Shatter-class kill)",
+      "spectrisTiming": {
+        "startup": 10,
+        "faf": 44,
+        "landing": 0
+      },
+      "budget": {
+        "role": "smash (Shatter-class kill)",
+        "startup": [
+          7,
+          16
+        ],
+        "faf": [
+          36,
+          52
+        ]
+      },
       "sourceName": "Up Smash",
       "sourceRow": 21,
       "sourceTiming": {
         "startup": 8,
         "faf": 50,
         "landing": null
-      },
-      "spectrisTiming": {
-        "startup": 10,
-        "faf": 44,
-        "landing": 0
       },
       "delta": {
         "startup": 2,
@@ -582,6 +907,23 @@
     },
     {
       "id": "cape:down-smash",
+      "role": "smash (Shatter-class kill)",
+      "spectrisTiming": {
+        "startup": 7,
+        "faf": 40,
+        "landing": 0
+      },
+      "budget": {
+        "role": "smash (Shatter-class kill)",
+        "startup": [
+          7,
+          16
+        ],
+        "faf": [
+          36,
+          52
+        ]
+      },
       "sourceName": "Down Smash",
       "sourceRow": 24,
       "sourceTiming": {
@@ -589,21 +931,33 @@
         "faf": null,
         "landing": null
       },
-      "spectrisTiming": {
-        "startup": 7,
-        "faf": 40,
-        "landing": 0
-      },
       "delta": {
         "startup": 2,
         "faf": null,
         "landing": null
       },
       "comparison": "Timing comparison; not a claim of equal range or knockback",
-      "notes": "Source FAF has a footnote; numeric comparison deliberately omitted."
+      "notes": "Source FAF has a footnote; treat the numeric delta with care."
     },
     {
       "id": "cape:neutral-air",
+      "role": "Cape aerial (committal)",
+      "spectrisTiming": {
+        "startup": 8,
+        "faf": 34,
+        "landing": 14
+      },
+      "budget": {
+        "role": "Cape aerial (committal)",
+        "startup": [
+          7,
+          11
+        ],
+        "landing": [
+          10,
+          20
+        ]
+      },
       "sourceName": "Neutral air",
       "sourceRow": 28,
       "sourceTiming": {
@@ -611,21 +965,33 @@
         "faf": 32,
         "landing": 15
       },
-      "spectrisTiming": {
-        "startup": 8,
-        "faf": 34,
-        "landing": 14
-      },
       "delta": {
         "startup": 5,
         "faf": 2,
         "landing": -1
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
       "id": "cape:forward-air",
+      "role": "Cape aerial (committal)",
+      "spectrisTiming": {
+        "startup": 10,
+        "faf": 38,
+        "landing": 18
+      },
+      "budget": {
+        "role": "Cape aerial (committal)",
+        "startup": [
+          7,
+          11
+        ],
+        "landing": [
+          10,
+          20
+        ]
+      },
       "sourceName": "Forward air",
       "sourceRow": 30,
       "sourceTiming": {
@@ -633,21 +999,33 @@
         "faf": 40,
         "landing": 15
       },
-      "spectrisTiming": {
-        "startup": 10,
-        "faf": 38,
-        "landing": 18
-      },
       "delta": {
         "startup": 4,
         "faf": -2,
         "landing": 3
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
       "id": "cape:back-air",
+      "role": "Cape aerial (committal)",
+      "spectrisTiming": {
+        "startup": 9,
+        "faf": 34,
+        "landing": 14
+      },
+      "budget": {
+        "role": "Cape aerial (committal)",
+        "startup": [
+          7,
+          11
+        ],
+        "landing": [
+          10,
+          20
+        ]
+      },
       "sourceName": "Back air",
       "sourceRow": 33,
       "sourceTiming": {
@@ -655,21 +1033,33 @@
         "faf": 48,
         "landing": 12
       },
-      "spectrisTiming": {
-        "startup": 9,
-        "faf": 34,
-        "landing": 14
-      },
       "delta": {
         "startup": 2,
         "faf": -14,
         "landing": 2
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
       "id": "cape:up-air",
+      "role": "Cape aerial (committal)",
+      "spectrisTiming": {
+        "startup": 9,
+        "faf": 35,
+        "landing": 15
+      },
+      "budget": {
+        "role": "Cape aerial (committal)",
+        "startup": [
+          7,
+          11
+        ],
+        "landing": [
+          10,
+          20
+        ]
+      },
       "sourceName": "Messed Up air",
       "sourceRow": 36,
       "sourceTiming": {
@@ -677,21 +1067,33 @@
         "faf": 14,
         "landing": 12
       },
-      "spectrisTiming": {
-        "startup": 9,
-        "faf": 35,
-        "landing": 15
-      },
       "delta": {
         "startup": 7,
         "faf": 21,
         "landing": 3
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     },
     {
       "id": "cape:down-air",
+      "role": "Cape aerial (committal)",
+      "spectrisTiming": {
+        "startup": 7,
+        "faf": 30,
+        "landing": 12
+      },
+      "budget": {
+        "role": "Cape aerial (committal)",
+        "startup": [
+          7,
+          11
+        ],
+        "landing": [
+          10,
+          20
+        ]
+      },
       "sourceName": "Down air",
       "sourceRow": 37,
       "sourceTiming": {
@@ -699,17 +1101,12 @@
         "faf": 26,
         "landing": 15
       },
-      "spectrisTiming": {
-        "startup": 7,
-        "faf": 30,
-        "landing": 12
-      },
       "delta": {
         "startup": 3,
         "faf": 4,
         "landing": -3
       },
-      "comparison": "Role comparison only: different strike structure or stance kit",
+      "comparison": "Role comparison: different strike structure or stance kit",
       "notes": null
     }
   ],
@@ -722,7 +1119,12 @@
     {
       "key": "walk",
       "source": 1.22,
-      "spectris": 1.1
+      "spectris": 1.2
+    },
+    {
+      "key": "traction",
+      "source": 0.04,
+      "spectris": 0.06
     },
     {
       "key": "gravity",
@@ -732,17 +1134,17 @@
     {
       "key": "airAcceleration",
       "source": 0.08,
-      "spectris": 0.09
+      "spectris": 0.08
     },
     {
       "key": "wingsAirSpeed",
       "source": 0.752,
-      "spectris": 1.3
+      "spectris": 0.9
     },
     {
       "key": "capeAirSpeed",
       "source": 0.752,
-      "spectris": 1.05
+      "spectris": 0.75
     },
     {
       "key": "wingsFall",
@@ -752,7 +1154,17 @@
     {
       "key": "wingsFastFall",
       "source": 1.946,
-      "spectris": 2.2
+      "spectris": 1.95
+    },
+    {
+      "key": "capeFall",
+      "source": 1.39,
+      "spectris": 1.65
+    },
+    {
+      "key": "capeFastFall",
+      "source": 1.946,
+      "spectris": 2.3
     },
     {
       "key": "jumpSquat",
@@ -760,11 +1172,5 @@
       "spectris": 3
     }
   ],
-  "status": "Reference comparison complete; GDD move contracts are certified separately; human controller feel remains unverified",
-  "limitations": [
-    "Source measurements are distinct from Spectris design targets.",
-    "No acceptance ranges are derived from the implementation.",
-    "Jab chains, combined forward tilt and redesigned aerials are role comparisons, not identical moves.",
-    "Source footnotes and full glide physics require further review."
-  ]
+  "status": "Every normal certified inside its role budget; Brawl deltas reported for comparable moves. Controller feel remains a playtest question."
 }

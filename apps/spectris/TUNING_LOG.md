@@ -37,3 +37,24 @@ Brawl source is now imported. No other move timing or movement values changed in
 The final level-9-versus-level-3 benchmark finished 97–3 across 100 seeds with alternating player slots. Lower levels now use advanced Shatter finishers less reliably, matching the specified level-dependent option breadth; neither damage nor life values differ by CPU level.
 
 All 1,000 distinct soak cases completed without a crash. Two cases exceeded the original 10,500-frame watchdog after a legitimate tied Sudden Death restart. Exact seeded followups completed both at frame 14,119 without a simulation change. The watchdog is now 21,000 frames and logs case IDs/state on failure. Original batch reports and targeted followups remain in `proofs/`; the aggregate does not erase the original timeouts. Duplicate-state hashes were sampled on every 100th soak case; the separate full determinism check compares every frame across 10,000 frames.
+
+## 2026-10-01 — GDD revision 2 physics (replay version spectris-duel-v4)
+
+Calibrated against Brawl Meta Knight (`reference/brawl-mk.json`): match the feel, not the values. Wings drifts ~20% above MK, Cape sits at MK's drift.
+
+| Value | Before | After | Reason | Verification |
+|---|---|---|---|---|
+| Wings air speed | 1.30 | 0.90 | GDD 3.3; MK 0.752 + ~20% so Wings is the mobile stance | Reference table regenerated; golden v4 recorded |
+| Cape air speed | 1.05 | 0.75 | GDD 3.3; MK's value | Same |
+| Wings fast fall | 2.20 | 1.95 | GDD 3.3; MK 1.946 | Same |
+| Cape fast fall | 2.60 | 2.30 | GDD 3.3; heavier stance falls faster | Same |
+| Walk | 1.10 | 1.20 | GDD 3.4; MK 1.22 | Same |
+| Traction | 0.20 | 0.06 | GDD 3.4; toward MK's 0.04 slide without going icy | Feel lab A/B 0.04 / 0.06 / 0.10 |
+| Air acceleration | 0.09 | 0.08 | GDD 3.4; MK 0.08 | Same |
+| Jumpsquat | 3 | 3 (A/B 4) | GDD 16 open item; feel lab toggles 3f/4f | Unit test: 4f leaves the ground exactly one frame later |
+
+Unchanged: gravity 0.095, fall speeds 1.40/1.65, jump heights, glide.
+
+Behaviour fixes shipped in the same version bump: grab mash symmetry (P1 could not escape P2), Cape down throw keeps its knockdown, Kindle's free Flash Unfurl expires with Kindle.
+
+Sanity: 20-match soak completes with no watchdog timeouts; level 9 won 17/20 against level 3 under the new physics (the full 100-match benchmark runs with the Step 4 AI).

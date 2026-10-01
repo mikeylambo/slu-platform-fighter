@@ -1,5 +1,5 @@
 import type { WorldState } from '../../../../../packages/sim/src/types.js';
-import { createSession, IDS } from '../session.js';
+import { createSession, gameData, IDS } from '../session.js';
 import { DEFAULT_OPTIONS, DEFAULT_SEED } from '../../content/rules/duel.js';
 import { stageById, stageLedges, surfaces } from '../../content/stages/roster.js';
 import { initialKnight, save, type DuelOptions } from './state.js';
@@ -17,6 +17,11 @@ export function createDuel(options: Partial<DuelOptions> = {}, seed = DEFAULT_SE
   const stage = stageById(opt.stage);
   w.surfaces = surfaces(stage);
   w.ledges = stageLedges(stage);
+  if (opt.feel) {
+    const data = gameData(w);
+    data.feel = opt.feel;
+    w.extensionState = JSON.stringify(data);
+  }
   w.fighters.forEach((p) => {
     p.stocks = opt.lives;
   });

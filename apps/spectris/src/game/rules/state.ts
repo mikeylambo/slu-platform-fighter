@@ -7,6 +7,7 @@ import { gameData, neutral, type KnightState } from '../session.js';
 import { DUEL, type Oath } from '../../content/rules/duel.js';
 import { OATH_EFFECTS, type OathEffects } from '../../content/rules/oaths.js';
 import type { EvadeKind } from '../../content/knight/defense.js';
+import type { FeelSettings } from '../../content/knight/physics.js';
 
 export interface DuelOptions {
   stage: string;
@@ -19,6 +20,8 @@ export interface DuelOptions {
   buffer: number;
   counterpick?: boolean;
   stanceLock?: 'free' | 'wings' | 'cape';
+  /** Feel-lab physics preset (jumpsquat/traction A/B); absent = GDD default. */
+  feel?: FeelSettings;
 }
 
 export interface Ghost {
@@ -125,6 +128,8 @@ export interface Frame {
   w: WorldState;
   d: DuelState;
   inputs: Record<string, SimInputFrame>;
+  /** Each player's input as sampled this frame, before any rule froze it. */
+  samples: Record<string, SimInputFrame>;
   guards: Map<string, GuardSnapshot>;
   immediate: MatchEvent[];
   shatterTargets: Set<string>;

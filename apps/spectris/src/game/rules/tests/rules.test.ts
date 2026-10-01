@@ -20,7 +20,14 @@ import { holdVictim, stepGrabWindow, stepHolding, tickRegrab, tryGrab } from '..
 import { findClash, openClash, stepClashWindow } from '../clash.js';
 import { gain, siphon, spend } from '../meter.js';
 import { stepFeint, tryFeint } from '../feint.js';
-import { detectDoubleKindle, kindleOnHit, parryWindow, tickBurn, tryKindle } from '../kindle.js';
+import {
+  detectDoubleKindle,
+  kindleOnHit,
+  parryWindow,
+  tickBurn,
+  tickKindle as tickKindleFor,
+  tryKindle,
+} from '../kindle.js';
 import { absorbsHit, becomesHelpless, stepActiveSpecial, stepCleaveCharge, trySpecial } from '../specials/index.js';
 import { applyHit, isShatterHit, takeFracture } from '../fractures.js';
 import { blastRules, checkRoundEnd, tickClock } from '../rounds.js';
@@ -149,6 +156,35 @@ describe('grab', () => {
     assert.equal(grabber.k.holding, null);
   });
 
+  it('either player can mash out (regression: P1 could not escape P2)', () => {
+    for (const holder of [0, 1] as const) {
+      const victim = (1 - holder) as 0 | 1;
+      const frame = duelFrame();
+      const k = frame.d.knights[IDS[holder]]!;
+      k.holding = IDS[victim];
+      k.hold = 50;
+      frame.d.knights[IDS[victim]]!.heldBy = IDS[holder];
+      frame.samples[IDS[victim]] = { ...frame.samples[IDS[victim]]!, attackPressed: true };
+      // The victim's frame runs first when it is player 1 and freezes its input.
+      if (victim === 0) holdVictim(actorFor(frame, 0, { attackPressed: true }));
+      frame.samples[IDS[victim]] = { ...frame.samples[IDS[victim]]!, attackPressed: true };
+      const holderActor = makeHolder(frame, holder);
+      stepHolding(holderActor);
+      assert.equal(k.hold, 50 - 1 - DUEL.grab.escape, `holder ${holder}`);
+    }
+  });
+
+  it('Cape down throw leaves the victim in knockdown', () => {
+    const frame = duelFrame();
+    frame.w.fighters[0]!.definitionId = 'cape';
+    const k = frame.d.knights[IDS[0]]!;
+    k.holding = IDS[1];
+    k.hold = 50;
+    frame.d.knights[IDS[1]]!.heldBy = IDS[0];
+    stepHolding(actorFor(frame, 0, { moveY: -1000 }));
+    assert.equal(frame.w.fighters[1]!.locomotion, 'knockdown');
+  });
+
   it('regrab memory expires after the regrab window', () => {
     const k = duelFrame().d.knights[IDS[0]]!;
     k.regrabs = 2;
@@ -159,6 +195,14 @@ describe('grab', () => {
     assert.equal(k.regrabs, 0);
   });
 });
+
+/** Holder actor whose own sample is neutral (only the victim mashes). */
+function makeHolder(frame: ReturnType<typeof duelFrame>, holder: 0 | 1) {
+  const victimSample = frame.samples[IDS[1 - holder]!]!;
+  const actor = actorFor(frame, holder);
+  frame.samples[IDS[1 - holder]!] = victimSample;
+  return actor;
+}
 
 describe('meter', () => {
   it('clamps, siphons, spends, and stops while Kindled', () => {
@@ -231,6 +275,14 @@ describe('kindle', () => {
     assert.equal(b.meter, 1000 - OATH_EFFECTS.hunger.kindle.hitDrain);
     assert.equal(parryWindow(a, 'stillness'), OATH_EFFECTS.stillness.kindle.parryWindow);
     assert.equal(parryWindow(a, 'unsworn'), DUEL.guard.parry);
+  });
+
+  it('the free Flash Unfurl expires with Kindle', () => {
+    const frame = duelFrame();
+    const k = frame.d.knights[IDS[0]]!;
+    k.soul = { remaining: 1, activating: 0, freeFlash: true };
+    tickKindleFor(k);
+    assert.equal(k.soul.freeFlash, false);
   });
 
   it('detects a double Kindle once', () => {
@@ -360,5 +412,22 @@ describe('momentum', () => {
     for (let n = 0; n < DUEL.momentum.screens; n++) stepMomentumFracture(frame.w, frame.d, frame.w.fighters[1]!, IDS);
     assert.equal(frame.d.phase, 'over');
     assert.equal(frame.d.winner, IDS[0]);
+  });
+});
+
+describe('feel lab', () => {
+  it('jumpsquat preset is match state: 4f leaves the ground one frame after 3f', async () => {
+    const { stepDuel } = await import('../../duel.js');
+    const { neutral } = await import('../../session.js');
+    const takeoff = (jumpsquat: 3 | 4) => {
+      let w = duelFrame({ feel: { jumpsquat, traction: 'gdd' } }).w;
+      for (let frame = 0; frame < 20; frame++) {
+        const jump = { ...neutral(w.frame), jumpPressed: frame === 0, jumpHeld: true };
+        w = stepDuel(w, { frame: w.frame, byFighterId: { [IDS[0]]: jump, [IDS[1]]: neutral(w.frame) } }).state;
+        if (!w.fighters[0]!.grounded) return frame;
+      }
+      return -1;
+    };
+    assert.equal(takeoff(4) - takeoff(3), 1);
   });
 });
