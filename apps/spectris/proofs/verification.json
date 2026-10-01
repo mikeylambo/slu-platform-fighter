@@ -16,10 +16,10 @@
     "Recorded offstage chase, glide, normal attack, stance switch, and recovery"
   ],
   "metrics": {
-    "simP50Ms": 0.02525100000002567,
-    "simP95Ms": 0.06220199999998499,
-    "simP99Ms": 0.20665500000001202,
-    "rollbackAdvanceP95Ms": 2.392123999999967,
+    "simP50Ms": 0.023729000000002998,
+    "simP95Ms": 0.05538100000001123,
+    "simP99Ms": 0.18605800000000272,
+    "rollbackAdvanceP95Ms": 2.3972049999999854,
     "environment": "Linux Node.js container; not target Mac GPU validation"
   },
   "referenceBudget": "Source imported; see reference-comparison.json for deltas and remaining feel review",

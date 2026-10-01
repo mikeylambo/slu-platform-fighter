@@ -1,12 +1,57 @@
 {
-  "version": 1,
+  "version": 2,
   "pieces": {
-    "helm/default": null, "helm/horned": null, "helm/crest": null,
-    "helm/halo": null, "helm/winged-crest": null, "helm/crown": null,
-    "helm/hooded": null, "helm/cracked": null,
-    "chest": null, "pauldron": null, "gauntlet": null,
-    "sword": null, "wing-feather": null
+    "chest": null,
+    "pauldron": null,
+    "gauntlet": null,
+    "sword": null,
+    "wing-feather": null,
+    "helm/duelist": "art/helm/duelist.glb",
+    "helm/glitch": "art/helm/glitch.glb",
+    "helm/herald": "art/helm/herald.glb",
+    "helm/inquisitor": "art/helm/inquisitor.glb",
+    "helm/reaper": "art/helm/reaper.glb",
+    "helm/sentinel": "art/helm/sentinel.glb",
+    "helm/vanguard": "art/helm/vanguard.glb"
   },
   "capeTexture": null,
-  "backdrops": {}
+  "backdrops": {},
+  "helms": {
+    "duelist": {
+      "interim": true,
+      "sideProfile": true,
+      "triangles": 9280
+    },
+    "glitch": {
+      "interim": true,
+      "sideProfile": true,
+      "triangles": 4072
+    },
+    "herald": {
+      "interim": true,
+      "sideProfile": true,
+      "triangles": 10808
+    },
+    "inquisitor": {
+      "interim": true,
+      "sideProfile": true,
+      "triangles": 5284
+    },
+    "reaper": {
+      "interim": true,
+      "sideProfile": true,
+      "triangles": 9277
+    },
+    "sentinel": {
+      "interim": true,
+      "sideProfile": true,
+      "triangles": 6672
+    },
+    "vanguard": {
+      "interim": true,
+      "sideProfile": true,
+      "triangles": 10068
+    }
+  },
+  "note": "helm/<name> GLBs are produced by scripts/spectris-trace-helm.mjs from art/source/helm. helms.<name>.interim marks silhouettes authored from the GDD until the v2 concept renders are supplied."
 }

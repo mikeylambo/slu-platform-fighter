@@ -1,0 +1,28 @@
+{
+  "files": {
+    "apps/spectris/art/source/helm/duelist-front.png": "6a97718b5efc1c0a6a6f42f828cad2f9f698cd0583bb8f784b04591fe841b4a6",
+    "apps/spectris/art/source/helm/duelist-side.png": "d2520f82be5f17096e0a46eb2c9d551b55488cd3ae21a207718ce86359911441",
+    "apps/spectris/art/source/helm/sentinel-front.png": "7f3208b171c505f0312715fdf0d1797c1c0d89f0e39c221d3a6526d5de989c1a",
+    "apps/spectris/art/source/helm/sentinel-side.png": "113a8e317998e0c13c10e46ce0d859296a3ccc4585d6bf0ed078af03fb6d8c99",
+    "apps/spectris/art/source/helm/reaper-front.png": "17ba69ccd38603c404c29700154756d8f669ba50dd1c0e0cde53361fe5fb9d4b",
+    "apps/spectris/art/source/helm/reaper-side.png": "ecf7becca6ddb2cbd252c63ba04133e2857a737f02b48838c4a3d8e50d464249",
+    "apps/spectris/art/source/helm/herald-front.png": "e38af8a0f5b3c0c7bce0e882c54873dd9edc6726a980209de348f181b86a868b",
+    "apps/spectris/art/source/helm/herald-side.png": "e3d3a9e00e96ac22900f96c4a5253e63fd6df7a25c08bed455ab4d7bd93caffd",
+    "apps/spectris/art/source/helm/inquisitor-front.png": "287fd251efb5a86270529d49c889461514e1fac5b2b7f4aaecefc40779e36d21",
+    "apps/spectris/art/source/helm/inquisitor-side.png": "85a0209d9da83036a421b0261f3bddcdeaef335d12fac218fa418a9dcb2216ad",
+    "apps/spectris/art/source/helm/vanguard-front.png": "d9294ad152191737bea49619760be1a5989907fbf3dcda1572c76801c04e879d",
+    "apps/spectris/art/source/helm/vanguard-side.png": "3bbb5846611dca59bcf2ea195c958d0a84a651c630b7224a8e1a507c75a42fd4",
+    "apps/spectris/art/source/helm/glitch-front.png": "aadf3115c1ad26d8c4959b9e4cdbbf991e8448cce873b9bc25f546a4b2ad9ebb",
+    "apps/spectris/art/source/helm/glitch-side.png": "6eb062fe0acf310bbf520397ce1a3c07655866c04923d28e150ebac71089f9a6"
+  },
+  "titles": {
+    "duelist": "Duelist (v2 #01) — base Knight, Unsworn",
+    "sentinel": "Sentinel (v2 #02) — Iron",
+    "reaper": "Reaper (v2 #03) — Ember",
+    "herald": "Herald (v2 #04) — Stillness",
+    "inquisitor": "Inquisitor (v2 #05) — Hunger",
+    "vanguard": "Vanguard (v2 #06) — Gale",
+    "glitch": "Glitch crest (to be designed from v2 #14/#23) — Static"
+  },
+  "note": "Interim silhouettes authored from GDD descriptions; the v2 concept sheet was not delivered. Any file whose hash differs from this ledger is treated as a final render."
+}

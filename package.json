@@ -106,14 +106,21 @@
     "spectris:soak": "npm run build && node dist/apps/spectris/src/dev/soak.js 1000",
     "spectris:golden": "node dist/apps/spectris/src/dev/golden.js",
     "spectris:golden:record": "npm run build && node dist/apps/spectris/src/dev/golden.js --record",
-    "spectris:unit": "node --test --test-reporter=spec dist/packages/soulfire/src/*.test.js dist/packages/clash/src/*.test.js dist/packages/life-system/src/*.test.js dist/packages/stance/src/*.test.js dist/apps/spectris/src/game/rules/tests/*.test.js"
+    "spectris:unit": "node --test --test-reporter=spec dist/packages/soulfire/src/*.test.js dist/packages/clash/src/*.test.js dist/packages/life-system/src/*.test.js dist/packages/stance/src/*.test.js dist/apps/spectris/src/game/rules/tests/*.test.js",
+    "spectris:helms": "node scripts/spectris-helm-sources.mjs && node scripts/spectris-trace-helm.mjs",
+    "spectris:shots": "npm run spectris:build && node scripts/spectris-shots.mjs && node scripts/spectris-art-proofs.mjs",
+    "spectris:bench": "npm run spectris:build && node scripts/spectris-bench.mjs local 10"
   },
   "dependencies": {
     "three": "^0.185.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^24.3.0",
     "@types/three": "^0.185.0",
+    "playwright": "^1.63.0",
+    "pngjs": "^7.0.0",
+    "potrace": "^2.1.8",
     "prettier": "^3.9.9",
     "typescript": "^5.9.2",
     "vite": "^7.1.3"

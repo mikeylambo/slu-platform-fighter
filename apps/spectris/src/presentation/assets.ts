@@ -11,6 +11,12 @@ const manifest = fetch(new URL('art.manifest.json', document.baseURI))
   .catch(() => fallback);
 const loader = new GLTFLoader(),
   cache = new Map<string, Promise<T.Group>>();
+/** Resolved URL of a manifest piece (null when the piece is procedural). */
+export async function pieceUrl(key: string): Promise<string | null> {
+  const url = (await manifest).pieces[key];
+  return url ? new URL(url, document.baseURI).href : null;
+}
+
 export async function replacePiece(parent: T.Object3D, key: string) {
   const data = await manifest,
     url = data.pieces[key];

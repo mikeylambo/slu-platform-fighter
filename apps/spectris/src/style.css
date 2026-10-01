@@ -813,3 +813,50 @@ input[type='checkbox'] {
     display: none;
   }
 }
+
+.bench-report {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  min-width: min(560px, calc(100vw - 32px));
+  padding: 28px 32px;
+  background: rgba(6, 14, 20, 0.94);
+  border: 1px solid rgba(113, 233, 224, 0.35);
+  color: #d8eeee;
+  font:
+    12px/1.6 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+.bench-report h3 {
+  margin: 0 0 12px;
+  letter-spacing: 0.3em;
+  font-size: 11px;
+  color: #71e9e0;
+}
+.bench-report pre {
+  margin: 0 0 18px;
+  white-space: pre-wrap;
+}
+
+/* Title scrim: the sky is now light-to-mid, so the menu column gets its own dark ground. */
+.hero::before {
+  content: '';
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(62vw, 900px);
+  background: linear-gradient(90deg, rgba(3, 8, 13, 0.86) 0%, rgba(3, 8, 13, 0.62) 55%, transparent 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* HUD sits over light skies now: keep type crisp with a soft dark halo. */
+.hud,
+.hud-center,
+.stage-name {
+  text-shadow: 0 1px 10px rgba(2, 6, 10, 0.55);
+}

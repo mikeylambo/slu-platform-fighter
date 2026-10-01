@@ -2,9 +2,22 @@ import * as T from 'three';
 import type { StageSurface } from '../../../../packages/sim/src/types.js';
 import { SURFACES } from '../content/stages/sanctum.js';
 import { fixed } from '../../../../packages/deterministic-math/src/fixed.js';
-const stone = new T.MeshStandardMaterial({ color: 0x152333, metalness: 0.5, roughness: 0.6, flatShading: true });
-const edge = new T.MeshStandardMaterial({ color: 0x567680, metalness: 0.7, roughness: 0.3 });
-const glow = new T.MeshBasicMaterial({ color: new T.Color(0x45827f).multiplyScalar(1.3) });
+import { STAGE_LOOK, type StageLook } from '../content/presentation.js';
+import { markBloom } from './materials.js';
+const stone = new T.MeshStandardMaterial({ color: 0x152333, metalness: 0.35, roughness: 0.7, flatShading: true });
+const edge = new T.MeshStandardMaterial({ color: 0x567680, metalness: 0.6, roughness: 0.35 });
+const glow = new T.MeshBasicMaterial({ color: new T.Color(0x45827f).multiplyScalar(1.3), toneMapped: false });
+const silhouette = new T.MeshLambertMaterial({ color: 0x557077 });
+const DEFAULT_LOOK = STAGE_LOOK['mirror-sanctum']!;
+
+/** Applies a stage's value structure to the shared stage materials. */
+export function applyStageLook(look: StageLook): void {
+  stone.color.set(look.stone);
+  edge.color.set(look.edge).multiplyScalar(0.7);
+  glow.color.set(look.glow).multiplyScalar(1.4);
+  silhouette.color.set(look.silhouette);
+}
+
 export function createArena(surfaces: StageSurface[] = SURFACES) {
   const root = new T.Group();
   for (const s of surfaces) {
@@ -25,6 +38,7 @@ export function createArena(surfaces: StageSurface[] = SURFACES) {
     g.add(slab);
     const seam = new T.Mesh(new T.BoxGeometry(width, 0.025, 0.025), glow);
     seam.position.set(0, 0.015, main ? 3.01 : 1.21);
+    markBloom(seam);
     g.add(seam);
     for (let i = 0; i < width; i += 2) {
       const band = new T.Mesh(new T.BoxGeometry(0.018, 0.015, main ? 5.9 : 2.3), edge);
@@ -47,102 +61,116 @@ export function createArena(surfaces: StageSurface[] = SURFACES) {
   }
   return root;
 }
-export function createBackdrop(scene: T.Scene) {
+const SKY_SHADER = {
+  uniforms: {
+    top: { value: new T.Color(DEFAULT_LOOK.skyTop) },
+    horizon: { value: new T.Color(DEFAULT_LOOK.horizon) },
+    glow: { value: new T.Color(DEFAULT_LOOK.glow) },
+  },
+  vertexShader: `varying vec3 vDirection; void main() { vDirection = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`,
+  fragmentShader: `uniform vec3 top; uniform vec3 horizon; uniform vec3 glow; varying vec3 vDirection;
+void main() {
+  float height = clamp(vDirection.y * 1.6 + 0.12, 0.0, 1.0);
+  vec3 sky = mix(horizon, top, pow(height, 0.75));
+  float centre = pow(max(0.0, 1.0 - length(vec2(vDirection.x * 1.4, vDirection.y - 0.08)) * 1.6), 2.2);
+  gl_FragColor = vec4(mix(sky, glow, centre * 0.75), 1.0);
+}`,
+};
+
+export interface Backdrop {
+  root: T.Group;
+  dust: T.Points;
+  setLook(look: StageLook): void;
+}
+
+/**
+ * Sky dome, lights, distant pillars and dust. The space behind the fighting plane stays
+ * light-to-mid (gradient sky, glow, fog); Knights stay the darkest shapes on screen.
+ */
+export function createBackdrop(scene: T.Scene): Backdrop {
   const root = new T.Group();
   scene.add(root);
-  const ambient = new T.HemisphereLight(0xc0e0f5, 0x080a16, 2.1);
-  scene.add(ambient);
-  const moonLight = new T.DirectionalLight(0xd5f4fc, 3);
-  moonLight.position.set(-15, 30, 14);
-  scene.add(moonLight);
-  const back = new T.DirectionalLight(0x398a94, 4);
-  back.position.set(0, 12, -20);
+  const skyMaterial = new T.ShaderMaterial({ ...SKY_SHADER, side: T.BackSide, depthWrite: false, fog: false });
+  const sky = new T.Mesh(new T.SphereGeometry(300, 32, 16), skyMaterial);
+  sky.renderOrder = -1;
+  root.add(sky);
+  const hemisphere = new T.HemisphereLight(0xdfeef0, 0x10131a, 1.4);
+  scene.add(hemisphere);
+  const key = new T.DirectionalLight(0xffffff, 2.2);
+  key.position.set(-14, 26, 18);
+  scene.add(key);
+  const back = new T.DirectionalLight(0xffffff, 1.6);
+  back.position.set(4, 10, -22);
   scene.add(back);
-  const ringMat = new T.MeshBasicMaterial({ color: 0x35545e, transparent: true, opacity: 0.45 });
-  for (const [r, w, z] of [
-    [17, 0.045, -22],
-    [19, 0.025, -23],
-    [16.5, 0.014, -22],
-  ]) {
-    const ring = new T.Mesh(new T.TorusGeometry(r!, w!, 6, 180), ringMat);
-    ring.position.set(0, 13, z!);
+  const ringMat = new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, fog: false });
+  for (const [radius, width] of [
+    [17, 0.05],
+    [19, 0.028],
+  ] as const) {
+    const ring = new T.Mesh(new T.TorusGeometry(radius, width, 6, 180), ringMat);
+    ring.position.set(0, 13, -40);
     root.add(ring);
-  }
-  const moon = new T.Mesh(new T.CircleGeometry(13, 96), new T.MeshBasicMaterial({ color: 0x102935 }));
-  moon.position.set(0, 13, -28);
-  root.add(moon);
-  const halo = new T.Mesh(
-    new T.RingGeometry(12.8, 13.1, 100),
-    new T.MeshBasicMaterial({ color: 0x86b0b4, transparent: true, opacity: 0.6 }),
-  );
-  halo.position.set(0, 13, -27.9);
-  root.add(halo);
-  for (let i = 0; i < 12; i++) {
-    const a = (i * Math.PI) / 6;
-    const tick = new T.Mesh(new T.BoxGeometry(0.055, 0.8, 0.04), ringMat);
-    tick.position.set(Math.sin(a) * 18, 13 + Math.cos(a) * 18, -22);
-    tick.rotation.z = -a;
-    root.add(tick);
   }
   for (const side of [-1, 1])
     for (let i = 0; i < 5; i++) {
       const pillar = new T.Group();
-      pillar.position.set(side * (20 + i * 6), -4 - i * 1.4, -10 - i * 6);
+      pillar.position.set(side * (24 + i * 7), -6 - i * 1.4, -16 - i * 9);
       root.add(pillar);
-      const height = 30 + i * 3;
-      const shaft = new T.Mesh(new T.CylinderGeometry(0.65, 1.3, height, 6), stone);
+      const height = 34 + i * 3;
+      const shaft = new T.Mesh(new T.CylinderGeometry(0.75, 1.4, height, 6), silhouette);
       shaft.position.y = height / 2;
       pillar.add(shaft);
-      const crown = new T.Mesh(new T.ConeGeometry(1.6, 4.5, 4), edge);
+      const crown = new T.Mesh(new T.ConeGeometry(1.7, 4.5, 4), silhouette);
       crown.position.y = height + 2;
       pillar.add(crown);
-      for (let j = 0; j < 3; j++) {
-        const collar = new T.Mesh(new T.BoxGeometry(2.3, 0.5, 2.3), stone);
-        collar.position.y = height - j * 9;
-        pillar.add(collar);
-      }
     }
   let seed = 471;
   const rand = () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  const positions = new Float32Array(700 * 3);
-  for (let i = 0; i < 700; i++) {
-    positions[i * 3] = (rand() - 0.5) * 180;
-    positions[i * 3 + 1] = (rand() - 0.3) * 100;
-    positions[i * 3 + 2] = -30 - rand() * 60;
-  }
-  const stars = new T.Points(
-    new T.BufferGeometry().setAttribute('position', new T.BufferAttribute(positions, 3)),
-    new T.PointsMaterial({ size: 0.1, color: 0xb8dbe0, transparent: true, opacity: 0.55, sizeAttenuation: true }),
-  );
-  root.add(stars);
   const dustPositions = new Float32Array(160 * 3);
   for (let i = 0; i < 160; i++) {
     dustPositions[i * 3] = (rand() - 0.5) * 80;
     dustPositions[i * 3 + 1] = rand() * 40 - 12;
     dustPositions[i * 3 + 2] = (rand() - 0.5) * 22;
   }
+  const dustMaterial = new T.PointsMaterial({
+    size: 0.08,
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.55,
+    blending: T.AdditiveBlending,
+    depthWrite: false,
+  });
   const dust = new T.Points(
     new T.BufferGeometry().setAttribute('position', new T.BufferAttribute(dustPositions, 3)),
-    new T.PointsMaterial({
-      size: 0.07,
-      color: 0x9fe9df,
-      transparent: true,
-      opacity: 0.5,
-      blending: T.AdditiveBlending,
-    }),
+    dustMaterial,
   );
   root.add(dust);
-  return { root, dust };
+  const setLook = (look: StageLook) => {
+    skyMaterial.uniforms.top!.value.set(look.skyTop);
+    skyMaterial.uniforms.horizon!.value.set(look.horizon);
+    skyMaterial.uniforms.glow!.value.set(look.glow);
+    hemisphere.color.set(look.horizon);
+    back.color.set(look.glow);
+    ringMat.color.set(look.glow);
+    dustMaterial.color.set(look.glow);
+    scene.background = new T.Color(look.horizon);
+    scene.fog = new T.FogExp2(look.fog, look.fogDensity);
+    applyStageLook(look);
+  };
+  setLook(DEFAULT_LOOK);
+  return { root, dust, setLook };
 }
 /** Decorative silhouettes are separate from collision surfaces. */
 export function createBiome(id: string, color: number) {
   const root = new T.Group();
-  root.position.z = -16;
-  const dark = new T.MeshToonMaterial({ color: 0x111d2b }),
-    lit = new T.MeshBasicMaterial({ color, transparent: true, opacity: 0.35, side: T.DoubleSide });
+  // Far enough behind the fighting plane that fog carries it into the mid values.
+  root.position.z = -38;
+  root.scale.setScalar(1.35);
+  const dark = silhouette,
+    lit = new T.MeshBasicMaterial({ color, transparent: true, opacity: 0.45, side: T.DoubleSide });
   const add = (geometry: T.BufferGeometry, material: T.Material, x: number, y: number, z = 0) => {
     const mesh = new T.Mesh(geometry, material);
     mesh.position.set(x, y, z);
@@ -150,7 +178,7 @@ export function createBiome(id: string, color: number) {
     return mesh;
   };
   if (id === 'eclipse') {
-    add(new T.CircleGeometry(12, 64), new T.MeshBasicMaterial({ color: 0x080c16 }), 0, 15);
+    add(new T.CircleGeometry(12, 64), new T.MeshBasicMaterial({ color: 0x8c4f43 }), 0, 15);
     add(new T.RingGeometry(12, 12.2, 64), lit, 0, 15, 0.1);
     for (let i = 0; i < 9; i++)
       add(new T.ConeGeometry(3, 15 + (i % 3) * 4, 4), dark, (i - 4) * 7, -8).rotation.z = Math.PI;

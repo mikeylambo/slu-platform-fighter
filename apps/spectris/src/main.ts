@@ -16,6 +16,7 @@ import { STAGES, stageById } from './content/stages/roster.js';
 import { OATHS, type Oath } from './content/rules/duel.js';
 import { OnlineDuel } from './platform/online.js';
 import { readProgress, readSettings, persist } from './platform/progress.js';
+import { BenchRecorder, benchOptions, benchReport, benchSeconds, gpuName } from './platform/bench.js';
 let counterpickStage: number | null = null,
   counterpickRound = 0,
   vigilOffstage = false,
@@ -591,8 +592,10 @@ function frame(now: number) {
   if (!menu && !paused && !frozen) accumulator += elapsed * (playback ? replaySpeed : 1);
   else accumulator = 0;
   let n = 0;
+  const sims: number[] = [];
   while (accumulator >= 1000 / 60 && n < 6) {
     tick();
+    sims.push(simMs);
     accumulator -= 1000 / 60;
     n++;
   }
@@ -610,7 +613,14 @@ function frame(now: number) {
     !menu && !paused,
     STAGES.findIndex((s) => s.id === options.stage),
   );
+  const renderBegin = performance.now();
   renderer.render(world, paused || frozen ? 1 : accumulator / (1000 / 60), previous, now, menu, debug);
+  const renderMs = performance.now() - renderBegin;
+  if (bench) {
+    const info = renderer.renderer.info.render;
+    bench.sample(rawElapsed, sims, renderMs, info.calls, info.triangles);
+    if (bench.done) finishBench(bench);
+  }
   updateHud(now);
   if (now > toastUntil) app.querySelector('.toast')?.remove();
   requestAnimationFrame(frame);
@@ -1011,4 +1021,33 @@ const hooks = {
 };
 Object.assign(window, { __spectris: hooks });
 renderUi();
+let bench: BenchRecorder | null = null;
+const benchLength = benchSeconds();
+if (benchLength) startBench(benchLength);
 requestAnimationFrame(frame);
+
+/** `?bench`: fixed CPU-vs-CPU match on the heaviest stage, timed per frame. */
+function startBench(seconds: number) {
+  options = benchOptions(options);
+  shell.audio.enabled = false;
+  start();
+  introUntil = 0;
+  bench = new BenchRecorder(seconds * 60);
+  toast(`Bench running · ${seconds}s simulated`);
+}
+
+function finishBench(recorder: BenchRecorder) {
+  bench = null;
+  frozen = true;
+  const result = recorder.result(gpuName(renderer.renderer));
+  const report = benchReport(result);
+  Object.assign(window, { __benchResult: result });
+  const panel = document.createElement('section');
+  panel.className = 'bench-report';
+  panel.innerHTML = `<h3>SPECTRIS BENCH</h3><pre></pre><button class="primary">Copy results</button>`;
+  panel.querySelector('pre')!.textContent = report;
+  panel.querySelector('button')!.onclick = () => {
+    void navigator.clipboard?.writeText(report).then(() => toast('Bench results copied'));
+  };
+  document.body.append(panel);
+}

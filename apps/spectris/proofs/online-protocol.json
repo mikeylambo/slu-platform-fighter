@@ -6,6 +6,6 @@
   "frames": 481,
   "finalHash": "e4e1dc2a078130dc",
   "winner": "player-2",
-  "advanceP95Ms": 1.020780000000002,
+  "advanceP95Ms": 1.1897690000000125,
   "browserWebRTC": "Blocked in this workspace: both Chromium peers gathered zero ICE candidates. External browser/NAT validation remains required."
 }

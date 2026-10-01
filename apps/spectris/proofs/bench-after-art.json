@@ -1,0 +1,26 @@
+{
+  "label": "after-art",
+  "seconds": 10,
+  "renderer": "Headless Chromium + SwiftShader (software): relative only",
+  "result": {
+    "frames": 75,
+    "simulatedFrames": 603,
+    "meanMs": 282.8786666666667,
+    "p95Ms": 416.6000000000022,
+    "worstMs": 583.2999999999993,
+    "fps": 3.5350845356548626,
+    "simMeanMs": 0.7831081081011861,
+    "simWorstMs": 4.800000000279397,
+    "renderMeanMs": 12.683999999991308,
+    "drawCalls": 552,
+    "triangles": 65755,
+    "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.0.0 Safari/537.36",
+    "pass": {
+      "frame": false,
+      "p95": false,
+      "sim": true
+    }
+  },
+  "errors": []
+}

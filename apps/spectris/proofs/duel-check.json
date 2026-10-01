@@ -32,6 +32,6 @@
     "Duel replay round trip includes complete rules and AI state",
     "8-frame delayed rollback converges with specials"
   ],
-  "simMs": 1.02297768405,
+  "simMs": 1.02367843155,
   "finalHash": "e20005a881df4bd1"
 }
