@@ -1,4 +1,5 @@
 import './style.css';
+import {REPLAY_VERSION} from './content/version.js';
 import { fixed as f } from '../../../packages/deterministic-math/src/fixed.js';
 import { hashWorldState } from '../../../packages/sim/src/stateHash.js';
 import { ReplayRecorder, ReplayPlayer, type ReplayTape } from '../../../packages/sim/src/replay.js';
@@ -26,7 +27,7 @@ let dummyRecord=false,dummyPlay=false,dummyCursor=0,dummyRecording:SimInputFrame
 let dummy='still',tape:ReplayTape|null=null,playback:ReplayPlayer|null=null,playbackFrames=new Map<number,ReplayTape['frames'][number]>(),slots:(ReplayTape|null)[]=Array.from({length:5},()=>null),slot=0,recorder:ReplayRecorder;
 let menuPadHeld=false;
 let simMs=0,steps=0,lastInput:SimInputFrame=neutral(0),fps=60,frameTimes:number[]=[];
-function record(){recorder=new ReplayRecorder(world,{gameVersion:'spectris-duel-v3',participantIds:IDS,stageId:options.stage,rulesetId:options.format},120);}
+function record(){recorder=new ReplayRecorder(world,{gameVersion:REPLAY_VERSION,participantIds:IDS,stageId:options.stage,rulesetId:options.format},120);}
 shell.input.remap(settings.bindings);record();
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>app.querySelector<T>(s)!;
 function on(s:string,fn:()=>void){app.querySelector(s)?.addEventListener('click',fn);}
@@ -65,7 +66,7 @@ function bindDev(){if(!dev)return;
  on('#apply-tuning',()=>{const m=MOVES.get(moveSel.value)!,value=Number($<HTMLInputElement>('#startup').value);if(!Number.isInteger(value)||value<1||value>60)return toast('Startup must be an integer from 1 to 60.');const delta=value-m.strikes[0]!.start;m.strikes=m.strikes.map(s=>({...s,start:s.start+delta}));m.faf+=delta;ATTACKS.clear();for(const [id,a] of compileMoves())ATTACKS.set(id,a);slots=slots.map(()=>null);playback=null;record();toast('Applied. Replay slots cleared for the changed rules.');});
 }
 function saveReplay(){downloadJson(recorder.finish(),'spectris-exchange.json');toast('Replay exported');}
-function loadReplay(value:ReplayTape){if(value.metadata.gameVersion!=='spectris-duel-v3'||value.frames.length>216000)throw new Error('Unsupported replay or too many frames');const player=new ReplayPlayer(value,stepDuel);player.playToEnd();tape=value;playback=player;world=player.seek(player.startFrame);options=duelData(world)!.options;mode='replay';resultShown=false;previous=world;playbackFrames=new Map(value.frames.map(i=>[i.frame,i]));frozen=false;paused=false;menu=false;renderUi();toast('Playing verified input replay');}
+function loadReplay(value:ReplayTape){if(value.metadata.gameVersion!==REPLAY_VERSION||value.frames.length>216000)throw new Error('Unsupported replay or too many frames');const player=new ReplayPlayer(value,stepDuel);player.playToEnd();tape=value;playback=player;world=player.seek(player.startFrame);options=duelData(world)!.options;mode='replay';resultShown=false;previous=world;playbackFrames=new Map(value.frames.map(i=>[i.frame,i]));frozen=false;paused=false;menu=false;renderUi();toast('Playing verified input replay');}
 function dummyInput(frame:number,p1:SimInputFrame):SimInputFrame{if(dummyRecord){const input=shell.input.sample(1,frame);dummyRecording.push(input);return input;}if(dummyPlay&&dummySlots[slot]!.length)return {...dummySlots[slot]![dummyCursor++%dummySlots[slot]!.length]!,frame};if(dummy==='mirror')return {...p1,moveX:-p1.moveX};if(dummy==='patrol')return {...neutral(frame),moveX:frame%180<80?-650:frame%180<160?650:0,jumpPressed:frame%100===0,jumpHeld:frame%100<30,attackPressed:frame%40===0,auxiliaryButtons:frame%240===0?1:0};return neutral(frame);}
 function tick(){previous=world;const begin=performance.now();let result;
  if(online){const advanced=online.advance(shell.input.sample(0,world.frame));if(!advanced)return;result={state:advanced.state,events:[...advanced.events] as Awaited<ReturnType<typeof stepDuel>>['events']};}

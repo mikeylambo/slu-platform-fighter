@@ -99,13 +99,14 @@
     "spectris:dev": "vite apps/spectris --host 0.0.0.0",
     "spectris:build": "vite build apps/spectris --outDir ../../dist-spectris --emptyOutDir --base=./",
     "spectris:test": "npm run content:build && npm run build && node dist/apps/spectris/src/dev/check.js",
-    "spectris:check": "npm run spectris:lint && npm run spectris:test && node dist/apps/spectris/src/dev/duel-check.js && node dist/apps/spectris/src/dev/online-check.js && node scripts/spectris-certify.mjs && node scripts/spectris-frame-budget.mjs --report-only && npm run spectris:build",
+    "spectris:check": "npm run spectris:lint && npm run spectris:test && npm run spectris:unit && node dist/apps/spectris/src/dev/duel-check.js && npm run spectris:golden && node dist/apps/spectris/src/dev/online-check.js && node scripts/spectris-certify.mjs && node scripts/spectris-frame-budget.mjs --report-only && npm run spectris:build",
     "spectris:lint": "node scripts/spectris-lint.mjs",
     "spectris:verify-foundation": "npm run spectris:lint && npm run spectris:test && npm run certify:k8rollback && npm run certify:k9replay && npm run spectris:build",
     "spectris:reference": "node scripts/spectris-import-reference.mjs && node scripts/spectris-frame-budget.mjs --report-only",
     "spectris:soak": "npm run build && node dist/apps/spectris/src/dev/soak.js 1000",
     "spectris:golden": "node dist/apps/spectris/src/dev/golden.js",
-    "spectris:golden:record": "npm run build && node dist/apps/spectris/src/dev/golden.js --record"
+    "spectris:golden:record": "npm run build && node dist/apps/spectris/src/dev/golden.js --record",
+    "spectris:unit": "node --test --test-reporter=spec dist/packages/soulfire/src/*.test.js dist/packages/clash/src/*.test.js dist/packages/life-system/src/*.test.js dist/packages/stance/src/*.test.js dist/apps/spectris/src/game/rules/tests/*.test.js"
   },
   "dependencies": {
     "three": "^0.185.0"
@@ -113,6 +114,7 @@
   "devDependencies": {
     "@types/node": "^24.3.0",
     "@types/three": "^0.185.0",
+    "prettier": "^3.9.9",
     "typescript": "^5.9.2",
     "vite": "^7.1.3"
   }

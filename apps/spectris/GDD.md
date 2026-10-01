@@ -1,7 +1,9 @@
 # SPECTRIS DUELLUM — Game Design Document (living)
 
 Working title. Fallback: **Dark Mirror Duelist**. Final name pending a USPTO/Steam search.
-SLU (Soulfire Legends Universe). Built on `mikeylambo/slu-platform-fighter`.
+SLU (Soulfire Legends Universe). Built on `mikeylambo/slu-platform-fighter`, branch `feat/spectris-duellum` (the existing build is the base; see `CONTINUATION_BRIEF.md`).
+
+**Revision 2 (2026-10-01):** physics retuned against the Brawl Meta Knight data, body proportions and rendering rebuilt around the v2 helm concept sheet (`art/concepts/helm-concepts-v2.png`), Fracture helms reassigned to the six refined concepts, renderer corrected to Three.js.
 
 ---
 
@@ -48,14 +50,16 @@ Nidhogg is the reference for Momentum mode, Bushido Blade for the lethality of t
 
 ### 3.1 Body plan
 
+Reference: `art/concepts/helm-concepts-v2.png`, refined concept **01 Duelist** is the base Knight.
+
 | Part | Notes |
 |---|---|
-| **Helm** | Flame-crest helm (concept #8). The crest *is* the flame. About 40% of the silhouette (chibi). Carries all crack and life readouts. |
-| **Chest shell + pauldrons** | Compact, rigid, and floating. The soul-flame shows through the gaps. |
-| **Flame wisp** | Replaces legs. A shader plus particles, driven by velocity. |
-| **Two gauntlets** | Disembodied and floating. They hold one longsword. Four hand poses: grip, open, fist, grab. |
-| **Longsword** | One weapon only. Thickened blade with a glow edge for readability. |
-| **Wings** (Wing stance) | 6 large blade-feathers per wing, rigid planes that fan open and closed. |
+| **Helm** | Duelist helm: the swept flame-crest blade with an emissive V-visor. **About 60% of the silhouette.** Carries all crack and life readouts. |
+| **Chest shell + pauldrons** | Small: chest at 0.6× of the current build. Pauldrons are two short blades, not plates. The soul-flame shows through the gaps. |
+| **Flame wisp** | Replaces legs. Short (about the helm's height), a shader plus particles, driven by velocity. |
+| **Two gauntlets** | Disembodied, chunky fists with clear knuckle plates. They hold one sword. Four hand poses: grip, open, fist, grab. |
+| **Sword** | One weapon only. Thick blade, gold crossguard with a center gem, glow edge in the flame color. Roughly as long as the Knight is tall. |
+| **Wings** (Wing stance) | 6 blade-feathers per wing. **Folded behind the body at rest**; they fan open only during glide, jumps, and wing attacks. |
 | **Cape** (Cape stance) | Presentation-only verlet ribbon, tinted by the flame palette. |
 
 ### 3.2 Controls
@@ -81,8 +85,8 @@ Buffer window: 5f for all actions. Stance input can be buffered out of dash, jum
 |---|---|---|
 | Identity | Offense, flight, one-handed fencing | Defense, deception, two-handed cuts |
 | Jumps | Ground + 3 midair | Ground + 2 midair |
-| Air speed | 1.30 | 1.05 |
-| Fall speed / fast fall | 1.40 / 2.20 | 1.65 / 2.60 |
+| Air speed | 0.90 | 0.75 |
+| Fall speed / fast fall | 1.40 / 1.95 | 1.65 / 2.30 |
 | Glide | Yes (hold Jump after the last midair jump) | No |
 | Defense | **Evade**: roll, spot dodge, air dodge (each leaves an afterimage) | **Guard**: directional, with parry on the first frames |
 | Aerial startup | Fast (see 3.8) | +3–5f vs Wings, more landing lag |
@@ -97,7 +101,10 @@ Buffer window: 5f for all actions. Stance input can be buffered out of dash, jum
 | Stat | Value |
 |---|---|
 | Weight | 0.85 (light) |
-| Walk / run | 1.10 / 1.85 |
+| Walk / run | 1.20 / 1.85 |
+| Traction | 0.06 |
+| Air acceleration | 0.08 |
+| Jumpsquat | 3f |
 | Jump height (full / short) | 34 / 16 units |
 | Midair jump height | 26 units |
 | Gravity | 0.095 |
@@ -106,7 +113,11 @@ Buffer window: 5f for all actions. Stance input can be buffered out of dash, jum
 | Glide cancel | Landing during a glide = 8f landing lag |
 | Ledge | Intangible for 30f on the first grab. Zero intangibility on a regrab until the Knight touches the stage. |
 
-Calibrate these against the Brawl Meta Knight data file in `/reference/`. Target the feel, not exact values.
+Calibrate these against the Brawl Meta Knight data in `reference/brawl-mk.json`. Target the feel, not exact values.
+
+**Brawl reference (MK):** air speed 0.752, air accel 0.08, fall 1.39, fast fall 1.946, gravity 0.0956, traction 0.04, dash 1.847, walk 1.22, jumpsquat 4f.
+
+**Why these numbers:** MK's aerial dominance came from 5 jumps, glide, and fast aerials, not drift speed. His drift was slow and precise. Wings sits about 20% above MK's drift so it's the more mobile stance; Cape sits at MK's value. Traction moves toward MK's slide (0.04) without becoming icy. Jumpsquat stays at 3f, one frame snappier than Brawl, as a deliberate modern choice.
 
 ### 3.5 Damage model: Strain & Fractures
 
@@ -146,6 +157,8 @@ Each evade leaves an afterimage at its start position that fades over 20f. It's 
 ### 3.8 Moveset
 
 Starting frame data at 60fps. Strain equals damage. KB is written as base/growth (0–100 scale). **Calibrate by role against the Brawl MK data: jab, fair, nair, uair, landing lag, and glide are the feel anchors.**
+
+**Mapping note:** Brawl MK has no 3-hit jab. His jab is a rapid jab (first hit frame 7, loops) with a separate finisher (frame 30). Compare our Jab 1 and Rapid Jab against his rapid-jab row and our Rapid Jab finisher against his finisher. Our Jab 2 and Jab 3 have no Brawl counterpart and are compared against role budgets only.
 
 **Ground (shared by both stances; the grip changes visually only)**
 
@@ -277,13 +290,15 @@ Every Oath changes exactly **three things**: one special per stance, the Kindle 
 
 | Oath | Palette | Wings special | Cape special | Kindle effect | Fracture helm |
 |---|---|---|---|---|---|
-| **Ember** | Red / black / orange | Gale Lunge chains twice | Charged Cleave charges ×2 speed | Hits leave burning trails: +4 Strain after 60f | Horned (#19) |
-| **Static** | BSOD blue / cyan / white | Stoop leaves a decoy Knight | Veil Step leaves an attacking afterimage | Feints stay free and chain | Crested (#5) |
-| **Stillness** | White / pale blue / silver | Ascend gains a 4f parry | **Riposte counter** (replaces Anchor) | Parry window becomes 8f | Halo (#20) |
-| **Gale** | Teal / white / mint | Ascend is not helpless | Rift usable twice | +1 midair jump, glide 180f | Winged crest (#9) |
-| **Iron** | Gunmetal / amber | Blade Sling gains armor | Anchor shockwave range ×1.5 | Super armor on smashes (up to 15) | Crown (#3) |
-| **Hunger** | Violet / black / magenta | Blade Sling siphons 10 meter on hit | Siphon steals ×2 | Hits drain 5 meter from the opponent | Hooded (#10) |
-| **Unsworn** | Player's own | — | — | True Mirror | Cracked (#14) |
+| **Ember** | Red / black / orange | Gale Lunge chains twice | Charged Cleave charges ×2 speed | Hits leave burning trails: +4 Strain after 60f | **Reaper** (v2 #03) |
+| **Static** | BSOD blue / cyan / white | Stoop leaves a decoy Knight | Veil Step leaves an attacking afterimage | Feints stay free and chain | **Glitch crest** (to be designed; start from v2 grid #14 or #23) |
+| **Stillness** | White / gold / pale blue | Ascend gains a 4f parry | **Riposte counter** (replaces Anchor) | Parry window becomes 8f | **Herald** (v2 #04) |
+| **Gale** | Teal / white / mint | Ascend is not helpless | Rift usable twice | +1 midair jump, glide 180f | **Vanguard** (v2 #06) |
+| **Iron** | Gunmetal / amber | Blade Sling gains armor | Anchor shockwave range ×1.5 | Super armor on smashes (up to 15) | **Sentinel** (v2 #02) |
+| **Hunger** | Violet / black / magenta | Blade Sling siphons 10 meter on hit | Siphon steals ×2 | Hits drain 5 meter from the opponent | **Inquisitor** (v2 #05) |
+| **Unsworn** | Player's own | — | — | True Mirror | **Duelist** (v2 #01), cracked |
+
+All helms share one body rig. Swapping the Oath swaps the helm, the flame palette, and the trim metal (gold for Herald and Sentinel, dark steel for the rest).
 
 ## 6. Fracture Gauntlet (solo)
 
@@ -338,8 +353,17 @@ Main floor widths (units): Sanctum 160, Eclipse 190, Fault 170, Stillwater 185, 
 
 ## 10. Presentation
 
-- **Art direction:** dark steel armor, painterly-stylized shading (toon ramp plus rim light). All color comes from the soul-flame.
-- **Readability law:** at gameplay camera distance, the helm, blade, and flame must each read on their own. Helm scale is 1.25× relative to the concept sheet. Blade width is doubled, with a glow edge.
+- **Art direction:** match `art/concepts/helm-concepts-v2.png`. Glossy black armor, hard bevelled edges, gold trim, and all color coming from the soul-flame.
+- **Rendering recipe:**
+  - Armor: a glossy black toon material (2–3 band ramp) with a strong **rim light in the flame color** and a sharp specular highlight on bevels.
+  - Visor: an **emissive V-slit** in the flame color, the brightest thing on the character.
+  - Bloom post-process on emissives only (visor, sword edge, flame wisp, Kindle).
+  - Gold trim as its own material (crossguard, helm edge accents, Herald/Sentinel crowns).
+  - Inverted-hull outline for a crisp silhouette edge.
+- **Helm pipeline:** each helm is traced, not hand-modeled. A front-view black-on-white silhouette is traced to SVG, extruded with a bevel, and shaped with a side-view depth profile, then given the visor slit as a separate emissive mesh. The exact concept silhouette becomes the in-game helm.
+- **Readability law:** at gameplay camera distance, the helm, blade, and flame must each read on their own, and the Knight must read as a dark shape against a lighter mid-tone. The silhouette must stay identifiable when rendered at 64px tall.
+- **Camera:** about 30% closer than the current build; dynamic zoom keeps both Knights and the nearest ledge in frame.
+- **Stage value contrast:** stage backdrops sit in light-to-mid values behind the fighting plane (fog, gradient sky, glow), with darkness kept to the edges and foreground. The Knights are always the darkest, most saturated thing in the play area.
 - **Two Knights, same color:** player 2 gets an automatic alternate flame palette. In the same Oath, the palette shifts 60° in hue.
 - **Game feel:**
   - Hitstop: 3f + Strain × 0.25, capped at 12f; Shatter hits get a flat 8f bonus.
@@ -392,7 +416,7 @@ It ends with a Level 3 CPU duel on Mirror Sanctum.
 ## 14. Platform & tech
 
 - **Stack:** the `slu-platform-fighter` monorepo (TypeScript). The game lives as a new app package. Use the PF sim, deterministic math, rollback/replay, input, training, and presentation packages.
-- **Renderer:** the PF presentation package's renderer. If none has been chosen, use Babylon.js.
+- **Renderer:** Three.js (the PF presentation renderer), with its EffectComposer for bloom.
 - **New shared PF modules** (built generic, with this game as the first consumer): Soulfire buff state, stance system, the life-system abstraction (Strain + Fractures as one implementation), and clash resolution.
 - **Performance budget:** 60fps locked on a 2019 Intel MacBook Pro in Chrome; sim step ≤ 2ms; rollback of 8 frames ≤ 8ms; initial load ≤ 15MB.
 - **Deploy:** Vercel.
@@ -412,5 +436,8 @@ It ends with a Level 3 CPU duel on Mirror Sanctum.
 | Clash window length | 12f; tune in playtest |
 | Continuous format Fracture count | 6 |
 | Pilgrimage length | 5 screens |
-| Wing-stance air speed vs Cape | 1.30 vs 1.05; tune in the feel gate |
+| Wing-stance air speed vs Cape | 0.90 vs 0.75; tune in the feel gate |
+| Traction | 0.06; tune between 0.04 (Brawl slide) and 0.10 |
+| Jumpsquat | 3f; try 4f (Brawl) in the feel gate and keep whichever feels better |
+| Static Fracture helm | Glitch crest, to be designed |
 | Oath → helm assignments | As in section 5 |

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {REPLAY_VERSION} from '../content/version.js';
 import {writeFileSync} from 'node:fs';
 import {performance} from 'node:perf_hooks';
 import {RollbackSession} from '../../../../packages/sim/src/rollback.js';
@@ -8,7 +9,7 @@ import {hashWorldState} from '../../../../packages/sim/src/stateHash.js';
 import {createDuel,stepDuel,duelData} from '../game/duel.js';
 import {IDS,neutral} from '../game/session.js';
 const initial=createDuel({cpu:[0,0],format:'continuous',lives:1,timer:0});
-const peers=IDS.map((id,i)=>new OnlineRollbackPeer(new RollbackSession(initial,stepDuel,{participants:IDS,historyFrames:240}),{sessionId:'spectris-certification',peerId:`peer-${i}`,participantIds:IDS,localParticipantIds:[id],inputDelayFrames:2,gameVersion:'spectris-duel-v3',contentHash:hashWorldState(initial)}));
+const peers=IDS.map((id,i)=>new OnlineRollbackPeer(new RollbackSession(initial,stepDuel,{participants:IDS,historyFrames:240}),{sessionId:'spectris-certification',peerId:`peer-${i}`,participantIds:IDS,localParticipantIds:[id],inputDelayFrames:2,gameVersion:REPLAY_VERSION,contentHash:hashWorldState(initial)}));
 peers[0]!.acceptHello(peers[1]!.hello);peers[1]!.acceptHello(peers[0]!.hello);
 assert.throws(()=>peers[0]!.acceptHello({...peers[1]!.hello,contentHash:'different-rules'}));
 let queue:{due:number;target:number;packet:NetPacket}[]=[],rollbacks=0,desyncs=0;const samples:number[]=[];let states=[initial,initial];
