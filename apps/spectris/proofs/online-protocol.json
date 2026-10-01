@@ -1,0 +1,11 @@
+{
+  "transport": "PF OnlineRollbackPeer over a deterministic packet queue; not a live WebRTC browser test",
+  "latencyMs": 100,
+  "rollbacks": 8,
+  "desyncs": 0,
+  "frames": 481,
+  "finalHash": "4d1e7fb6ecd41997",
+  "winner": "player-2",
+  "advanceP95Ms": 0.7176880000000097,
+  "browserWebRTC": "Blocked in this workspace: both Chromium peers gathered zero ICE candidates. External browser/NAT validation remains required."
+}

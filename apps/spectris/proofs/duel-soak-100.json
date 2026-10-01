@@ -1,0 +1,10 @@
+{
+  "matches": 300,
+  "offset": 100,
+  "completed": 300,
+  "unfinished": 0,
+  "level9WinsFirst100": 0,
+  "frames": 1264302,
+  "elapsedSeconds": 768.828844132,
+  "protocol": "Four-Fracture continuous matches, 60-second timer, seven competitive stages, alternating level9 benchmark slots, Oaths thereafter. Duplicate deterministic simulations on each 100th match."
+}

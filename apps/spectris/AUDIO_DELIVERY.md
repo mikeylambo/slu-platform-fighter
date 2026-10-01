@@ -1,8 +1,69 @@
-# Audio delivery checklist
+# Spectris Duellum — audio delivery
 
-Planning checklist for the later audio pass. Only synthesized jump, stance, impact, clash, and menu feedback currently exists. No production stems or recorded voice have been delivered. Durations below are proposed delivery targets, not measured recordings.
+The build runs with synthesized music and effects. Replace these through `public/audio.manifest.json`; paths are relative to the deployed root. Use Ogg or MP3 for web delivery, retain 48 kHz/24-bit WAV masters outside the runtime. No recorded voice has been supplied.
 
-Deliver WAV, 48 kHz / 24-bit, dry one-shots with natural tails. Music stems must share length, downbeat, tempo, and exact loop boundaries. Choose the final tempo with the composer; the Spectris GDD does not mandate 174 BPM.
+## Music stems
+
+For each stage below, deliver four files named `audio/music/<stage>-<layer>.ogg`. Layers are `base`, `percussion`, `lead`, `kindle`. All four must have identical length, sample start, tempo, and loop boundaries, with no leading silence. Working synth tempo is 150 BPM; authored tracks may choose another tempo once their beat metadata is integrated. Suggested delivery: 32 bars, 51.2 seconds at 150 BPM, loop 0–51.2 seconds.
+
+| Stage | Intent |
+| --- | --- |
+| mirror-sanctum | Restrained, ceremonial mirror duel |
+| eclipse | Low distorted pulse and heat |
+| fault-screen | Brittle digital percussion and broken harmonics |
+| stillwater | Sparse bell tones, patient space |
+| bell-foundry | Heavy struck metal, steady machinery |
+| skyreach | Air, height, rising phrases |
+| hollow-throne | Empty grandeur and low pressure |
+| unsworn | Sanctum motif fractured and reassembled |
+| pilgrimage | A coherent journey through the biome motifs |
+
+Manifest example: `"stems": {"eclipse": ["audio/music/eclipse-base.ogg", "audio/music/eclipse-percussion.ogg", "audio/music/eclipse-lead.ogg", "audio/music/eclipse-kindle.ogg"]}`. The runtime starts stems together and crossfades their gains on Fractures/Kindle. Synthesized Clash stingers wait at most 100 ms for the next beat. Authored tempo/beat metadata is a follow-up integration item.
+
+## Effects
+
+Deliver one-shots without loop points, trim silence, and leave a short natural tail. Manifest SFX keys map directly to URLs. Layered variants may be combined into one file for this first delivery.
+
+| Manifest key / filename | Target length | Intent |
+| --- | --- | --- |
+| hit / hit.ogg | 0.15–0.35s | Steel bite, clear transient |
+| clank / clank.ogg | 0.2–0.5s | Equal blades meet |
+| clash / clash.ogg | 0.4–0.8s | Locked steel, suspended pressure |
+| clash-resolve / clash-resolve.ogg | 0.25–0.6s | Read resolved, release tension |
+| parry / parry.ogg | 0.2–0.4s | Sharp, unmistakable successful read |
+| block / block.ogg | 0.12–0.25s | Duller protected impact |
+| guard-break / guard-break.ogg | 0.4–0.8s | Integrity gives way |
+| shatter / shatter.ogg | 0.5–1.0s | Helm burst plus soul-flame discharge |
+| fracture / fracture.ogg | 0.5–0.9s | Armor fall and extinguished flame |
+| kindle / kindle.ogg | 0.7–1.2s | Sudden white-hot ignition |
+| stance / stance.ogg | 0.2–0.4s | Unfurl with metal/cloth accent |
+| jump / jump.ogg | 0.1–0.25s | Compact breath of flame |
+| throw / throw.ogg | 0.2–0.5s | Gauntlet release and displaced air |
+| pummel / pummel.ogg | 0.1–0.2s | Close siphon pulse |
+| blade-hit / blade-hit.ogg | 0.15–0.35s | Spinning blade contact |
+| recall / recall.ogg | 0.3–0.5s | Blade returning to gauntlet |
+| round-win / round-win.ogg | 0.7–1.5s | Severe, restrained victory |
+| match-win / match-win.ogg | 1–2s | A reclaimed fragment |
+| menu / menu.ogg | 0.08–0.2s | Quiet confirmation |
+
+Additional production cues with general synthesized fallbacks: light/heavy swing variants, Strain-tier crack, glide loop, landing, ledge grab, Sling throw, Rift, Veil Step, Anchor shockwave, respawn, and Kindle end. Move-start, landing, ledge, respawn, and Strain-tier events are hooked up. Dedicated glide/Kindle loops and light/heavy variation remain production polish.
+
+## Michael's voice session
+
+Deliver dry mono WAV masters; runtime files can be mono Ogg. Leave no baked reverb. Reflection processing should preserve intelligibility: subtle pitch/formant shift, short dark delay, restrained distortion.
+
+| Files | Length each | Direction |
+| --- | --- | --- |
+| voice/start-01 … start-08.ogg | 1–3s | Eight restrained challenges, masked and close |
+| voice/reflection-01 … reflection-08.ogg | 1–3s | Matching answers, same voice with reflection processing |
+| voice/kindle-01 … kindle-04.ogg | 0.4–1.2s | Four nonverbal ignition cries |
+| voice/death-breath.ogg | 0.5–1.5s | Flame failing, no theatrical shout |
+
+Voice keys use `voice:<name>` in the manifest. The loader supports them; round-start/result hooks, separate voice volume, and a basic lower-pitched/filtered reflection path are present. Final line selection, subtitles, distortion/delay tuning, and recording QA await the actual delivery.
+
+## Complete master-file inventory
+
+The original production inventory is retained below. Runtime manifest keys map these masters to compressed web deliveries; filenames need not match the keys.
 
 ## Music
 
@@ -112,11 +173,3 @@ Deliver WAV, 48 kHz / 24-bit, dry one-shots with natural tails. Music stems must
 | voice/kindle-03.wav | 0.4–1.2s | None | Nonverbal ignition cry |
 | voice/kindle-04.wav | 0.4–1.2s | None | Nonverbal ignition cry |
 | voice/death-breath.wav | 0.5–1.5s | None | Flame extinguishes |
-
-## Engine acceptance still outstanding
-
-- Four synchronized stems, stepping on Fractures rather than time.
-- Clash stinger aligned to a beat with maximum delay 100 ms; schedule a subdivision or immediate accent when the next beat is farther away.
-- Music ducks 4 dB for 500 ms on Shatter. Blade and armor transients remain audible over music.
-- Independent music, SFX, and voice sliders.
-- Asset-manifest overrides and per-stage music hooks are not implemented in this foundation.

@@ -1,0 +1,19 @@
+{
+  "checks": [
+    "Title",
+    "Rules and stage/Oath selection",
+    "Blade Sling via keyboard",
+    "Five-slot verified replay",
+    "Nine stage views",
+    "Result screen",
+    "Gauntlet home-stage launch"
+  ],
+  "errors": [],
+  "metrics": {
+    "fps": 5.317734645041212,
+    "simMs": 1.900000000023283,
+    "drawCalls": 115,
+    "triangles": 11102
+  },
+  "environment": "Linux Chromium SwiftShader, not target hardware performance"
+}

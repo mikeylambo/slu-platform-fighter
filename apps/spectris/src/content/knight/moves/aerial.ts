@@ -8,7 +8,7 @@ export const WINGS: Move[] = [
 ];
 export const CAPE: Move[] = [
  {key:'neutral-air',name:'Veil Spin',faf:34,landing:14,strikes:[s(8,7,10,0,1.4,2,[10,4],[50,70])]},
- {key:'forward-air',name:'Cleave',faf:38,landing:18,shatter:true,strikes:[s(10,4,15,1.8,1,1.2,[3,-10],[40,80])]},
+ {key:'forward-air',name:'Cleave',faf:38,landing:18,shatter:true,strikes:[s(10,4,15,2.6,1,.6,[3,-10],[40,80]),s(10,4,12,1.3,1.2,1,[10,4],[40,70])]},
  {key:'back-air',name:'Cape Lash',faf:34,landing:14,strikes:[s(9,4,12,-2,1.4,1.4,[-10,4],[40,85])]},
  {key:'up-air',name:'Greatslash',faf:35,landing:15,strikes:[s(9,5,14,0,3,1.3,[1,10],[45,90])]},
  {key:'down-air',name:'Drop Stab',faf:30,landing:12,strikes:[s(7,3,10,.1,-.3,.85,[1,-10],[45,80])]},

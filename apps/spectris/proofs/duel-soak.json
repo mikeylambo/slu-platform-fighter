@@ -1,0 +1,67 @@
+{
+  "matches": 1000,
+  "completedWithinOriginalWatchdog": 998,
+  "completedAfterTargetedFollowup": 1000,
+  "crashes": 0,
+  "sampledDeterminismMismatches": 0,
+  "level9WinsVsLevel3": 97,
+  "benchmarkMatches": 100,
+  "originalWatchdogFrames": 10500,
+  "extendedWatchdogFrames": 21000,
+  "extendedCases": [
+    {
+      "match": 639,
+      "frame": 14119,
+      "phase": "over",
+      "atLimit": {
+        "round": 2,
+        "sudden": true,
+        "suddenFrames": 2641,
+        "fighters": [
+          {
+            "x": -1130000,
+            "y": 0,
+            "stocks": 1,
+            "respawn": 0,
+            "held": null
+          },
+          {
+            "x": 1130000,
+            "y": 0,
+            "stocks": 1,
+            "respawn": 0,
+            "held": null
+          }
+        ]
+      }
+    },
+    {
+      "match": 891,
+      "frame": 13186,
+      "phase": "over",
+      "atLimit": {
+        "round": 2,
+        "sudden": true,
+        "suddenFrames": 2641,
+        "fighters": [
+          {
+            "x": -1130000,
+            "y": 0,
+            "stocks": 1,
+            "respawn": 0,
+            "held": null
+          },
+          {
+            "x": 1130000,
+            "y": 0,
+            "stocks": 1,
+            "respawn": 0,
+            "held": null
+          }
+        ]
+      }
+    }
+  ],
+  "framesInInitialPass": 4272280,
+  "verificationScope": "1000 distinct four-Fracture continuous matches with a 60-second stress timer. Each 100th case had duplicate hash checks; 10000-frame full determinism is separately certified. Two tied Sudden Death cases restarted correctly and completed at 14119 frames under the extended watchdog. No simulation changes were required for these followups."
+}

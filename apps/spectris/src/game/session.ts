@@ -1,3 +1,4 @@
+import type { StockMatchRules } from '../../../../packages/sim/src/lifecycle.js';
 import { fixed as f, type Fixed } from '../../../../packages/deterministic-math/src/fixed.js';
 import { createTwoFighterMatch, stepMatchWorld, type MatchEvent, type MatchInputFrame } from '../../../../packages/sim/src/match.js';
 import { resolveStandardMove } from '../../../../packages/sim/src/actionResolver.js';
@@ -8,7 +9,7 @@ import { STANCES } from '../content/knight/stances.js';
 import { ATTACKS, MOVES } from '../content/knight/moves/index.js';
 import { SURFACES, LEDGES, SANCTUM, STOCK_RULES } from '../content/stages/sanctum.js';
 export interface KnightState { stance: StanceState; glide: number; gliding: boolean; glideUsed: boolean; glideSpeed: Fixed; ledgeTouched: boolean; bufferedMove: string|null; bufferFrames: number; stanceBuffer: number; jabIndex: number; jabWindow: number; lastHitReset: number; }
-export interface GameData { knights: Record<string,KnightState>; }
+export interface GameData { modifiers?:Record<string,{extraJumps:number;glideDuration:number;buffer:number}>; knights: Record<string,KnightState>; }
 export const IDS = ['player-1','player-2'] as const;
 export const neutral = (frame:number): SimInputFrame => ({frame,moveX:0,moveY:0,jumpPressed:false,jumpHeld:false,dodgePressed:false,shieldHeld:false});
 function newKnight(): KnightState { return {stance:{id:'wings',unfurl:0,switchedAirborne:false},glide:0,gliding:false,glideUsed:false,glideSpeed:worldValue(PHYSICS.glide.initialSpeed),ledgeTouched:false,bufferedMove:null,bufferFrames:0,stanceBuffer:0,jabIndex:0,jabWindow:0,lastHitReset:-1}; }
@@ -19,27 +20,28 @@ export function createSession(seed=0x53504543):WorldState {
  w.surfaces=structuredClone(SURFACES);w.ledges=structuredClone(LEDGES);delete w.match;
  w.extensionState=JSON.stringify({knights:Object.fromEntries(IDS.map(id=>[id,newKnight()]))});return w;
 }
-export function stepSession(original:WorldState,bundle:MatchInputFrame):{state:WorldState;events:MatchEvent[]} {
+export function stepSession(original:WorldState,bundle:MatchInputFrame,stockRules?:StockMatchRules):{state:WorldState;events:MatchEvent[]} {
  // PF owns immutable histories and surfaces. Copy only the records this adapter edits.
  const w:WorldState={...original,fighters:original.fighters.map(p=>({...p,attack:p.attack?{...p.attack,hitTargets:[...p.attack.hitTargets]}:null}))};
  const data=gameData(w),inputs:Record<string,SimInputFrame>={};
  for(const p of w.fighters){
-  const k=data.knights[p.id]!,raw=bundle.byFighterId[p.id]??neutral(w.frame);
+  const k=data.knights[p.id]!,modifier=data.modifiers?.[p.id],raw=bundle.byFighterId[p.id]??neutral(w.frame);
   const was=original.fighters.find(v=>v.id===p.id)!;
   let input:SimInputFrame={...raw,grabPressed:false,specialPressed:false,shieldHeld:false,dodgePressed:false};
   const airborne=!p.grounded&&p.locomotion!=='ledge-hang';
   const canAct=p.hitlagFrames===0&&p.hitstunFrames===0&&p.respawnFrames===0;
   k.stance=tickStance(k.stance,p.grounded||p.locomotion==='ledge-hang'||p.hitstunFrames>0);
-  if(raw.auxiliaryButtons&&raw.auxiliaryButtons&1) k.stanceBuffer=PHYSICS.buffer;
+  if(raw.auxiliaryButtons&&raw.auxiliaryButtons&1) k.stanceBuffer=(modifier?.buffer??PHYSICS.buffer);
   else k.stanceBuffer=Math.max(0,k.stanceBuffer-1);
   if(k.stanceBuffer>0&&canAct&&!p.attack&&p.landingLagFrames===0){
    const next=requestStance(k.stance,STANCES,airborne);
    if(next!==k.stance){k.stance=next;k.stanceBuffer=0;k.gliding=false;}
   }
   p.definitionId=k.stance.id;
+  if(p.grounded&&canAct&&!p.attack){const aim=raw.smashX||raw.moveX;if(Math.abs(aim)>180)p.facing=aim>0?1:-1;}
   // Air attacks retain facing: resolve the request before PF movement updates facing.
   const requested=resolveStandardMove(p,{...raw,specialPressed:false,grabPressed:false});
-  if(requested){k.bufferedMove=requested;k.bufferFrames=PHYSICS.buffer;}
+  if(requested){k.bufferedMove=requested;k.bufferFrames=(modifier?.buffer??PHYSICS.buffer);}
   else if(k.bufferFrames>0)k.bufferFrames--;
   if(k.bufferFrames===0)k.bufferedMove=null;
   if(p.attack){
@@ -57,10 +59,10 @@ export function stepSession(original:WorldState,bundle:MatchInputFrame):{state:W
   if(p.attack&&p.grounded){input.moveX=0;input.moveY=0;input.jumpPressed=false;input.jumpHeld=false;p.vx=f.zero;}
   if(p.attack&&!p.grounded){input.jumpPressed=false;input.jumpHeld=false;}
   if(p.grounded){k.glide=0;k.glideUsed=false;k.gliding=false;k.ledgeTouched=false;}
-  if(p.locomotion==='ledge-hang'){k.glide=0;k.glideUsed=false;k.gliding=false;p.jumpsRemaining=PHYSICS[k.stance.id as 'wings'|'cape'].jumps;}
+  if(p.locomotion==='ledge-hang'){k.glide=0;k.glideUsed=false;k.gliding=false;p.jumpsRemaining=(PHYSICS[k.stance.id as 'wings'|'cape'].jumps+(data.modifiers?.[p.id]?.extraJumps??0));}
   const canGlide=canAct&&!p.attack&&k.stance.unfurl===0&&k.stance.id==='wings'&&!p.grounded&&p.locomotion==='airborne'&&p.jumpsRemaining===0;
   if(canGlide&&raw.jumpHeld&&!k.glideUsed&&p.vy<=f.zero){k.gliding=true;k.glideUsed=true;}
-  if(k.gliding&&(!raw.jumpHeld||!canGlide||k.glide>=PHYSICS.glide.duration))k.gliding=false;
+  if(k.gliding&&(!raw.jumpHeld||!canGlide||k.glide>=(modifier?.glideDuration??PHYSICS.glide.duration)))k.gliding=false;
   if(k.gliding){
    const pitch=Math.max(-1000,Math.min(1000,raw.moveY));
    const acceleration=worldValue(PHYSICS.glide.acceleration);
@@ -71,17 +73,17 @@ export function stepSession(original:WorldState,bundle:MatchInputFrame):{state:W
    p.vy=(Math.trunc(k.glideSpeed*pitch*PHYSICS.glide.lift/1000)-worldValue(PHYSICS.glide.sink)+worldValue(PHYSICS.gravity)) as Fixed;
    input.moveX=p.facing*1000;k.glide++;p.fastFalling=false;
   }
-  if(!p.grounded&&p.jumpsRemaining>PHYSICS[k.stance.id as 'wings'|'cape'].jumps)p.jumpsRemaining=PHYSICS[k.stance.id as 'wings'|'cape'].jumps;
+  if(!p.grounded&&p.jumpsRemaining>(PHYSICS[k.stance.id as 'wings'|'cape'].jumps+(data.modifiers?.[p.id]?.extraJumps??0)))p.jumpsRemaining=(PHYSICS[k.stance.id as 'wings'|'cape'].jumps+(data.modifiers?.[p.id]?.extraJumps??0));
   inputs[p.id]=input;
   // Zero ledge invulnerability on regrabs is applied after PF resolves the catch.
   if(was.hitstunFrames>0){k.gliding=false;k.stance.switchedAirborne=false;}
  }
- const result=stepMatchWorld(w,{frame:w.frame,byFighterId:inputs},ATTACKS,'wings:jab',MOVEMENT,new Map(),STOCK_RULES,new Map(),new Map(),new Map(),PHYSICS_REGISTRY);
+ const result=stepMatchWorld(w,{frame:w.frame,byFighterId:inputs},ATTACKS,'wings:jab',MOVEMENT,new Map(),stockRules??STOCK_RULES,new Map(),new Map(),new Map(),PHYSICS_REGISTRY);
  for(const p of result.state.fighters){
   const before=w.fighters.find(v=>v.id===p.id)!,k=data.knights[p.id]!;
-  if(before.grounded&&!p.grounded)p.jumpsRemaining=PHYSICS[k.stance.id as 'wings'|'cape'].jumps;
+  if(before.grounded&&!p.grounded)p.jumpsRemaining=(PHYSICS[k.stance.id as 'wings'|'cape'].jumps+(data.modifiers?.[p.id]?.extraJumps??0));
   if(p.grounded&&!before.grounded){
-   p.jumpsRemaining=PHYSICS[k.stance.id as 'wings'|'cape'].jumps;
+   p.jumpsRemaining=(PHYSICS[k.stance.id as 'wings'|'cape'].jumps+(data.modifiers?.[p.id]?.extraJumps??0));
    p.landingLagFrames=k.gliding?PHYSICS.glide.landing:before.attack?(MOVES.get(before.attack.attackId)?.landing??0):0;
    p.attack=null;k.gliding=false;k.glideUsed=false;k.glide=0;k.stance.switchedAirborne=false;
   }
@@ -89,7 +91,7 @@ export function stepSession(original:WorldState,bundle:MatchInputFrame):{state:W
    if(k.ledgeTouched)p.invulnerableFrames=0;
    k.ledgeTouched=true;k.stance.switchedAirborne=false;
   }
-  if(p.respawnFrames>0){data.knights[p.id]=newKnight();p.stocks=4;}
+  if(p.respawnFrames>0){data.knights[p.id]=newKnight();if(!stockRules)p.stocks=4;}
   if(p.hitstunFrames>0)k.gliding=false;
  }
  result.state.extensionState=JSON.stringify(data);

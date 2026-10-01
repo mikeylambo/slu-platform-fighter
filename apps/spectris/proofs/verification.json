@@ -9,19 +9,19 @@
     "32 authored stance/move entries: valid windows and real kernel hits (GDD data only)",
     "All 32 moves accept a fresh attack on their authored first actionable frame",
     "Triple Thrust lands three distinct hits",
-    "10,000-frame deterministic simulation: 1a6fed2d890c4ab0",
+    "10,000-frame deterministic simulation: d6379c77f1ddc2a8",
     "Authoritative stance/glide state affects replay hashes",
     "720-frame replay serialization, seek, and round-trip",
     "Eight-frame delayed rollback including stance inputs (344 frames resimulated)",
     "Recorded offstage chase, glide, normal attack, stance switch, and recovery"
   ],
   "metrics": {
-    "simP50Ms": 0.014320999999995365,
-    "simP95Ms": 0.048471999999975424,
-    "simP99Ms": 0.22029499999999302,
-    "rollbackAdvanceP95Ms": 1.9550600000000031,
+    "simP50Ms": 0.01325000000002774,
+    "simP95Ms": 0.03758499999997866,
+    "simP99Ms": 0.1539369999999849,
+    "rollbackAdvanceP95Ms": 1.74980800000003,
     "environment": "Linux Node.js container; not target Mac GPU validation"
   },
   "referenceBudget": "Source imported; see reference-comparison.json for deltas and remaining feel review",
-  "fullGame": "Not implemented beyond feel gate"
+  "scope": "This report covers the original foundation adapter. Expanded rules are verified by duel-check and online-check."
 }

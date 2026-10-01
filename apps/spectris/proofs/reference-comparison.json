@@ -760,7 +760,7 @@
       "spectris": 3
     }
   ],
-  "status": "Reference comparison complete; role-budget and controller-feel approval pending",
+  "status": "Reference comparison complete; GDD move contracts are certified separately; human controller feel remains unverified",
   "limitations": [
     "Source measurements are distinct from Spectris design targets.",
     "No acceptance ranges are derived from the implementation.",

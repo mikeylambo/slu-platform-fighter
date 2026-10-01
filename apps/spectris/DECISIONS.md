@@ -24,3 +24,19 @@
 - The check now produces a reproducible comparison of all 32 authored moves and nine movement attributes. Source import is complete; the feel gate is still pending, not falsely certified by ranges derived from the implementation.
 - Fixed a one-frame error converting first actionable frame to the PF attack duration. All moves now release after FAF minus one steps. Real simulation tests assert lockout before FAF and fresh attack acceptance on FAF.
 - Replay game version bumped to spectris-feel-v2. Existing v1 tapes deliberately fail validation instead of silently changing results. The offstage proof was re-recorded under current timing.
+
+## 2026-09-30 — Full duel implementation
+
+Mike authorized building through the GDD without a conservative feel-gate stop. The GDD's authored timings remain the working design contract; the independently imported Brawl data remains a comparison, not a claim that these two kits have identical feel. `spectris:check` now exercises the expanded duel and certifies the explicit GDD normal-move timings. Hardware/controller feel remains a playtest question rather than a fabricated automated pass.
+
+- All changes stay on `feat/spectris-duellum`. No merge into main or production alias promotion is part of this work.
+- The authoritative duel state lives in the PF world extension, so meters, Oaths, AI history, projectiles, rounds, and Clash choices travel through serialization, replay, and rollback together.
+- Soulfire, Clash, and the life predicate are shared modules. Spectris consumes them with its own content parameters.
+- A simultaneous Sudden Death loss restarts Sudden Death, with a deterministically advanced seed. Blast zones continue shrinking to 1% to prevent indefinite matches. Double-Kindle Clash ties extinguish both buffs.
+- Cape Fair's outer sweetspot is Shatter-class; the inner blade contact is a non-Shatter 12-Strain hit. Charged Cleave interpolates in twelve one-Strain increments between the authored endpoints.
+- Pilgrimage uses deterministic exchange segments and a camera transition for earned right of way. It is not yet a continuous traversable five-biome level.
+- Direct online pairing exchanges WebRTC invitation/answer payloads and validates the full initial world hash. There is no deployed signaling service, short room-code service, or TURN relay. The interface states that limitation.
+- The original 32 normal attacks retain the source reference comparison. Expanded specials and charge variants are separately checked against their authored timing/structural contracts.
+- Local versus and training expose all Oaths for development and playtesting. Gauntlet rewards persist as reclaimed shards; unlocks do not hide testable content in this branch.
+- Procedural art remains the shipped fallback. Helmet, sword, chest, pauldron, gauntlet, wing-feather GLBs and cape textures can override their procedural pieces through the public art manifest. Backdrop textures and gauntlet pose-node animation still need final asset integration.
+- Music and SFX are synthesized by default. An audio manifest accepts replacement cues and synchronized looping stage stems. Michael's voice recordings have not been supplied and are not impersonated or fabricated.

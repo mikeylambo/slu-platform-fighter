@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "pieces": {
+    "helm/default": null, "helm/horned": null, "helm/crest": null,
+    "helm/halo": null, "helm/winged-crest": null, "helm/crown": null,
+    "helm/hooded": null, "helm/cracked": null,
+    "chest": null, "pauldron": null, "gauntlet": null,
+    "sword": null, "wing-feather": null
+  },
+  "capeTexture": null,
+  "backdrops": {}
+}

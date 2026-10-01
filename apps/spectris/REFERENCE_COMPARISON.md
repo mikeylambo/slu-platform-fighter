@@ -61,4 +61,4 @@ The compiled FAF conversion was one frame late. It now releases after FAF minus 
 
 ## Remaining acceptance work
 
-Role budgets are not yet approved. This comparison does not certify movement feel, glide physics, or target hardware performance. Do not manufacture ranges around existing values to mark this gate green.
+GDD role contracts are exercised separately by spectris-certify.mjs. This reference comparison does not certify subjective movement feel, glide pitch, or target hardware performance.
