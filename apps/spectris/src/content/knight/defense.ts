@@ -21,8 +21,11 @@ export const EVADES: Record<EvadeKind, EvadeSpec> = {
 };
 
 export const EVADE = {
-  /** Horizontal travel per frame for rolls and air dodges. */
-  travel: f.fromRatio(2, 5),
+  /**
+   * Horizontal travel per frame for rolls and air dodges: 0.1 world units → a roll covers
+   * ~2.8 units (about two body lengths). Was 0.4 (≈11 units), which threw Knights offstage.
+   */
+  travel: f.fromRatio(1, 10),
   /** Air dodge vertical velocity per stick unit (velocity = moveY / divisor). */
   airLiftDivisor: 2000,
   /** Stick deflection that turns a spot dodge into a roll. */

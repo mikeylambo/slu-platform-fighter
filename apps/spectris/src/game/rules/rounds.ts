@@ -8,6 +8,7 @@ import { STAGES, type Stage } from '../../content/stages/roster.js';
 import { STOCK_RULES } from '../../content/stages/sanctum.js';
 import { createDuel } from './setup.js';
 import { duelData, emit, save, type DuelState } from './state.js';
+import { carryMind } from '../../ai/mind.js';
 
 const B = DUEL.blast;
 const ROUNDS = DUEL.rounds;
@@ -66,6 +67,7 @@ export function stepRoundEnd(
     nd.knights[id]!.parries = d.knights[id]!.parries;
     nd.knights[id]!.clashes = d.knights[id]!.clashes;
     nd.knights[id]!.fractures = d.knights[id]!.fractures;
+    nd.knights[id]!.mind = carryMind(d.knights[id]!.mind);
   }
   save(next, nd);
   return { state: next, events: [] };

@@ -9,6 +9,7 @@ import { MOVES } from '../../content/knight/moves/index.js';
 import { kindleOnHit } from './kindle.js';
 import { hitMeter } from './meter.js';
 import { emit, initialKnight, type DuelState, type Frame } from './state.js';
+import { carryMind } from '../../ai/mind.js';
 
 export const LIFE_SYSTEM = new StrainFractures(LIFE);
 
@@ -80,6 +81,7 @@ export function takeFracture(d: DuelState, p: FighterState): void {
     parries: k.parries,
     clashes: k.clashes,
     fractures: k.fractures,
+    mind: carryMind(k.mind),
   };
   emit(d, 'fracture', p);
 }

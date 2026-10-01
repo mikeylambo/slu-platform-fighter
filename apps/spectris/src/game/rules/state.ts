@@ -8,6 +8,7 @@ import { DUEL, type Oath } from '../../content/rules/duel.js';
 import { OATH_EFFECTS, type OathEffects } from '../../content/rules/oaths.js';
 import type { EvadeKind } from '../../content/knight/defense.js';
 import type { FeelSettings } from '../../content/knight/physics.js';
+import { emptyMind, type Mind } from '../../ai/mind.js';
 
 export interface DuelOptions {
   stage: string;
@@ -88,8 +89,8 @@ export interface DuelKnight {
   parries: number;
   clashes: number;
   fractures: number;
-  ai: SimInputFrame;
-  history: { x: number; y: number; attack: boolean }[];
+  /** CPU memory (unused for human slots). */
+  mind: Mind;
 }
 
 export interface DuelEvent {
@@ -195,8 +196,7 @@ export const initialKnight = (): DuelKnight => ({
   parries: 0,
   clashes: 0,
   fractures: 0,
-  ai: neutral(0),
-  history: [],
+  mind: emptyMind(),
 });
 
 export const duelData = (w: WorldState): DuelState | undefined =>

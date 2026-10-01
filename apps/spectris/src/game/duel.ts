@@ -17,7 +17,7 @@ import { registerDuelMoves } from '../content/knight/moves/special.js';
 import { PHYSICS } from '../content/knight/physics.js';
 import { DEFAULT_OPTIONS } from '../content/rules/duel.js';
 import { stageById, surfaces } from '../content/stages/roster.js';
-import { aiInput, cpuClashChoice } from '../ai/scripted.js';
+import { aiInput, cpuClashChoice } from '../ai/index.js';
 import { clearBuffer } from './rules/input-buffer.js';
 import { makeActor } from './rules/actor.js';
 import {

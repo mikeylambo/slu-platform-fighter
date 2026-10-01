@@ -1,0 +1,8 @@
+{
+  "protocol": "32 continuous 4-Fracture matches, 6:00 timer (GDD default), 7 competitive stages, level 9 alternating slots, Unsworn vs Unsworn",
+  "level9Wins": 32,
+  "matches": 32,
+  "winRate": 1,
+  "pass": true,
+  "meanFrames": 12562.46875
+}
