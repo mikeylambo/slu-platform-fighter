@@ -17,6 +17,7 @@ import { OATHS, type Oath } from './content/rules/duel.js';
 import { gauntletFight, type Difficulty } from './content/gauntlet.js';
 import { OnlineDuel } from './platform/online.js';
 import { readProgress, readSettings, persist } from './platform/progress.js';
+import { openGamepadDiagnostics } from './platform/gamepad-diagnostics.js';
 import { BenchRecorder, benchOptions, benchReport, benchSeconds, gpuName } from './platform/bench.js';
 let counterpickStage: number | null = null,
   counterpickRound = 0,
@@ -141,7 +142,7 @@ function controls() {
 }
 function renderUi() {
   if (menu) {
-    app.innerHTML = `<header class="topline"><div class="brand"><span class="sigil">♜</span> SOULFIRE LEGENDS</div><span class="build">DUEL BUILD · 003</span></header><div class="corner-line"></div><main class="hero"><div class="eyebrow">A duel with your reflection</div><h1>SPECTRIS<span>DUELLUM</span></h1><div class="divider"></div><p class="tagline">Face the knight who knows<br>every move you know.</p><nav class="menu"><button class="primary" id="versus">ENTER THE DUEL <span>↗</span></button><div class="menu-grid"><button class="menu-secondary" id="gauntlet">Fracture Gauntlet <span>SOLO</span></button><button class="menu-secondary" id="momentum">Pilgrimage <span>MOMENTUM</span></button><button class="menu-secondary" id="practice">Training <span>SANCTUM</span></button><button class="menu-secondary" id="vigil">The Vigil <span>LEARN</span></button><button class="menu-secondary" id="online">Direct online <span>1v1</span></button><button class="menu-secondary" id="options">Options</button><button class="menu-secondary" id="controls">Controls</button></div></nav></main><div class="knight-label">An empty helm. An unbroken will.<small>THE UNSWORN KNIGHT</small></div><footer class="title-bottom"><div class="caption">ONE KNIGHT. TWO STANCES.<br><span class="title-mark">EVERY DECISION LEAVES A CRACK.</span></div><div id="connection">KEYBOARD + CONTROLLER</div><div>SLU / 001</div></footer>${screen !== 'title' ? menuPanel() : ''}${showHelp ? controls() : ''}`;
+    app.innerHTML = `<header class="topline"><div class="brand"><span class="sigil">♜</span> SOULFIRE LEGENDS</div><span class="build">DUEL BUILD · 003</span></header><div class="corner-line"></div><main class="hero"><div class="eyebrow">A duel with your reflection</div><h1>SPECTRIS<span>DUELLUM</span></h1><div class="divider"></div><p class="tagline">Face the knight who knows<br>every move you know.</p><nav class="menu"><button class="primary" id="versus">ENTER THE DUEL <span>↗</span></button><div class="menu-grid"><button class="menu-secondary" id="gauntlet">Fracture Gauntlet <span>SOLO</span></button><button class="menu-secondary" id="momentum">Pilgrimage <span>MOMENTUM</span></button><button class="menu-secondary" id="practice">Training <span>SANCTUM</span></button><button class="menu-secondary" id="vigil">The Vigil <span>LEARN</span></button><button class="menu-secondary" id="online">Online <span>ROOM CODE</span></button><button class="menu-secondary" id="options">Options</button><button class="menu-secondary" id="controls">Controls</button><button class="menu-secondary" id="pad-test">Controller test</button></div></nav></main><div class="knight-label">An empty helm. An unbroken will.<small>THE UNSWORN KNIGHT</small></div><footer class="title-bottom"><div class="caption">ONE KNIGHT. TWO STANCES.<br><span class="title-mark">EVERY DECISION LEAVES A CRACK.</span></div><div id="connection">KEYBOARD + CONTROLLER</div><div>SLU / 001</div></footer>${screen !== 'title' ? menuPanel() : ''}${showHelp ? controls() : ''}`;
     on('#online', onlinePanel);
     on('#versus', () => setup('versus'));
     on('#momentum', () => setup('momentum'));
@@ -164,6 +165,7 @@ function renderUi() {
       vigilStart = world.frame;
     });
     bindMenu();
+    on('#pad-test', () => openGamepadDiagnostics(settings.deadzone));
     on('#controls', () => {
       showHelp = true;
       renderUi();
@@ -471,7 +473,8 @@ function tick() {
   }
 }
 function updateHud(now: number) {
-  if (menu) {
+  // The controller test owns the pad while it is open.
+  if (menu && !document.querySelector('.pad-diagnostics')) {
     const pad = Array.from(navigator.getGamepads?.() ?? []).find(Boolean),
       pressed = pad?.buttons.some((b) => b.pressed) ?? false;
     if (pressed && !menuPadHeld) {
@@ -524,7 +527,7 @@ function updateHud(now: number) {
     message.textContent = duel.clash
       ? 'CLASH · Forward: Press / Back: Parry / Down: Slip'
       : duel.phase === 'round-end'
-        ? `${duel.winner === IDS[0] ? 'YOUR FLAME ENDURES' : 'THE REFLECTION ENDURES'}`
+        ? `${duel.winner === null ? 'BOTH FLAMES FALL' : duel.winner === IDS[0] ? 'YOUR FLAME ENDURES' : 'THE REFLECTION ENDURES'}`
         : '';
   const d = gameData(world);
   world.fighters.forEach((p, i) => {
@@ -834,7 +837,7 @@ function results() {
     won = d.winner === IDS[0];
   const el = document.createElement('div');
   el.className = 'modal-shade';
-  el.innerHTML = `<section class="modal result"><div class="eyebrow">${stageById(options.stage).name} · ${d.wins.join(' — ')}</div><h2>${won ? 'Your flame endures.' : 'The reflection remembers.'}</h2><div class="result-stats">${world.fighters
+  el.innerHTML = `<section class="modal result"><div class="eyebrow">${stageById(options.stage).name} · ${d.wins.join(' — ')}</div><h2>${d.winner === null ? 'Both flames fall. A draw.' : won ? 'Your flame endures.' : 'The reflection remembers.'}</h2><div class="result-stats">${world.fighters
     .map((p, i) => {
       const k = d.knights[p.id]!;
       return `<div><h3>${i ? 'THE REFLECTION' : 'THE UNSWORN'}</h3><b>${k.parries}</b> parries <b>${k.clashes}</b> clashes won <b>${k.fractures}</b> Fractures lost</div>`;
@@ -1065,6 +1068,7 @@ renderUi();
 let bench: BenchRecorder | null = null;
 const benchLength = benchSeconds();
 if (benchLength) startBench(benchLength);
+if (new URLSearchParams(location.search).has('pad')) openGamepadDiagnostics(settings.deadzone);
 requestAnimationFrame(frame);
 
 /** `?bench`: fixed CPU-vs-CPU match on the heaviest stage, timed per frame. */

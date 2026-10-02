@@ -77,7 +77,8 @@ function decide(w: WorldState, d: DuelState, slot: number): void {
   let best: OptionId = 'wait';
   let bestScore = -Infinity;
   // Hesitation is a level trait, scaled by how much the personality likes to wait.
-  const hesitating = !v.self.offstage && roll(1) < level.hesitation * (personality.weights.wait ?? 1);
+  const hesitating =
+    !v.self.offstage && roll(1) < Math.min(MIND.maxHesitation, level.hesitation * (personality.weights.wait ?? 1));
   for (const [index, id] of OPTION_IDS.entries()) {
     if (level.locked.includes(id)) continue;
     if (hesitating && id !== 'wait') continue;

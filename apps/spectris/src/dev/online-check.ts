@@ -64,7 +64,7 @@ const result = {
   winner: duelData(states[0]!)!.winner,
   advanceP95Ms: samples[Math.floor(samples.length * 0.95)],
   browserWebRTC:
-    'Blocked in this workspace: both Chromium peers gathered zero ICE candidates. External browser/NAT validation remains required.',
+    'See proofs/online-two-tab.json: real WebRTC between two tabs (room code, rollback, zero desyncs). Cross-network/NAT validation: ONLINE_TEST.md.',
 };
 writeFileSync('apps/spectris/proofs/online-protocol.json', JSON.stringify(result, null, 2) + '\n');
 console.log('ONLINE PROTOCOL PASS', JSON.stringify(result));

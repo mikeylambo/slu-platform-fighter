@@ -59,6 +59,8 @@ export function stepRoundEnd(
     // A simultaneous Sudden Death loss replays Sudden Death.
     nd.sudden = true;
     nd.clock = 0;
+    // Keep closing the blast zones across replays so Sudden Death always ends.
+    nd.suddenFrames = d.suddenFrames;
     for (const p of next.fighters) {
       p.stocks = ROUNDS.suddenDeathLives;
       p.percentTenths = ROUNDS.suddenDeathStrain;
@@ -91,11 +93,14 @@ export function tickClock(w: WorldState, d: DuelState): void {
   }
 }
 
+/** Current Sudden Death blast-zone scale (1 = full size). */
+function sdScale(d: DuelState): number {
+  return d.sudden ? Math.max(B.minimumScale, 1 - Math.floor(d.suddenFrames / B.shrinkInterval) / B.shrinkSteps) : 1;
+}
+
 /** Blast zones for this frame; Sudden Death shrinks them 1% per interval down to a floor. */
 export function blastRules(d: DuelState, stage: Stage): StockMatchRules {
-  const shrink = d.sudden
-    ? Math.max(B.minimumScale, 1 - Math.floor(d.suddenFrames / B.shrinkInterval) / B.shrinkSteps)
-    : 1;
+  const shrink = sdScale(d);
   const zone = (value: number, sign: number) =>
     f.fromRatio(sign * Math.round(value * shrink * B.precision), B.precision * B.unitsPerWorld);
   const [left, right, top, bottom] = stage.blast;
@@ -123,7 +128,9 @@ export function checkRoundEnd(w: WorldState, d: DuelState, ids: readonly string[
     d.winner = winner;
   }
   const decided = format === 'continuous' || d.wins.some((wins) => wins >= winsNeeded(d.options.bestOf));
-  d.phase = winner && decided ? 'over' : 'round-end';
+  // A double loss with the Sudden Death zones fully closed cannot be replayed into a result: draw.
+  const exhausted = !winner && d.sudden && sdScale(d) <= B.minimumScale;
+  d.phase = (winner && decided) || exhausted ? 'over' : 'round-end';
   d.pause = DUEL.roundPause;
   emit(d, d.phase === 'over' ? 'match-win' : 'round-win', alive[0] ?? w.fighters[0]!);
 }

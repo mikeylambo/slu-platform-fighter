@@ -31,7 +31,9 @@ import {
 import { absorbsHit, becomesHelpless, stepActiveSpecial, stepCleaveCharge, trySpecial } from '../specials/index.js';
 import { applyHit, isShatterHit, takeFracture } from '../fractures.js';
 import { blastRules, checkRoundEnd, tickClock } from '../rounds.js';
-import { stepMomentumFracture } from '../momentum.js';
+import { stepMomentumFracture, stepMomentumScroll } from '../momentum.js';
+import { PILGRIMAGE, screenCentre } from '../../../content/stages/pilgrimage.js';
+import type { FighterState } from '../../../../../../packages/sim/src/types.js';
 import { stageById } from '../../../content/stages/roster.js';
 import { actorFor, duelFrame, IDS } from './fixtures.js';
 
@@ -407,9 +409,19 @@ describe('rounds', () => {
 });
 
 describe('momentum', () => {
-  it('each Fracture moves right of way; five screens win', () => {
+  it('a Fracture grants right of way; the holder scrolls screens and wins at the goal line', () => {
     const frame = duelFrame({ format: 'momentum', stage: 'pilgrimage' });
-    for (let n = 0; n < DUEL.momentum.screens; n++) stepMomentumFracture(frame.w, frame.d, frame.w.fighters[1]!, IDS);
+    const [holder, victim] = frame.w.fighters as [FighterState, FighterState];
+    stepMomentumFracture(frame.w, frame.d, victim, IDS);
+    assert.equal(frame.d.rightOfWay, IDS[0]);
+    assert.ok(victim.x > holder.x, 'victim respawns ahead');
+    for (let screen = 1; screen <= PILGRIMAGE.finalScreen; screen++) {
+      holder.x = f.fromInt(screenCentre(screen - 1) + PILGRIMAGE.halfScreen + 1);
+      stepMomentumScroll(frame.w, frame.d, IDS);
+      assert.equal(frame.d.progress, screen);
+    }
+    holder.x = f.fromInt(screenCentre(PILGRIMAGE.finalScreen) + PILGRIMAGE.halfScreen);
+    stepMomentumScroll(frame.w, frame.d, IDS);
     assert.equal(frame.d.phase, 'over');
     assert.equal(frame.d.winner, IDS[0]);
   });

@@ -896,3 +896,111 @@ input[type='checkbox'] {
   color: #8fa6ab;
   margin: 12px 0;
 }
+
+/* Controller diagnostics */
+.pad-diagnostics {
+  position: fixed;
+  inset: 5vh max(16px, 6vw);
+  z-index: 60;
+  overflow: auto;
+  padding: 28px 32px;
+  background: rgba(6, 13, 19, 0.985);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(113, 233, 224, 0.28);
+  color: #d6e6e8;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
+}
+.pad-diagnostics header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+.pad-diagnostics h2 {
+  font:
+    400 26px/1.2 Georgia,
+    serif;
+  margin: 6px 0 18px;
+}
+.pad-diagnostics .pad {
+  border-top: 1px solid #1d3540;
+  padding: 18px 0;
+}
+.pad-diagnostics h3 {
+  font: 600 14px/1.3 system-ui;
+  margin: 0 0 4px;
+}
+.pad-diagnostics .ok {
+  color: #71e9e0;
+}
+.pad-diagnostics .warn {
+  color: #e8b153;
+}
+.pad-diagnostics .sticks {
+  display: flex;
+  gap: 28px;
+  margin: 12px 0;
+}
+.pad-diagnostics .stick {
+  margin: 0;
+  text-align: center;
+  font:
+    11px/1.4 ui-monospace,
+    Menlo,
+    monospace;
+  color: #9db4b8;
+}
+.pad-diagnostics .stick svg {
+  width: 120px;
+  height: 120px;
+}
+.pad-diagnostics .ring {
+  fill: #0d1d25;
+  stroke: #2c4b55;
+}
+.pad-diagnostics .deadzone {
+  fill: rgba(232, 177, 83, 0.14);
+  stroke: rgba(232, 177, 83, 0.5);
+  stroke-dasharray: 3 3;
+}
+.pad-diagnostics .vector {
+  stroke: #71e9e0;
+  stroke-width: 2;
+}
+.pad-diagnostics .dot {
+  fill: #6a8188;
+}
+.pad-diagnostics .dot.live {
+  fill: #71e9e0;
+}
+.pad-diagnostics .buttons {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+.pad-diagnostics .buttons li {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #0d1d25;
+  border: 1px solid #16303a;
+  font: 12px/1.4 system-ui;
+}
+.pad-diagnostics .buttons li.on {
+  background: #133c40;
+  border-color: #71e9e0;
+}
+.pad-diagnostics .buttons em {
+  font-style: normal;
+  color: #8fa6ab;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.pad-diagnostics .pad-note,
+.pad-diagnostics .pad-empty {
+  color: #8fa6ab;
+  font-size: 12px;
+  max-width: 70ch;
+}

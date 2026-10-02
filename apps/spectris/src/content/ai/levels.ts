@@ -44,4 +44,6 @@ export const MIND = {
   adaptBoost: 2.4,
   /** Opponent samples needed before Unsworn adapts. */
   adaptAfter: 6,
+  /** Even the most patient, least skilled CPU acts on some decisions. */
+  maxHesitation: 0.8,
 };
