@@ -58,3 +58,14 @@ Unchanged: gravity 0.095, fall speeds 1.40/1.65, jump heights, glide.
 Behaviour fixes shipped in the same version bump: grab mash symmetry (P1 could not escape P2), Cape down throw keeps its knockdown, Kindle's free Flash Unfurl expires with Kindle.
 
 Sanity: 20-match soak completes with no watchdog timeouts; level 9 won 17/20 against level 3 under the new physics (the full 100-match benchmark runs with the Step 4 AI).
+
+## 2026-10-02 — Utility AI pass (replay versions v5–v6)
+
+| Value | Before | After | Reason | Verification |
+|---|---|---|---|---|
+| Roll / air-dodge travel | 0.4 world/frame (~11 units per evade) | 0.1 (~2.8 units) | An evade carried a Knight eight body-widths, often offstage into helplessness; GDD 3.7 gives no distance, two body lengths is the genre norm | Rules unit test; AI SDs fell from ~1 per match to ~0 |
+| Sudden Death shrink on replay | restarted from 100% | continues | Repeated double losses could stall matches indefinitely | The three watchdog cases now finish in ~7,100 frames |
+| Double loss at minimum blast zones | replay | draw | Cannot produce a result otherwise | Rules logic; draw banner/result copy |
+| CPU benchmark protocol | 60 s timer | GDD default 6:00 | 60 s forced every match into Sudden Death coin-flips | Level 9 vs 3: 96/100 |
+
+AI numbers (option base utilities, level curves, personality weights) live in `content/ai/`; see `proofs/ai-personalities.html` for the resulting behaviour.
