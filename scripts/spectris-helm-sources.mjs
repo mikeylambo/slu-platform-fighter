@@ -35,72 +35,87 @@ const SIDE_BODY =
 /** Each helm: black silhouette paths, white visor (hole) paths, and a side profile. */
 const HELMS = {
   duelist: {
-    title: 'Duelist (v2 #01) — base Knight, Unsworn',
+    title: 'Duelist (v2 refined #01) — base Knight, Unsworn · drawn from the v2 sheet',
     body: [
-      'M256 166 C322 166 364 212 366 276 L388 318 L360 340 L340 398 L256 482 L172 398 L152 340 L124 318 L146 276 C148 212 190 166 256 166 Z',
-      // Swept flame-crest blade, flicking to the right.
-      'M224 228 C218 150 242 84 302 18 C294 72 306 104 334 84 C322 140 308 182 290 228 Z',
+      'M256 210 C318 210 354 250 356 300 L392 336 L352 352 L330 404 L256 470 L182 404 L160 352 L120 336 L156 300 C158 250 194 210 256 210 Z',
+      // The great swept crescent: rises from the brow and hooks over to the right.
+      'M200 244 C194 150 252 72 340 50 C384 40 424 62 444 100 C412 82 370 80 336 98 C298 122 286 172 298 222 Z',
     ],
-    visor: ['M176 266 L248 316 L256 334 L264 316 L336 266 L340 284 L268 342 L256 364 L244 342 L172 284 Z'],
-    side: [
-      SIDE_BODY,
-      'M340 236 C300 150 240 92 140 38 C196 100 214 148 236 184 C206 176 184 180 164 196 C196 204 222 222 240 246 Z',
-    ],
+    visor: ['M178 290 L248 334 L256 350 L264 334 L334 290 L338 306 L268 358 L256 378 L244 358 L174 306 Z'],
+    side: [SIDE_BODY, 'M340 236 C312 150 230 72 118 58 C172 92 204 150 224 222 Z'],
   },
   sentinel: {
-    title: 'Sentinel (v2 #02) — Iron',
+    title: 'Sentinel (v2 refined #02) — Iron · drawn from the v2 sheet',
     body: [
-      'M138 150 L374 150 L386 262 L378 382 L332 452 L256 476 L180 452 L134 382 L126 262 Z',
-      rect(140, 78, 34, 80),
-      rect(188, 104, 34, 54),
-      rect(239, 64, 34, 94),
-      rect(290, 104, 34, 54),
-      rect(338, 78, 34, 80),
+      'M256 198 L332 228 L354 302 L330 384 L256 452 L182 384 L158 302 L180 228 Z',
+      'M243 206 L256 26 L269 206 Z',
+      'M212 216 L220 92 L236 210 Z',
+      mirror('M212 216 L220 92 L236 210 Z'),
+      'M188 234 L182 146 L206 226 Z',
+      mirror('M188 234 L182 146 L206 226 Z'),
+      // Gold crescents flanking the crown (floating).
+      'M146 304 C104 252 114 176 168 144 C148 190 150 244 174 286 Z',
+      mirror('M146 304 C104 252 114 176 168 144 C148 190 150 244 174 286 Z'),
     ],
-    visor: ['M166 262 L346 262 L346 292 L272 292 L272 386 L240 386 L240 292 L166 292 Z'],
-    side: ['M140 160 L376 160 L384 280 L370 400 L320 466 L230 478 L170 430 L142 340 Z', rect(150, 80, 220, 90)],
+    visor: ['M188 300 L250 326 L256 340 L262 326 L324 300 L326 314 L264 346 L256 362 L248 346 L186 314 Z'],
+    side: [SIDE_BODY, 'M262 180 L250 30 L280 30 L292 180 Z'],
   },
   reaper: {
-    title: 'Reaper (v2 #03) — Ember',
+    title: 'Reaper (v2 refined #03) — Ember · drawn from the v2 sheet',
     body: [
-      'M256 190 C310 190 342 230 344 290 L334 370 L300 430 L256 472 L212 430 L178 370 L168 290 C170 230 202 190 256 190 Z',
-      'M194 236 C138 214 96 160 86 56 C112 112 138 136 176 140 C152 154 166 186 222 204 Z',
-      mirror('M194 236 C138 214 96 160 86 56 C112 112 138 136 176 140 C152 154 166 186 222 204 Z'),
+      'M256 214 C312 214 346 254 346 304 L334 380 L256 462 L178 380 L166 304 C166 254 200 214 256 214 Z',
+      // Scythe crest sweeping back over the right shoulder.
+      'M198 254 C178 144 262 58 384 46 C436 42 474 80 484 124 L456 110 L446 134 L420 108 L404 132 L382 112 C330 136 302 184 312 240 L290 214 L296 252 Z',
+      // Flames on both flanks, larger on the left.
+      mirror('M196 330 L150 304 L176 348 L144 360 L192 372 Z'),
+      // Ragged flames licking off the left side.
+      'M176 300 L118 262 L152 314 L104 324 L158 348 L120 380 L180 364 Z',
     ],
-    visor: ['M190 286 L248 312 L248 330 L186 304 Z', mirror('M190 286 L248 312 L248 330 L186 304 Z')],
-    side: [SIDE_BODY, 'M232 214 C176 194 132 142 118 52 C150 108 196 140 262 176 Z'],
+    visor: ['M184 300 L248 332 L248 350 L180 318 Z', mirror('M184 300 L248 332 L248 350 L180 318 Z')],
+    side: [SIDE_BODY, 'M236 222 C200 130 150 70 70 56 C120 92 160 150 196 222 Z'],
   },
   herald: {
-    title: 'Herald (v2 #04) — Stillness',
+    title: 'Herald (v2 refined #04) — Stillness · drawn from the v2 sheet',
     body: [
-      'M256 170 C326 170 358 220 358 290 C358 370 316 440 256 472 C196 440 154 370 154 290 C154 220 186 170 256 170 Z',
-      rays(256, 262, 146, 236, 204, 336, 7),
+      'M256 212 C312 212 346 252 346 302 L330 382 L256 452 L182 382 L166 302 C166 252 200 212 256 212 Z',
+      // Spire with a crossbar, then the broken halo as two floating arcs.
+      'M247 216 L256 24 L265 216 Z',
+      'M218 112 L294 112 L294 126 L218 126 Z',
+      'M148 262 C114 196 146 120 222 92 C180 130 164 192 182 252 Z',
+      mirror('M148 262 C114 196 146 120 222 92 C180 130 164 192 182 252 Z'),
+      // Broad pale wing-plates at the jaw.
+      'M184 352 L84 318 L150 396 Z',
+      mirror('M184 352 L84 318 L150 396 Z'),
     ],
-    visor: ['M178 294 Q256 318 334 294 L334 312 Q256 336 178 312 Z'],
-    side: [SIDE_BODY, 'M196 236 L150 52 L214 48 L262 210 Z'],
+    visor: ['M190 302 L250 330 L256 342 L262 330 L322 302 L324 316 L262 350 L256 364 L250 350 L188 316 Z'],
+    side: [SIDE_BODY, 'M232 230 L196 40 L230 40 L262 214 Z'],
   },
   inquisitor: {
-    title: 'Inquisitor (v2 #05) — Hunger',
+    title: 'Inquisitor (v2 refined #05) — Hunger · drawn from the v2 sheet',
     body: [
-      'M256 34 C304 120 364 172 374 262 L372 382 L332 452 L256 482 L180 452 L140 382 L138 262 C148 172 208 120 256 34 Z',
+      'M256 118 L332 230 L350 322 L322 402 L256 462 L190 402 L162 322 L180 230 Z',
+      'M249 124 L256 16 L263 124 Z',
+      // Halo fragments and floating side blades.
+      'M166 196 C154 140 196 98 240 88 C210 112 192 150 196 190 Z',
+      mirror('M166 196 C154 140 196 98 240 88 C210 112 192 150 196 190 Z'),
+      'M116 256 L138 196 L160 256 L138 330 Z',
+      mirror('M116 256 L138 196 L160 256 L138 330 Z'),
     ],
-    visor: [rect(246, 246, 20, 120), rect(200, 278, 112, 16)],
+    visor: ['M192 300 L250 326 L256 338 L262 326 L320 300 L322 314 L262 346 L256 360 L250 346 L190 314 Z'],
     side: [
       'M190 40 C270 120 372 176 376 284 L366 380 L330 452 L260 480 L196 440 L160 360 L148 280 C150 200 168 120 190 40 Z',
     ],
   },
   vanguard: {
-    title: 'Vanguard (v2 #06) — Gale',
+    title: 'Vanguard (v2 refined #06) — Gale · drawn from the v2 sheet',
     body: [
-      'M256 176 C318 176 352 222 352 286 L344 370 L304 436 L256 468 L208 436 L168 370 L160 286 C160 222 194 176 256 176 Z',
-      'M174 254 C120 232 76 178 52 100 C92 134 116 146 140 146 C118 126 108 104 106 80 C142 124 174 168 204 214 Z',
-      mirror(
-        'M174 254 C120 232 76 178 52 100 C92 134 116 146 140 146 C118 126 108 104 106 80 C142 124 174 168 204 214 Z',
-      ),
-      'M244 182 L256 112 L268 182 Z',
+      'M256 200 L326 226 L350 302 L322 392 L256 452 L190 392 L162 302 L186 226 Z',
+      // Swept blade horns, the right one larger, both raking back.
+      'M292 224 L444 54 L432 152 L362 238 L344 296 Z',
+      'M218 224 L112 104 L144 204 L172 286 Z',
     ],
-    visor: ['M182 280 L256 302 L330 280 L330 298 L256 322 L182 298 Z'],
-    side: [SIDE_BODY, 'M206 236 C152 206 108 154 82 84 C138 128 186 158 250 190 Z'],
+    visor: ['M184 292 L250 326 L256 340 L262 326 L328 292 L330 308 L262 350 L256 366 L250 350 L182 308 Z'],
+    side: [SIDE_BODY, 'M220 230 C170 180 120 110 96 40 C150 100 200 150 260 196 Z'],
   },
   glitch: {
     title: 'Glitch crest (to be designed from v2 #14/#23) — Static',
@@ -150,6 +165,6 @@ for (const [name, helm] of Object.entries(HELMS)) {
   ledger.titles = { ...ledger.titles, [name]: helm.title };
 }
 ledger.note =
-  'Interim silhouettes authored from GDD descriptions; the v2 concept sheet was not delivered. Any file whose hash differs from this ledger is treated as a final render.';
+  'Interim silhouettes: the six refined helms are redrawn by eye from the v2 concept sheet (shared in chat, no file); the Glitch crest is authored from the GDD. Any file whose hash differs from this ledger is treated as a final render.';
 writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + '\n');
 console.log(`HELM SOURCES ${written.length} interim PNGs written to ${OUT}`);

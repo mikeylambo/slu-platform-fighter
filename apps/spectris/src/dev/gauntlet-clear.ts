@@ -4,6 +4,7 @@
  * deterministic replay and verified by playing it back.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { ReplayPlayer, ReplayRecorder } from '../../../../packages/sim/src/replay.js';
 import { hashWorldState } from '../../../../packages/sim/src/stateHash.js';
 import { createDuel, DEFAULT_DUEL, duelData, stepDuel } from '../game/duel.js';
@@ -43,7 +44,7 @@ for (const oath of GAUNTLET_ORDER) {
     const recorder = new ReplayRecorder(
       initial,
       { gameVersion: REPLAY_VERSION, participantIds: IDS, stageId: fight.stage, rulesetId: `gauntlet-squire-${oath}` },
-      600,
+      6000,
     );
     let w = initial;
     let frames = 0;
@@ -58,8 +59,9 @@ for (const oath of GAUNTLET_ORDER) {
     const replayed = new ReplayPlayer(JSON.parse(JSON.stringify(tape)), stepDuel).playToEnd();
     const verified = hashWorldState(replayed) === hashWorldState(w);
     cleared = d.winner === IDS[0];
-    const file = `${DIR}/${oath}-attempt-${attempt}.json`;
-    writeFileSync(file, JSON.stringify(tape));
+    // Gzipped: CPU tapes are highly repetitive (≈100× smaller). `zcat` restores the JSON tape.
+    const file = `${DIR}/${oath}-attempt-${attempt}.json.gz`;
+    writeFileSync(file, gzipSync(JSON.stringify(tape)));
     results.push({
       oath,
       attempt,

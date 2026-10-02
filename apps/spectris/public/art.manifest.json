@@ -20,7 +20,7 @@
     "duelist": {
       "interim": true,
       "sideProfile": true,
-      "triangles": 9280
+      "triangles": 11420
     },
     "glitch": {
       "interim": true,
@@ -30,27 +30,27 @@
     "herald": {
       "interim": true,
       "sideProfile": true,
-      "triangles": 10808
+      "triangles": 14881
     },
     "inquisitor": {
       "interim": true,
       "sideProfile": true,
-      "triangles": 5284
+      "triangles": 9432
     },
     "reaper": {
       "interim": true,
       "sideProfile": true,
-      "triangles": 9277
+      "triangles": 14166
     },
     "sentinel": {
       "interim": true,
       "sideProfile": true,
-      "triangles": 6672
+      "triangles": 13749
     },
     "vanguard": {
       "interim": true,
       "sideProfile": true,
-      "triangles": 10068
+      "triangles": 8984
     }
   },
   "note": "helm/<name> GLBs are produced by scripts/spectris-trace-helm.mjs from art/source/helm. helms.<name>.interim marks silhouettes authored from the GDD until the v2 concept renders are supplied."

@@ -1,0 +1,120 @@
+{
+  "difficulty": "Squire",
+  "bot": "CPU level 9 (Unsworn) in the player slot",
+  "clearedAll": true,
+  "attempts": 8,
+  "results": [
+    {
+      "oath": "ember",
+      "attempt": 1,
+      "stage": "eclipse",
+      "cpuLevel": 3,
+      "won": true,
+      "rounds": [
+        2,
+        0
+      ],
+      "frames": 52029,
+      "replay": "apps/spectris/proofs/gauntlet/ember-attempt-1.json.gz",
+      "replayVerified": true
+    },
+    {
+      "oath": "static",
+      "attempt": 1,
+      "stage": "fault-screen",
+      "cpuLevel": 3,
+      "won": false,
+      "rounds": [
+        0,
+        2
+      ],
+      "frames": 45661,
+      "replay": "apps/spectris/proofs/gauntlet/static-attempt-1.json.gz",
+      "replayVerified": true
+    },
+    {
+      "oath": "static",
+      "attempt": 2,
+      "stage": "fault-screen",
+      "cpuLevel": 3,
+      "won": true,
+      "rounds": [
+        2,
+        1
+      ],
+      "frames": 63725,
+      "replay": "apps/spectris/proofs/gauntlet/static-attempt-2.json.gz",
+      "replayVerified": true
+    },
+    {
+      "oath": "stillness",
+      "attempt": 1,
+      "stage": "stillwater",
+      "cpuLevel": 3,
+      "won": true,
+      "rounds": [
+        2,
+        0
+      ],
+      "frames": 25941,
+      "replay": "apps/spectris/proofs/gauntlet/stillness-attempt-1.json.gz",
+      "replayVerified": true
+    },
+    {
+      "oath": "gale",
+      "attempt": 1,
+      "stage": "skyreach",
+      "cpuLevel": 3,
+      "won": true,
+      "rounds": [
+        2,
+        0
+      ],
+      "frames": 32843,
+      "replay": "apps/spectris/proofs/gauntlet/gale-attempt-1.json.gz",
+      "replayVerified": true
+    },
+    {
+      "oath": "iron",
+      "attempt": 1,
+      "stage": "bell-foundry",
+      "cpuLevel": 3,
+      "won": true,
+      "rounds": [
+        2,
+        1
+      ],
+      "frames": 48396,
+      "replay": "apps/spectris/proofs/gauntlet/iron-attempt-1.json.gz",
+      "replayVerified": true
+    },
+    {
+      "oath": "hunger",
+      "attempt": 1,
+      "stage": "hollow-throne",
+      "cpuLevel": 3,
+      "won": true,
+      "rounds": [
+        2,
+        0
+      ],
+      "frames": 51177,
+      "replay": "apps/spectris/proofs/gauntlet/hunger-attempt-1.json.gz",
+      "replayVerified": true
+    },
+    {
+      "oath": "unsworn",
+      "attempt": 1,
+      "stage": "unsworn",
+      "cpuLevel": 9,
+      "won": true,
+      "rounds": [
+        2,
+        0
+      ],
+      "frames": 47725,
+      "replay": "apps/spectris/proofs/gauntlet/unsworn-attempt-1.json.gz",
+      "replayVerified": true
+    }
+  ]
+}
