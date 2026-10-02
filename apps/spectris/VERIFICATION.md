@@ -1,37 +1,31 @@
-# Duel build verification — 2026-10-01
+# Verification — continuation build (2026-10-02)
 
-Branch: `feat/spectris-duellum`. Main is unchanged.
+Branch `feat/spectris-duellum`. Replay version `spectris-duel-v6`. Main is untouched.
 
-## Automated evidence
+## `npm run spectris:check` (all green)
 
-| Check | Result |
-| --- | --- |
-| `npm run spectris:check` | Passed: typed build, deterministic-code lint, foundation tests, duel tests, protocol test, move contracts, source comparison, production bundle |
-| Duel behavior | 31 checks, including specials, defense, Fractures, round counterpick, stance lock, and Pilgrimage completion |
-| Moves | 90 authored entries/charge variants; 30 explicit normal-move GDD timing contracts; valid hit windows before FAF |
-| Determinism | Matching worlds at every frame of a 10,000-frame AI/Oath duel |
-| Replay | Complete duel state round-trips through the PF replay player |
-| Rollback | Eight-frame delayed inputs converge to the live world hash |
-| Online protocol | Full one-Fracture match through PF peer packets with simulated 100 ms latency; equal final hashes, zero reported desyncs |
-| CPU difficulty | Level 9 won 97/100 versus level 3, alternating sides |
-| Soak | 1,000 distinct matches completed; zero crashes; duplicate hash checks sampled every 100th case |
-| Watchdog | 998 finished within 10,500 frames. Two legitimate Sudden Death rematches finished at 14,119 in exact seeded followups. Raw results retained. |
-| Browser | Title, stage/Oath selection, keyboard Sling, replay slots, nine stage views, results, Gauntlet launch; no page exceptions in recorded run |
+Lint (no tuning literals in `game/rules/`, no nondeterministic APIs in simulation) · typed build · foundation tests · 37 unit tests (rules modules + soulfire/clash/life-system/stance packages) · 31 duel tests · 20-match golden hashes · online protocol (8-frame rollback, 0 desyncs) · move contracts (90 entries) · Brawl reference comparison with role budgets (34 entries) · production build.
 
-## Performance boundary
+## Proofs by step
 
-| Measurement | Observed | Interpretation |
-| --- | --- | --- |
-| Duel step plus per-frame hash-check overhead | 0.68 ms mean | Linux Node, not the target Mac browser |
-| Delayed online-peer advance | 0.72 ms p95 | Packet-queue test; not an internet or full worst-case rollback budget claim |
-| Main JS | 854 kB raw / 231 kB gzip | Plus approximately 11 kB HTML/CSS and small manifests; below the 15 MB initial transfer budget with procedural assets |
-| Browser render | About 115 calls / 11k triangles | Software SwiftShader; its frame rate is not a hardware performance result |
-| 2019 Intel Mac / physical controllers | Not measured here | Target 60 fps and physical USB acceptance require the actual device |
+| Step | Proof | Result | Artifact |
+| --- | --- | --- | --- |
+| 1 Refactor | 20 seeded matches recorded before the split replay identically after it | Identical checkpoint + final hashes; `duel.ts` 273 lines | `proofs/golden-hashes.json` (now re-recorded for v6), commit `a3b6c6e` |
+| 2 Physics | Comparison table regenerated; offstage replay re-recorded; tuning logged | Pass | `REFERENCE_COMPARISON.md`, `proofs/offstage-exchange.json`, `TUNING_LOG.md` |
+| 3 Art | Duelist side-by-side; every stage at default camera; 64 px helm strip; frame time | Helms distinct at 64 px; mean frame time 334 → 303 ms (SwiftShader, faster), p95 400 → 383 ms | `proofs/art/` (`duelist-side-by-side.png`, `stage-*.png`, `helm-strip-64.png`), `proofs/bench-before-art.json`, `proofs/bench-final.json` |
+| 4 AI | Level 9 vs level 3, 100 matches (GDD default 6:00 rules) | **96 / 100** | `proofs/ai-benchmark.json` |
+| 4 AI | Personality signature ≥ 2× Unsworn, 50 matches each | Ember 2.7×, Static 18.7×, Stillness ∞ (Unsworn never guards), Gale 2.3×, Iron ∞, Hunger 59× | `proofs/ai-personalities.json`, `proofs/ai-personalities.html` |
+| 4 AI | 1,000-match soak | 1,000 / 1,000 finished; 0 timeouts, 0 crashes, 0 desyncs (duplicate sims every 100th match) | `proofs/duel-soak-{0,250,500,750}.json` |
+| 5 Pilgrimage | Full Momentum match replay | Finished (right of way → 2 scrolls → goal); replay verified | `proofs/momentum-match.json`, `proofs/momentum-replay.json` |
+| 5 Gauntlet | Bot clears all 7 on Squire | Cleared in 8 attempts (lost Static once); every replay verified | `proofs/gauntlet/summary.json`, `*.json.gz` tapes |
+| 5 Vigil | Scripted input completes 10 lessons, screenshot each | 10 / 10 | `proofs/vigil/` |
+| 5 Online | Two-tab test (room code, real WebRTC, rollback) | 600+ frames each side, 0 desyncs | `proofs/online-two-tab.json`, `online-host.png`, `online-guest.png`; Michael: `ONLINE_TEST.md` |
+| 6 Bench | `?bench` runs in the workspace browser | Runs; software-rendered numbers only | `proofs/bench-final.json`; Michael: `BENCH.md` |
+| 6 Controller | Diagnostics panel with a simulated standard pad | Renders mapping, sticks vs deadzone, buttons, latency | `proofs/controller-diagnostics.png` |
 
-## Explicit limitations
+## Not proven here (needs Michael's hardware or network)
 
-The WebRTC interface and PF transport adapter are implemented, but the workspace's Chromium peers gather zero ICE candidates. A live browser-to-browser match, internet NAT traversal, hosted short room codes, and TURN relay coverage are not certified. No simulated transport test is represented as a successful WebRTC test.
-
-Pilgrimage advances through exchange segments with camera scrolling; it is not yet a seamless traversable five-biome level. Gauntlet progression and the guided/scripted Vigil are playable, but an automated whole-Gauntlet clear and recorded whole-Vigil walkthrough are not present. Art, animation, reactive backdrops, cloth, audio, and accessibility received a procedural implementation pass; final authored assets and production polish remain. Complete live physics/meter authoring, final gauntlet pose-node integration, and production voice/subtitle direction are also follow-up work.
-
-The imported Brawl timings are preserved as source evidence. Passing authored GDD contracts does not certify subjective Brawl-like feel. See `README.md`, `DECISIONS.md`, `TUNING_LOG.md`, and `AUDIO_DELIVERY.md` for implementation and delivery details.
+- 60 fps on the 2019 MacBook Pro (`?bench`, see `BENCH.md`). The workspace browser is software-rendered (~3 fps); its numbers are relative only. Draw calls rose from 282 to 454 with outlines and selective bloom.
+- Supabase signaling and cross-network WebRTC (this container's network policy blocks supabase.co). TURN is not implemented.
+- Physical controllers (only simulated pads here).
+- Helms are interim: redrawn by eye from the v2 sheet because the sheet image was shared in chat, not as a file. Clean front/side renders traced through `npm run spectris:helms` replace them with no code changes.

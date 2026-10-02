@@ -1,25 +1,25 @@
 {
-  "target": 300,
+  "target": 600,
   "transport": "BroadcastChannel signaling + real RTCPeerConnection (same browser)",
   "errors": [],
-  "room": "XNZW7",
+  "room": "3HM76",
   "host": {
     "ready": true,
-    "frame": 305,
-    "remoteFrame": 314,
+    "frame": 600,
+    "remoteFrame": 615,
     "rollbacks": 0,
     "desyncs": 0,
     "status": "Connected · rollback active",
-    "room": "XNZW7"
+    "room": "3HM76"
   },
   "guest": {
     "ready": true,
-    "frame": 313,
-    "remoteFrame": 306,
-    "rollbacks": 492,
+    "frame": 614,
+    "remoteFrame": 601,
+    "rollbacks": 974,
     "desyncs": 0,
     "status": "Waiting for opponent…",
-    "room": "XNZW7"
+    "room": "3HM76"
   },
   "pass": true
 }
