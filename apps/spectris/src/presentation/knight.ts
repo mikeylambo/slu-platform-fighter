@@ -477,7 +477,7 @@ export class KnightView {
     (this.arc.material as T.MeshBasicMaterial).color.copy(flame).multiplyScalar(1.6);
     this.light.color.copy(flame);
     for (const material of [this.armor, this.steel, this.gold, this.capeMaterial]) setRim(material, flame);
-    this.capeMaterial.color.copy(flame).multiplyScalar(0.16);
+    this.capeMaterial.color.copy(flame).multiplyScalar(KNIGHT.cape.tint);
   }
 
   // ------------------------------------------------------------------ animation

@@ -39,6 +39,7 @@ export function createDuel(options: Partial<DuelOptions> = {}, seed = DEFAULT_SE
     clash: 0,
     doubleKindle: false,
     progress: 0,
+    rightOfWay: null,
     events: [],
   });
   return w;

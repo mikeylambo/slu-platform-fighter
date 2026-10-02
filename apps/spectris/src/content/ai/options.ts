@@ -34,6 +34,7 @@ export type OptionId =
   | 'kindle'
   | 'edgeguard'
   | 'chase'
+  | 'advance'
   | 'recover';
 
 export interface OptionSpec {
@@ -82,6 +83,8 @@ export const OPTIONS: Record<OptionId, OptionSpec> = {
   edgeguard: { base: 0.55, category: 'offstage' },
   /** Jump out after the recoverer and intercept offstage (riskier). */
   chase: { base: 0.3, category: 'offstage' },
+  /** Momentum: the right-of-way holder marches toward its goal. */
+  advance: { base: 0.95, category: 'movement' },
   recover: { base: 2, category: 'offstage' },
 };
 

@@ -114,6 +114,8 @@ export interface DuelState {
   clash: number;
   doubleKindle: boolean;
   progress: number;
+  /** Momentum: the Knight allowed to push the screen (null until the first Fracture). */
+  rightOfWay: string | null;
   events: DuelEvent[];
 }
 

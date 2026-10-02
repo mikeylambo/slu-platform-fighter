@@ -12,6 +12,7 @@ import { createGraphicsRenderer } from '../platform/graphics.js';
 import { duelData } from '../game/duel.js';
 import { OATHS } from '../content/rules/duel.js';
 import { stageById } from '../content/stages/roster.js';
+import { PILGRIMAGE, screenCentre } from '../content/stages/pilgrimage.js';
 export class Renderer {
   freeCamera = false;
   private orbit: OrbitControls;
@@ -21,6 +22,7 @@ export class Renderer {
   readonly knights = P.colors.map((c) => new KnightView(c));
   arena = createArena();
   private stageId = '';
+  private lookScreen = Number.NaN;
   private biome = new T.Group();
   private eventFrame = -1;
   shake = true;
@@ -91,6 +93,27 @@ export class Renderer {
    * Dynamic zoom: keep both Knights, and the nearest ledge when a Knight is near it, in frame.
    * About 30% closer than the pre-revision camera at neutral spacing.
    */
+  /** Stage dressing; Pilgrimage gets one biome per screen along its continuous floor. */
+  private createStageBiome(stageId: string): T.Group {
+    if (stageId !== 'pilgrimage') return createBiome(stageId, stageById(stageId).color);
+    const group = new T.Group();
+    PILGRIMAGE.biomes.forEach((biome, index) => {
+      const dressing = createBiome(biome, stageById(biome).color);
+      dressing.position.x = screenCentre(index - PILGRIMAGE.finalScreen);
+      group.add(dressing);
+    });
+    return group;
+  }
+
+  /** Sky, fog and stage materials follow the stage (and the current Pilgrimage screen). */
+  private updateLook(stageId: string, progress: number) {
+    const screen = stageId === 'pilgrimage' ? progress : 0;
+    if (screen === this.lookScreen) return;
+    this.lookScreen = screen;
+    const id = stageId === 'pilgrimage' ? PILGRIMAGE.biomes[progress + PILGRIMAGE.finalScreen]! : stageId;
+    this.backdrop.setLook(STAGE_LOOK[id] ?? STAGE_LOOK['mirror-sanctum']!);
+  }
+
   private frameFighters(world: WorldState, offset: number) {
     const points: [number, number][] = [];
     for (const p of world.fighters) {
@@ -140,7 +163,8 @@ export class Renderer {
       d = gameData(world),
       duel = duelData(world);
     this.arena.visible = !menu;
-    const offset = duel?.options.format === 'momentum' ? duel.progress * 32 : 0;
+    // Pilgrimage is one continuous world; nothing is offset any more.
+    const offset = 0;
     if (duel && this.stageId !== duel.options.stage) {
       this.stageId = duel.options.stage;
       this.scene.remove(this.biome);
@@ -150,7 +174,8 @@ export class Renderer {
           if (!Array.isArray(o.material)) o.material.dispose();
         }
       });
-      this.biome = createBiome(this.stageId, stageById(this.stageId).color);
+      this.biome = this.createStageBiome(this.stageId);
+      this.lookScreen = Number.NaN;
       this.scene.add(this.biome);
       this.scene.remove(this.arena);
       this.arena.traverse((o) => {
@@ -158,9 +183,9 @@ export class Renderer {
       });
       this.arena = createArena(world.surfaces);
       this.scene.add(this.arena);
-      this.backdrop.setLook(STAGE_LOOK[this.stageId] ?? STAGE_LOOK['mirror-sanctum']!);
     }
     this.biome.visible = !menu;
+    this.updateLook(duel?.options.stage ?? this.stageId, duel?.progress ?? 0);
     const cracks = this.biome.getObjectByName('fracture-cracks') as T.LineSegments | undefined;
     if (cracks)
       cracks.geometry.setDrawRange(

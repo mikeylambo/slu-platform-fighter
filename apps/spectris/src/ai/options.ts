@@ -99,6 +99,7 @@ export function score(id: OptionId, v: View, preference: { wings: number; cape: 
     return id === 'recover' ? spec.base : 0;
   }
   if (id === 'recover') return 0;
+  if (id === 'advance') return v.goal ? spec.base * (v.opp.vulnerable ? 0.5 : 1) : 0;
   if (s.holding) return id === 'pummel' ? (s.pummelReady ? spec.base : 0) : id === 'throw' ? spec.base : 0;
   if (id === 'pummel' || id === 'throw') return 0;
   if (v.opp.offstage && !s.offstage) {
@@ -293,6 +294,14 @@ export function plan(id: OptionId, v: View, holdFeint: boolean): PlanStep[] {
       return edgeguardPlan(v);
     case 'chase':
       return chasePlan(v);
+    case 'advance':
+      // Hop over a blocker in the way; otherwise run.
+      return v.dist < 2.5 && Math.sign(v.dx) === v.goal
+        ? [
+            step(1, { jumpPressed: true, jumpHeld: true, moveX: v.goal * FULL }),
+            step(5, { jumpHeld: true, moveX: v.goal * FULL }),
+          ]
+        : [step(4, { moveX: v.goal * FULL })];
     case 'forward-smash':
       return [step(1, { attackPressed: true, smashX: toward }), step(3, {})];
     case 'up-smash':

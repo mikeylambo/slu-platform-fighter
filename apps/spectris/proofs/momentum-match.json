@@ -1,0 +1,40 @@
+{
+  "finished": true,
+  "winner": "player-1",
+  "frames": 999,
+  "finalScreen": 2,
+  "replay": "apps/spectris/proofs/momentum-replay.json",
+  "replayVerified": true,
+  "timeline": [
+    {
+      "frame": 666,
+      "event": "fracture",
+      "player": "player-2",
+      "progress": 1
+    },
+    {
+      "frame": 666,
+      "event": "pilgrimage",
+      "player": "player-1",
+      "progress": 1
+    },
+    {
+      "frame": 666,
+      "event": "pilgrimage-scroll",
+      "player": "player-1",
+      "progress": 1
+    },
+    {
+      "frame": 739,
+      "event": "pilgrimage-scroll",
+      "player": "player-1",
+      "progress": 2
+    },
+    {
+      "frame": 999,
+      "event": "pilgrimage-goal",
+      "player": "player-1",
+      "progress": 2
+    }
+  ]
+}

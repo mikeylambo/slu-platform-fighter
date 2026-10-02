@@ -60,7 +60,7 @@ export const KNIGHT = {
     rootY: 1.3,
     rootZ: -0.3,
   },
-  cape: { width: 1.3, length: 1.9, y: 1.12, z: -0.35 },
+  cape: { width: 1.0, length: 1.75, y: 1.5, z: -0.62, tint: 0.07 },
   outline: 0.022,
   rim: { power: 3.6, strength: 0.6 },
   specular: { threshold: 0.985, strength: 0.55 },

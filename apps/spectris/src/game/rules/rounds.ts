@@ -54,6 +54,7 @@ export function stepRoundEnd(
   nd.wins = d.wins;
   nd.round = d.round + 1;
   nd.progress = d.progress;
+  nd.rightOfWay = d.rightOfWay;
   if (d.winner === null && d.sudden) {
     // A simultaneous Sudden Death loss replays Sudden Death.
     nd.sudden = true;

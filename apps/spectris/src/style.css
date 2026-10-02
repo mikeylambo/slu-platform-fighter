@@ -860,3 +860,39 @@ input[type='checkbox'] {
 .stage-name {
   text-shadow: 0 1px 10px rgba(2, 6, 10, 0.55);
 }
+
+.modal.online .room-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  margin: 22px 0 10px;
+}
+.modal.online #room-code {
+  background: #10232e;
+  color: #e2f4f2;
+  border: 1px solid #2c4b55;
+  font:
+    600 18px/1 ui-monospace,
+    Menlo,
+    monospace;
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.room-display {
+  display: block;
+  min-height: 1.2em;
+  margin: 8px 0 16px;
+  font:
+    600 42px/1 ui-monospace,
+    Menlo,
+    monospace;
+  letter-spacing: 0.32em;
+  color: #71e9e0;
+  text-shadow: 0 0 18px rgba(113, 233, 224, 0.45);
+}
+.manual-pair summary {
+  cursor: pointer;
+  color: #8fa6ab;
+  margin: 12px 0;
+}

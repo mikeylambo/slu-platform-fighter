@@ -1,5 +1,6 @@
 import { fixed as f } from '../../../../../packages/deterministic-math/src/fixed.js';
 import type { StageLedge, StageSurface } from '../../../../../packages/sim/src/types.js';
+import { PILGRIMAGE, pilgrimagePlatforms } from './pilgrimage.js';
 export interface Stage {
   id: string;
   name: string;
@@ -90,12 +91,10 @@ export const STAGES: Stage[] = [
   {
     id: 'pilgrimage',
     name: 'Pilgrimage',
-    width: 180,
+    // Five 36-unit screens of continuous floor (half width 90 world units).
+    width: (PILGRIMAGE.screens * PILGRIMAGE.screenWidth * 10) / 2,
     blast: [240, 240, 200, 140],
-    platforms: [
-      [-45, 30, 30],
-      [45, 45, 30],
-    ],
+    platforms: pilgrimagePlatforms(),
     color: 0xc9a976,
   },
 ];

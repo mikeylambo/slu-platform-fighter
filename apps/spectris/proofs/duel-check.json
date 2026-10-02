@@ -25,13 +25,13 @@
     "Stoop cancels into glide after frame 12",
     "Held Feint commits a real ghost and spends 25 meter",
     "Double-Kindle tie extinguishes both buffs without retriggering",
-    "Five right-of-way exchanges finish Pilgrimage",
+    "Pilgrimage: right of way, screen scrolling, respawn ahead, goal line",
     "Losing player chooses a deterministic between-round counterpick",
     "Training stance lock is authoritative replay state",
     "10,000-frame duel determinism with AI and Oaths",
     "Duel replay round trip includes complete rules and AI state",
     "8-frame delayed rollback converges with specials"
   ],
-  "simMs": 1.02367843155,
-  "finalHash": "e20005a881df4bd1"
+  "simMs": 1.0593609931,
+  "finalHash": "4fc7ceef55e159da"
 }

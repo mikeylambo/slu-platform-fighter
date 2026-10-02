@@ -1,0 +1,25 @@
+{
+  "target": 300,
+  "transport": "BroadcastChannel signaling + real RTCPeerConnection (same browser)",
+  "errors": [],
+  "room": "XNZW7",
+  "host": {
+    "ready": true,
+    "frame": 305,
+    "remoteFrame": 314,
+    "rollbacks": 0,
+    "desyncs": 0,
+    "status": "Connected · rollback active",
+    "room": "XNZW7"
+  },
+  "guest": {
+    "ready": true,
+    "frame": 313,
+    "remoteFrame": 306,
+    "rollbacks": 492,
+    "desyncs": 0,
+    "status": "Waiting for opponent…",
+    "room": "XNZW7"
+  },
+  "pass": true
+}

@@ -112,6 +112,7 @@
     "spectris:bench": "npm run spectris:build && node scripts/spectris-bench.mjs local 10"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "three": "^0.185.0"
   },
   "devDependencies": {

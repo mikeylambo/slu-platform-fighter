@@ -50,7 +50,7 @@ import {
 } from './rules/specials/index.js';
 import { applyHit, shatter, takeFracture } from './rules/fractures.js';
 import { blastRules, checkRoundEnd, stepRoundEnd, tickClock } from './rules/rounds.js';
-import { stepMomentumFracture } from './rules/momentum.js';
+import { momentumBlast, stepMomentumFracture, stepMomentumScroll } from './rules/momentum.js';
 import { applyStanceLock, stripStanceInput } from './rules/training.js';
 import { cancelOnHitstun, isFree, refreshRecovery, stepHelpless, stepLock } from './rules/recovery.js';
 import { settleFlash, tryFlashUnfurl } from './rules/stance.js';
@@ -90,7 +90,7 @@ export function stepDuel(original: WorldState, bundle: MatchInputFrame): StepRes
   const stage = stageById(d.options.stage);
   w.surfaces = surfaces(stage, w.frame);
   tickClock(w, d);
-  const rules = blastRules(d, stage);
+  const rules = momentumBlast(d, blastRules(d, stage));
   for (const [index, p] of w.fighters.entries()) {
     preSimulation(frame, index, p);
   }
@@ -120,6 +120,7 @@ export function stepDuel(original: WorldState, bundle: MatchInputFrame): StepRes
       stepMomentumFracture(next, d, p, IDS);
     }
   }
+  stepMomentumScroll(next, d, IDS);
   checkRoundEnd(next, d, IDS);
   save(next, d);
   return { state: next, events };

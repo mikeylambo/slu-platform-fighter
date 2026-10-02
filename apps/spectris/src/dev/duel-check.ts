@@ -233,14 +233,20 @@ for (let i = 0; i < 12; i++) w = step(w);
 assert(Object.values(duelData(w)!.knights).every((k) => k.soul.remaining === 0));
 pass('Double-Kindle tie extinguishes both buffs without retriggering');
 w = createDuel({ cpu: [0, 0], format: 'momentum', stage: 'pilgrimage', timer: 0 });
-for (let i = 0; i < 5; i++) {
-  w.fighters[1]!.respawnFrames = 0;
-  w.fighters[1]!.x = f.fromInt(60);
+w.fighters[1]!.x = f.fromInt(60);
+w = step(w);
+assert.equal(duelData(w)!.rightOfWay, IDS[0]);
+assert(w.fighters[1]!.x > w.fighters[0]!.x, 'victim respawns ahead of the holder');
+for (let screen = 1; screen <= 2; screen++) {
+  w.fighters[0]!.x = f.fromInt(screen * 36 - 17);
   w = step(w);
+  assert.equal(duelData(w)!.progress, screen);
 }
+w.fighters[0]!.x = f.fromInt(2 * 36 + 16);
+w = step(w);
 assert.equal(duelData(w)!.phase, 'over');
 assert.equal(duelData(w)!.winner, IDS[0]);
-pass('Five right-of-way exchanges finish Pilgrimage');
+pass('Pilgrimage: right of way, screen scrolling, respawn ahead, goal line');
 
 w = createDuel({ cpu: [0, 0], lives: 1, bestOf: 3, timer: 0, counterpick: true });
 w.fighters[1]!.x = f.fromInt(60);

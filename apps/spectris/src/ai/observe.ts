@@ -27,6 +27,8 @@ export interface View {
   /** Direction from self toward the opponent (-1 or 1). */
   toward: -1 | 1;
   half: number;
+  /** Momentum: +1/-1 when this Knight holds right of way (its march direction), else 0. */
+  goal: number;
   self: {
     x: number;
     y: number;
@@ -120,6 +122,7 @@ export function observe(w: WorldState, d: DuelState, slot: number, reaction: num
     dist: Math.abs(dx),
     toward: dx >= 0 ? 1 : -1,
     half,
+    goal: d.options.format === 'momentum' && d.rightOfWay === p.id ? (slot === 0 ? 1 : -1) : 0,
     self: {
       x,
       y,

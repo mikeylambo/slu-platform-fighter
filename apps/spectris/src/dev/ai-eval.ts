@@ -59,7 +59,11 @@ function play(job: Job): Outcome {
     if (me.attack && me.attack.attackId !== before && me.attack.frame <= 1) {
       const key = me.attack.attackId.split(':')[1]!;
       add(`attack:${me.attack.attackId}`);
-      if (key.endsWith('-air')) add('aerials');
+      if (key.endsWith('-air')) {
+        add('aerials');
+        const other = w.fighters[1 - job.subject]!;
+        if (Math.sign(other.x - me.x) * Math.sign(me.vx) > 0) add('approach-aerials');
+      }
       if (key === 'veil' || key === 'veil-cut') add('veil-step');
       if (key.startsWith('anchor') || key.startsWith('cleave')) add('anchor-cleave');
     }
@@ -130,7 +134,7 @@ async function benchmark(matches: number) {
 
 /** Each personality's signature behaviour (GDD 6) and how it is measured. */
 const SIGNATURES: Record<Exclude<Oath, 'unsworn'>, { label: string; keys: string[] }> = {
-  ember: { label: 'approaches + aerials', keys: ['option:approach', 'aerials'] },
+  ember: { label: 'aerials thrown while approaching', keys: ['approach-aerials'] },
   static: { label: 'feints + Veil Step', keys: ['event:feint', 'veil-step'] },
   stillness: { label: 'guard frames + parries', keys: ['guard-frames', 'event:parry'] },
   gale: { label: 'offstage chase frames', keys: ['offstage-chase'] },
@@ -139,7 +143,8 @@ const SIGNATURES: Record<Exclude<Oath, 'unsworn'>, { label: string; keys: string
 };
 
 async function personalities(matches: number) {
-  const subjects: Oath[] = ['unsworn', 'ember', 'static', 'stillness', 'gale', 'iron', 'hunger'];
+  const only = process.argv[4]?.split(',') as Oath[] | undefined;
+  const subjects: Oath[] = only ?? ['unsworn', 'ember', 'static', 'stillness', 'gale', 'iron', 'hunger'];
   const jobs: Job[] = [];
   for (const [p, oath] of subjects.entries()) {
     for (let m = 0; m < matches; m++) {
@@ -161,13 +166,22 @@ async function personalities(matches: number) {
   }
   const rate = (oath: Oath, keys: string[]) =>
     keys.reduce((sum, key) => sum + (totals.get(oath)![key] ?? 0), 0) / minutes.get(oath)!;
-  const rows = (Object.keys(SIGNATURES) as Exclude<Oath, 'unsworn'>[]).map((oath) => {
-    const signature = SIGNATURES[oath];
-    const value = rate(oath, signature.keys);
-    const baseline = rate('unsworn', signature.keys);
-    const ratio = baseline > 0 ? value / baseline : Infinity;
-    return { oath, signature: signature.label, perMinute: value, unswornPerMinute: baseline, ratio, pass: ratio >= 2 };
-  });
+  const rows = (Object.keys(SIGNATURES) as Exclude<Oath, 'unsworn'>[])
+    .filter((oath) => subjects.includes(oath))
+    .map((oath) => {
+      const signature = SIGNATURES[oath];
+      const value = rate(oath, signature.keys);
+      const baseline = rate('unsworn', signature.keys);
+      const ratio = baseline > 0 ? value / baseline : Infinity;
+      return {
+        oath,
+        signature: signature.label,
+        perMinute: value,
+        unswornPerMinute: baseline,
+        ratio,
+        pass: ratio >= 2,
+      };
+    });
   const histograms = Object.fromEntries(
     subjects.map((oath) => {
       const total = totals.get(oath)!;

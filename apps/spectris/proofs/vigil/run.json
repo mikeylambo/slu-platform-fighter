@@ -1,0 +1,56 @@
+{
+  "completed": true,
+  "lessons": [
+    {
+      "lesson": 1,
+      "attempts": 1,
+      "seconds": 4.792
+    },
+    {
+      "lesson": 2,
+      "attempts": 1,
+      "seconds": 3.154
+    },
+    {
+      "lesson": 3,
+      "attempts": 1,
+      "seconds": 2.707
+    },
+    {
+      "lesson": 4,
+      "attempts": 15,
+      "seconds": 3.718
+    },
+    {
+      "lesson": 5,
+      "attempts": 2,
+      "seconds": 3.231
+    },
+    {
+      "lesson": 6,
+      "attempts": 9,
+      "seconds": 3.328
+    },
+    {
+      "lesson": 7,
+      "attempts": 1,
+      "seconds": 3.128
+    },
+    {
+      "lesson": 8,
+      "attempts": 1,
+      "seconds": 2.471
+    },
+    {
+      "lesson": 9,
+      "attempts": 16,
+      "seconds": 3.15
+    },
+    {
+      "lesson": 10,
+      "attempts": 2,
+      "seconds": 2.394
+    }
+  ],
+  "errors": []
+}

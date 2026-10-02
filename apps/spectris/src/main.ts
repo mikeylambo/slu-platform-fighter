@@ -14,6 +14,7 @@ import { MOVES, ATTACKS, compileMoves } from './content/knight/moves/index.js';
 import { createDuel, stepDuel, duelData, DEFAULT_DUEL, type DuelOptions } from './game/duel.js';
 import { STAGES, stageById } from './content/stages/roster.js';
 import { OATHS, type Oath } from './content/rules/duel.js';
+import { gauntletFight, type Difficulty } from './content/gauntlet.js';
 import { OnlineDuel } from './platform/online.js';
 import { readProgress, readSettings, persist } from './platform/progress.js';
 import { BenchRecorder, benchOptions, benchReport, benchSeconds, gpuName } from './platform/bench.js';
@@ -69,6 +70,7 @@ let dummy = 'still',
   slot = 0,
   recorder: ReplayRecorder;
 let menuPadHeld = false;
+const scripted: SimInputFrame[] = [];
 let simMs = 0,
   steps = 0,
   lastInput: SimInputFrame = neutral(0),
@@ -426,7 +428,9 @@ function tick() {
     }
     result = stepDuel(world, input);
   } else {
-    lastInput = shell.input.sample(0, world.frame);
+    // Scripted input (tests and demos) stands in for the P1 controller when queued.
+    const queued = scripted.shift();
+    lastInput = queued ? { ...queued, frame: world.frame } : shell.input.sample(0, world.frame);
     const input = {
       frame: world.frame,
       byFighterId: {
@@ -629,7 +633,7 @@ function frame(now: number) {
 function onlinePanel() {
   const el = document.createElement('div');
   el.className = 'modal-shade';
-  el.innerHTML = `<section class="modal"><button id="online-close" class="close">×</button><div class="eyebrow">Direct peer-to-peer duel</div><h2>Invite your reflection.</h2><p>Host sends an invitation. Guest pastes it and sends an answer back. Both use keyboard P1 controls on their own device.</p><label>Input delay <select id="net-delay">${[0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => `<option ${n === settings.delay ? 'selected' : ''}>${n}</option>`).join('')}</select> frames</label><textarea id="pair-code" placeholder="Paste a pairing code here" rows="4" style="width:100%;margin:20px 0;background:#10232e;color:#c8dede"></textarea><button id="net-host" class="primary">CREATE INVITATION ↗</button><button id="net-join" class="menu-secondary">Join with invitation</button><button id="net-accept" class="menu-secondary">Host: accept answer</button><p id="net-status">Direct connection uses rollback and state-hash checks. Pairing codes contain connection information; share them only with your opponent. Some networks need a relay, which this build does not provide.</p></section>`;
+  el.innerHTML = `<section class="modal online"><button id="online-close" class="close">×</button><div class="eyebrow">Online duel · rollback netcode</div><h2>Invite your reflection.</h2><p>Create a room and share its code, or enter your opponent's code. Both play with P1 controls on their own device.</p><div class="room-row"><button id="room-host" class="primary">CREATE ROOM ↗</button><input id="room-code" maxlength="6" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="Room code"><button id="room-join" class="menu-secondary">Join</button></div><output id="room-display" class="room-display" aria-live="polite"></output><label>Input delay <select id="net-delay">${[0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => `<option ${n === settings.delay ? 'selected' : ''}>${n}</option>`).join('')}</select> frames</label><details class="manual-pair"><summary>Manual pairing (no signaling server)</summary><textarea id="pair-code" placeholder="Paste a pairing code here" rows="4" style="width:100%;margin:12px 0;background:#10232e;color:#c8dede"></textarea><button id="net-host" class="menu-secondary">Create invitation</button><button id="net-join" class="menu-secondary">Join with invitation</button><button id="net-accept" class="menu-secondary">Host: accept answer</button></details><p id="net-status">Peer-to-peer with public STUN. Strict networks may need a relay (TURN), which this build does not provide yet.</p></section>`;
   app.append(el);
   const make = () => {
     online?.close();
@@ -661,6 +665,18 @@ function onlinePanel() {
       $('#net-status').textContent = String(error);
     }
   };
+  on(
+    '#room-host',
+    () =>
+      void run(async () => {
+        const code = await make().hostRoom();
+        $('#room-display').textContent = code;
+      }),
+  );
+  on('#room-join', () => {
+    const code = $<HTMLInputElement>('#room-code').value;
+    void run(() => make().joinRoom(code));
+  });
   on('#net-host', () => void run(() => make().host()));
   on('#net-join', () => {
     const code = $<HTMLTextAreaElement>('#pair-code').value;
@@ -778,12 +794,8 @@ function bindMenu() {
     (b) =>
       (b.onclick = () => {
         currentOath = b.dataset.fracture as Oath;
-        options = {
-          ...DEFAULT_DUEL,
-          stage: currentOath === 'unsworn' ? 'unsworn' : OATHS[currentOath].stage,
-          cpu: [0, currentOath === 'unsworn' ? 9 : difficulty === 'Squire' ? 3 : difficulty === 'Paragon' ? 9 : 6],
-          oaths: ['unsworn', currentOath],
-        };
+        const fight = gauntletFight(currentOath, difficulty as Difficulty);
+        options = { ...DEFAULT_DUEL, stage: fight.stage, cpu: [0, fight.level], oaths: fight.oaths };
         start();
       }),
   );
@@ -938,7 +950,16 @@ function updateFlow() {
   if (Math.abs(f.toNumber(p.x)) > 16 && !p.grounded) vigilOffstage = true;
   if (vigil === 3 && elapsed % 100 === 1) {
     const target = world.fighters[1]!;
+    // Stage both Knights on the main floor (the glide lesson often ends on a platform).
+    for (const knight of [p, target]) {
+      knight.y = f.zero;
+      knight.vx = f.zero;
+      knight.vy = f.zero;
+      knight.grounded = true;
+      knight.groundSurfaceId = 'ground';
+    }
     p.x = f.fromInt(-1);
+    p.facing = 1;
     target.x = f.fromInt(2);
     target.facing = -1;
     target.attack = { attackId: 'wings:forward-smash', frame: 0, hitTargets: [] };
@@ -1018,6 +1039,26 @@ const hooks = {
     triangles: renderer.renderer.info.render.triangles,
   }),
   saveReplay: () => recorder.finish(),
+  online: () => online?.stats() ?? null,
+  /** Queue P1 inputs consumed one per simulated frame. */
+  script: (inputs: Partial<SimInputFrame>[]) => {
+    for (const input of inputs) scripted.push({ ...neutral(0), ...input });
+  },
+  vigil: () => {
+    const p = world.fighters[0]!;
+    const k = duelData(world)?.knights[p.id];
+    return {
+      lesson: vigil,
+      elapsed: world.frame - vigilStart,
+      x: f.toNumber(p.x),
+      y: f.toNumber(p.y),
+      grounded: p.grounded,
+      stance: gameData(world).knights[p.id]!.stance.id,
+      blade: !!k?.blade,
+      p2x: f.toNumber(world.fighters[1]!.x),
+      jumps: p.jumpsRemaining,
+    };
+  },
 };
 Object.assign(window, { __spectris: hooks });
 renderUi();
